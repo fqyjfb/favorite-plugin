@@ -12643,6 +12643,20 @@
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
    */
+  const GripVertical = createLucideIcon("GripVertical", [
+    ["circle", { cx: "9", cy: "12", r: "1", key: "1vctgf" }],
+    ["circle", { cx: "9", cy: "5", r: "1", key: "hp0tcf" }],
+    ["circle", { cx: "9", cy: "19", r: "1", key: "fkjjf6" }],
+    ["circle", { cx: "15", cy: "12", r: "1", key: "1tmaij" }],
+    ["circle", { cx: "15", cy: "5", r: "1", key: "19l28e" }],
+    ["circle", { cx: "15", cy: "19", r: "1", key: "f4zoj3" }]
+  ]);
+  /**
+   * @license lucide-react v0.454.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   */
   const LayoutGrid = createLucideIcon("LayoutGrid", [
     ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "1g98yp" }],
     ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "6d4xhi" }],
@@ -12875,7 +12889,7 @@
       updatedAt: (/* @__PURE__ */ new Date()).toISOString()
     };
   }
-  function addCategory$1(name, parentId, order = 0) {
+  function addCategory(name, parentId, order = 0) {
     return {
       id: generateCategoryId(),
       name,
@@ -12902,6 +12916,15 @@
         }
       }
     });
+    const sortRecursive = (nodes) => {
+      nodes.sort((a, b) => a.order - b.order);
+      nodes.forEach((n) => {
+        if (n.children && n.children.length > 0) {
+          sortRecursive(n.children);
+        }
+      });
+    };
+    sortRecursive(roots);
     return roots;
   }
   function searchBookmarks(bookmarks, query) {
@@ -12935,14 +12958,6 @@
   function getNextOrder(items) {
     if (items.length === 0) return 0;
     return Math.max(...items.map((i) => i.order)) + 1;
-  }
-  function isValidUrl(url) {
-    try {
-      new URL(url.startsWith("http") ? url : `https://${url}`);
-      return true;
-    } catch {
-      return false;
-    }
   }
   function normalizeUrl(url) {
     if (!url) return "";
@@ -13101,6 +13116,7 @@
     const [data, setData] = reactExports.useState(() => loadData());
     const [searchQuery, setSearchQuery] = reactExports.useState("");
     const [selectedCategoryId, setSelectedCategoryId] = reactExports.useState("all");
+    const [selectedTags, setSelectedTags] = reactExports.useState(/* @__PURE__ */ new Set());
     const [selectedBookmarks, setSelectedBookmarks] = reactExports.useState(/* @__PURE__ */ new Set());
     const [toasts, setToasts] = reactExports.useState([]);
     const initialized = reactExports.useRef(false);
@@ -13127,6 +13143,13 @@
     const categories = data.categories;
     const settings = data.settings;
     const categoryTree = buildCategoryTree(categories);
+    const allTags = reactExports.useMemo(() => {
+      const tagSet = /* @__PURE__ */ new Set();
+      bookmarks.forEach((b) => {
+        if (b.tags) b.tags.forEach((t) => tagSet.add(t));
+      });
+      return Array.from(tagSet).sort();
+    }, [bookmarks]);
     const filteredBookmarks = (() => {
       let result = bookmarks;
       if (selectedCategoryId !== "all") {
@@ -13148,6 +13171,14 @@
         } else {
           result = result.filter((b) => !b.categoryId);
         }
+      }
+      if (selectedTags.size > 0) {
+        result = result.filter(
+          (b) => Array.from(selectedTags).every((t) => {
+            var _a;
+            return (_a = b.tags) == null ? void 0 : _a.includes(t);
+          })
+        );
       }
       if (searchQuery.trim()) {
         result = searchBookmarks(result, searchQuery);
@@ -13220,12 +13251,12 @@
     const clearSelection = reactExports.useCallback(() => {
       setSelectedBookmarks(/* @__PURE__ */ new Set());
     }, []);
-    const addCategory2 = reactExports.useCallback(
+    const addCategory$1 = reactExports.useCallback(
       (name, parentId = null) => {
         const order = getNextOrder(
           categories.filter((c) => c.parentId === parentId)
         );
-        const category = addCategory$1(name, parentId, order);
+        const category = addCategory(name, parentId, order);
         const nextData = {
           ...data,
           categories: [...data.categories, category]
@@ -13236,7 +13267,7 @@
       },
       [data, categories, persist, addToast]
     );
-    const updateCategory2 = reactExports.useCallback(
+    const updateCategory = reactExports.useCallback(
       (id, name) => {
         const nextData = {
           ...data,
@@ -13249,7 +13280,7 @@
       },
       [data, persist, addToast]
     );
-    const deleteCategory2 = reactExports.useCallback(
+    const deleteCategory = reactExports.useCallback(
       (id) => {
         if (categories.filter((c) => c.parentId === id).length > 0) {
           addToast("请先删除子分类", "warning");
@@ -13272,6 +13303,86 @@
       },
       [data, categories, persist, addToast]
     );
+    const reorderCategory = reactExports.useCallback(
+      (draggedId, targetId, position) => {
+        const dragged = categories.find((c) => c.id === draggedId);
+        if (!dragged) return;
+        const descendants = /* @__PURE__ */ new Set();
+        const stack = [draggedId];
+        while (stack.length > 0) {
+          const current = stack.pop();
+          descendants.add(current);
+          categories.forEach((cat) => {
+            if (cat.parentId === current && !descendants.has(cat.id)) {
+              stack.push(cat.id);
+            }
+          });
+        }
+        if (targetId && descendants.has(targetId)) {
+          addToast("不能将分类移动到其子分类下", "warning");
+          return;
+        }
+        const siblings = categories.filter((c) => {
+          if (position === "child") {
+            return c.parentId === targetId;
+          }
+          if (targetId) {
+            const target = categories.find((c2) => c2.id === targetId);
+            return target && c.parentId === target.parentId;
+          }
+          return !c.parentId;
+        });
+        let newOrder;
+        let newParentId;
+        if (position === "child") {
+          newParentId = targetId;
+          newOrder = getNextOrder(siblings);
+        } else if (targetId) {
+          const target = categories.find((c) => c.id === targetId);
+          newParentId = target.parentId;
+          const sorted = [...siblings].sort((a, b) => a.order - b.order);
+          const targetIdx = sorted.findIndex((c) => c.id === targetId);
+          const reordered = sorted.filter((c) => c.id !== draggedId);
+          const insertIdx = position === "before" ? targetIdx : targetIdx + 1;
+          if (insertIdx >= reordered.length) {
+            newOrder = getNextOrder(reordered);
+          } else if (insertIdx <= 0) {
+            newOrder = reordered[0].order - 1;
+          } else {
+            const prev = reordered[insertIdx - 1];
+            const next = reordered[insertIdx];
+            newOrder = (prev.order + next.order) / 2;
+          }
+        } else {
+          newParentId = null;
+          const rootCategories = categories.filter((c) => !c.parentId && c.id !== draggedId);
+          newOrder = getNextOrder(rootCategories);
+        }
+        const nextData = {
+          ...data,
+          categories: data.categories.map(
+            (c) => c.id === draggedId ? { ...c, parentId: newParentId, order: newOrder } : c
+          )
+        };
+        persist(nextData);
+        addToast("分类已移动", "success");
+      },
+      [categories, data, persist, addToast]
+    );
+    const toggleTag = reactExports.useCallback((tag) => {
+      setSelectedTags((prev) => {
+        const next = new Set(prev);
+        if (next.has(tag)) {
+          next.delete(tag);
+        } else {
+          next.add(tag);
+        }
+        return next;
+      });
+    }, []);
+    const clearTagFilter = reactExports.useCallback(() => {
+      setSelectedTags(/* @__PURE__ */ new Set());
+    }, []);
     const updateSettings = reactExports.useCallback(
       (changes) => {
         const nextData = {
@@ -13357,11 +13468,11 @@
       setData(loadData());
       setSearchQuery("");
       setSelectedCategoryId("all");
+      setSelectedTags(/* @__PURE__ */ new Set());
       setSelectedBookmarks(/* @__PURE__ */ new Set());
       addToast("数据已重置", "success");
     }, [addToast]);
     return {
-      // State
       data,
       bookmarks,
       categories,
@@ -13369,12 +13480,15 @@
       settings,
       searchQuery,
       selectedCategoryId,
+      selectedTags,
+      allTags,
       selectedBookmarks,
       filteredBookmarks,
       toasts,
-      // Actions
       setSearchQuery,
       setSelectedCategoryId,
+      toggleTag,
+      clearTagFilter,
       addBookmark: addBookmark$1,
       updateBookmark: updateBookmark$1,
       deleteBookmark,
@@ -13382,9 +13496,10 @@
       toggleBookmarkSelect,
       selectAllBookmarks,
       clearSelection,
-      addCategory: addCategory2,
-      updateCategory: updateCategory2,
-      deleteCategory: deleteCategory2,
+      addCategory: addCategory$1,
+      updateCategory,
+      deleteCategory,
+      reorderCategory,
       updateSettings,
       importData,
       resetAllData,
@@ -13571,7 +13686,15 @@
     onAddCategory,
     onUpdateCategory,
     onDeleteCategory,
-    bookmarkCounts
+    onReorderCategory,
+    bookmarkCounts,
+    onDragStart,
+    onDragEnd,
+    draggingId,
+    dropTargetId,
+    dropPosition,
+    onDragOver,
+    onDrop
   }) => {
     const [expanded, setExpanded] = reactExports.useState(true);
     const [isEditing, setIsEditing] = reactExports.useState(false);
@@ -13581,131 +13704,171 @@
     const hasChildren = category.children && category.children.length > 0;
     const isSelected = selectedCategoryId === category.id;
     const count = bookmarkCounts.get(category.id) || 0;
-    const handleSaveRename = () => {
+    const isDragging = draggingId === category.id;
+    const isDropTarget = dropTargetId === category.id;
+    const handleSaveRename = reactExports.useCallback(() => {
       if (editName.trim()) {
         onUpdateCategory(category.id, editName.trim());
       }
       setIsEditing(false);
-    };
-    const handleAddSubCategory = () => {
+    }, [editName, category.id, onUpdateCategory]);
+    const handleAddSubCategory = reactExports.useCallback(() => {
       if (newCategoryName.trim()) {
         onAddCategory(newCategoryName.trim(), category.id);
-        setNewCategoryName("");
-        setShowAddInput(false);
-        setExpanded(true);
       }
-    };
-    return /* @__PURE__ */ React$2.createElement("div", { className: "select-none" }, /* @__PURE__ */ React$2.createElement(
+      setNewCategoryName("");
+      setShowAddInput(false);
+      setExpanded(true);
+    }, [newCategoryName, category.id, onAddCategory]);
+    const handleCancelAdd = reactExports.useCallback(() => {
+      setShowAddInput(false);
+      setNewCategoryName("");
+    }, []);
+    const handleKeyDown = reactExports.useCallback((e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleAddSubCategory();
+      }
+      if (e.key === "Escape") {
+        handleCancelAdd();
+      }
+    }, [handleAddSubCategory, handleCancelAdd]);
+    return /* @__PURE__ */ React$2.createElement(
       "div",
       {
-        className: `flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer group transition-colors ${isSelected ? "bg-primary/10 text-primary" : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"}`,
-        style: { paddingLeft: `${level * 16 + 8}px` },
-        onClick: () => onSelectCategory(category.id)
+        className: "select-none",
+        onDragOver: (e) => onDragOver(e, category.id),
+        onDrop: (e) => onDrop(e, category.id)
       },
       /* @__PURE__ */ React$2.createElement(
-        "button",
+        "div",
         {
-          className: "p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity",
-          onClick: (e) => {
-            e.stopPropagation();
-            setExpanded(!expanded);
-          }
+          className: `flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer group transition-colors ${isSelected ? "bg-primary/10 text-primary" : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"} ${isDragging ? "opacity-50" : ""} ${isDropTarget && dropPosition === "before" ? "border-t-2 border-primary" : ""} ${isDropTarget && dropPosition === "after" ? "border-b-2 border-primary" : ""} ${isDropTarget && dropPosition === "child" ? "bg-primary/20" : ""}`,
+          style: { paddingLeft: `${level * 16 + 8}px` },
+          onClick: () => onSelectCategory(category.id)
         },
-        hasChildren ? expanded ? /* @__PURE__ */ React$2.createElement(ChevronDown, { className: "w-3 h-3" }) : /* @__PURE__ */ React$2.createElement(ChevronRight, { className: "w-3 h-3" }) : /* @__PURE__ */ React$2.createElement("span", { className: "w-3 h-3" })
+        /* @__PURE__ */ React$2.createElement(
+          "span",
+          {
+            className: "p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity",
+            draggable: true,
+            onDragStart: (e) => {
+              e.stopPropagation();
+              onDragStart(category.id);
+            },
+            onDragEnd
+          },
+          /* @__PURE__ */ React$2.createElement(GripVertical, { className: "w-3 h-3 text-gray-400" })
+        ),
+        /* @__PURE__ */ React$2.createElement(
+          "button",
+          {
+            className: "p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity",
+            onClick: (e) => {
+              e.stopPropagation();
+              setExpanded(!expanded);
+            }
+          },
+          hasChildren ? expanded ? /* @__PURE__ */ React$2.createElement(ChevronDown, { className: "w-3 h-3" }) : /* @__PURE__ */ React$2.createElement(ChevronRight, { className: "w-3 h-3" }) : /* @__PURE__ */ React$2.createElement("span", { className: "w-3 h-3" })
+        ),
+        /* @__PURE__ */ React$2.createElement(FolderOpen, { className: "w-4 h-4 flex-shrink-0" }),
+        isEditing ? /* @__PURE__ */ React$2.createElement(
+          "input",
+          {
+            autoFocus: true,
+            value: editName,
+            onChange: (e) => setEditName(e.target.value),
+            onBlur: handleSaveRename,
+            onKeyDown: (e) => {
+              if (e.key === "Enter") handleSaveRename();
+              if (e.key === "Escape") {
+                setIsEditing(false);
+                setEditName(category.name);
+              }
+            },
+            className: "flex-1 px-1 py-0.5 text-sm border border-primary rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200",
+            onClick: (e) => e.stopPropagation()
+          }
+        ) : /* @__PURE__ */ React$2.createElement("span", { className: "flex-1 text-sm truncate" }, category.name),
+        /* @__PURE__ */ React$2.createElement("span", { className: "text-xs text-gray-400 dark:text-gray-500 flex-shrink-0" }, count),
+        /* @__PURE__ */ React$2.createElement("div", { className: "hidden group-hover:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity" }, /* @__PURE__ */ React$2.createElement(
+          "button",
+          {
+            className: "p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400",
+            title: "添加子分类",
+            onClick: (e) => {
+              e.stopPropagation();
+              setShowAddInput(true);
+              setExpanded(true);
+            }
+          },
+          /* @__PURE__ */ React$2.createElement(Plus, { className: "w-3 h-3" })
+        ), /* @__PURE__ */ React$2.createElement(
+          "button",
+          {
+            className: "p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400",
+            title: "重命名",
+            onClick: (e) => {
+              e.stopPropagation();
+              setIsEditing(true);
+            }
+          },
+          /* @__PURE__ */ React$2.createElement(Pencil, { className: "w-3 h-3" })
+        ), /* @__PURE__ */ React$2.createElement(
+          "button",
+          {
+            className: "p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 dark:text-gray-400 hover:text-red-500",
+            title: "删除",
+            onClick: (e) => {
+              e.stopPropagation();
+              onDeleteCategory(category.id);
+            }
+          },
+          /* @__PURE__ */ React$2.createElement(Trash2, { className: "w-3 h-3" })
+        ))
       ),
-      /* @__PURE__ */ React$2.createElement(FolderOpen, { className: "w-4 h-4 flex-shrink-0" }),
-      isEditing ? /* @__PURE__ */ React$2.createElement(
-        "input",
+      showAddInput && /* @__PURE__ */ React$2.createElement(
+        "div",
         {
-          autoFocus: true,
-          value: editName,
-          onChange: (e) => setEditName(e.target.value),
-          onBlur: handleSaveRename,
-          onKeyDown: (e) => {
-            if (e.key === "Enter") handleSaveRename();
-            if (e.key === "Escape") {
-              setIsEditing(false);
-              setEditName(category.name);
-            }
-          },
-          className: "flex-1 px-1 py-0.5 text-sm border border-primary rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200",
-          onClick: (e) => e.stopPropagation()
+          className: "flex items-center gap-1 px-2 py-1",
+          style: { paddingLeft: `${(level + 1) * 16 + 8}px` }
+        },
+        /* @__PURE__ */ React$2.createElement(
+          "input",
+          {
+            autoFocus: true,
+            value: newCategoryName,
+            onChange: (e) => setNewCategoryName(e.target.value),
+            onKeyDown: handleKeyDown,
+            onBlur: handleAddSubCategory,
+            placeholder: "分类名称",
+            className: "flex-1 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
+          }
+        )
+      ),
+      expanded && hasChildren && /* @__PURE__ */ React$2.createElement("div", null, category.children.map((child) => /* @__PURE__ */ React$2.createElement(
+        TreeNode,
+        {
+          key: child.id,
+          category: child,
+          level: level + 1,
+          selectedCategoryId,
+          onSelectCategory,
+          onAddCategory,
+          onUpdateCategory,
+          onDeleteCategory,
+          onReorderCategory,
+          bookmarkCounts,
+          onDragStart,
+          onDragEnd,
+          draggingId,
+          dropTargetId,
+          dropPosition,
+          onDragOver,
+          onDrop
         }
-      ) : /* @__PURE__ */ React$2.createElement("span", { className: "flex-1 text-sm truncate" }, category.name),
-      /* @__PURE__ */ React$2.createElement("span", { className: "text-xs text-gray-400 dark:text-gray-500 flex-shrink-0" }, count),
-      /* @__PURE__ */ React$2.createElement("div", { className: "hidden group-hover:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity" }, /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          className: "p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400",
-          title: "添加子分类",
-          onClick: (e) => {
-            e.stopPropagation();
-            setShowAddInput(true);
-            setExpanded(true);
-          }
-        },
-        /* @__PURE__ */ React$2.createElement(Plus, { className: "w-3 h-3" })
-      ), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          className: "p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400",
-          title: "重命名",
-          onClick: (e) => {
-            e.stopPropagation();
-            setIsEditing(true);
-          }
-        },
-        /* @__PURE__ */ React$2.createElement(Pencil, { className: "w-3 h-3" })
-      ), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          className: "p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 dark:text-gray-400 hover:text-red-500",
-          title: "删除",
-          onClick: (e) => {
-            e.stopPropagation();
-            onDeleteCategory(category.id);
-          }
-        },
-        /* @__PURE__ */ React$2.createElement(Trash2, { className: "w-3 h-3" })
-      ))
-    ), showAddInput && /* @__PURE__ */ React$2.createElement(
-      "div",
-      {
-        className: "flex items-center gap-1 px-2 py-1",
-        style: { paddingLeft: `${(level + 1) * 16 + 8}px` }
-      },
-      /* @__PURE__ */ React$2.createElement(
-        "input",
-        {
-          autoFocus: true,
-          value: newCategoryName,
-          onChange: (e) => setNewCategoryName(e.target.value),
-          onKeyDown: (e) => {
-            if (e.key === "Enter") handleAddSubCategory();
-            if (e.key === "Escape") {
-              setShowAddInput(false);
-              setNewCategoryName("");
-            }
-          },
-          onBlur: handleAddSubCategory,
-          placeholder: "分类名称",
-          className: "flex-1 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-        }
-      )
-    ), expanded && hasChildren && /* @__PURE__ */ React$2.createElement("div", null, category.children.map((child) => /* @__PURE__ */ React$2.createElement(
-      TreeNode,
-      {
-        key: child.id,
-        category: child,
-        level: level + 1,
-        selectedCategoryId,
-        onSelectCategory,
-        onAddCategory,
-        onUpdateCategory,
-        onDeleteCategory,
-        bookmarkCounts
-      }
-    ))));
+      )))
+    );
   };
   const CategoryTree = ({
     categories,
@@ -13714,11 +13877,65 @@
     onAddCategory,
     onUpdateCategory,
     onDeleteCategory,
+    onReorderCategory,
     bookmarkCounts
   }) => {
     const [showRootAdd, setShowRootAdd] = reactExports.useState(false);
     const [rootName, setRootName] = reactExports.useState("");
+    const [draggingId, setDraggingId] = reactExports.useState(null);
+    const [dropTargetId, setDropTargetId] = reactExports.useState(null);
+    const [dropPosition, setDropPosition] = reactExports.useState(null);
     const uncategorizedCount = bookmarkCounts.get(null) || 0;
+    const handleDragStart = reactExports.useCallback((id) => {
+      setDraggingId(id);
+    }, []);
+    const handleDragEnd = reactExports.useCallback(() => {
+      setDraggingId(null);
+      setDropTargetId(null);
+      setDropPosition(null);
+    }, []);
+    const handleDragOver = reactExports.useCallback((e, id) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!draggingId || draggingId === id) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const y = e.clientY - rect.top;
+      const height = rect.height;
+      let position;
+      if (y < height * 0.25) {
+        position = "before";
+      } else if (y > height * 0.75) {
+        position = "after";
+      } else {
+        position = "child";
+      }
+      setDropTargetId(id);
+      setDropPosition(position);
+    }, [draggingId]);
+    const handleDrop = reactExports.useCallback((e, targetId) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!draggingId || draggingId === targetId || !dropPosition) {
+        handleDragEnd();
+        return;
+      }
+      onReorderCategory(draggingId, targetId, dropPosition);
+      handleDragEnd();
+    }, [draggingId, dropPosition, onReorderCategory, handleDragEnd]);
+    const handleRootDragOver = reactExports.useCallback((e) => {
+      e.preventDefault();
+      if (draggingId && categories.some((c) => c.id === draggingId)) {
+        setDropTargetId("__root__");
+        setDropPosition("after");
+      }
+    }, [draggingId, categories]);
+    const handleRootDrop = reactExports.useCallback((e) => {
+      e.preventDefault();
+      if (draggingId && dropTargetId === "__root__") {
+        onReorderCategory(draggingId, null, "after");
+      }
+      handleDragEnd();
+    }, [draggingId, dropTargetId, onReorderCategory, handleDragEnd]);
     return /* @__PURE__ */ React$2.createElement("div", { className: "flex flex-col h-full" }, /* @__PURE__ */ React$2.createElement(
       "div",
       {
@@ -13737,20 +13954,36 @@
       /* @__PURE__ */ React$2.createElement(FolderOpen, { className: "w-4 h-4 flex-shrink-0" }),
       /* @__PURE__ */ React$2.createElement("span", { className: "flex-1 text-sm" }, "未分类"),
       /* @__PURE__ */ React$2.createElement("span", { className: "text-xs text-gray-400 dark:text-gray-500" }, uncategorizedCount)
-    ), /* @__PURE__ */ React$2.createElement("div", { className: "flex-1 overflow-y-auto py-1" }, categories.map((cat) => /* @__PURE__ */ React$2.createElement(
-      TreeNode,
+    ), /* @__PURE__ */ React$2.createElement(
+      "div",
       {
-        key: cat.id,
-        category: cat,
-        level: 0,
-        selectedCategoryId,
-        onSelectCategory,
-        onAddCategory,
-        onUpdateCategory,
-        onDeleteCategory,
-        bookmarkCounts
-      }
-    ))), showRootAdd ? /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-1 px-2 py-1" }, /* @__PURE__ */ React$2.createElement(
+        className: "flex-1 overflow-y-auto py-1",
+        onDragOver: handleRootDragOver,
+        onDrop: handleRootDrop
+      },
+      categories.map((cat) => /* @__PURE__ */ React$2.createElement(
+        TreeNode,
+        {
+          key: cat.id,
+          category: cat,
+          level: 0,
+          selectedCategoryId,
+          onSelectCategory,
+          onAddCategory,
+          onUpdateCategory,
+          onDeleteCategory,
+          onReorderCategory,
+          bookmarkCounts,
+          onDragStart: handleDragStart,
+          onDragEnd: handleDragEnd,
+          draggingId,
+          dropTargetId,
+          dropPosition,
+          onDragOver: handleDragOver,
+          onDrop: handleDrop
+        }
+      ))
+    ), showRootAdd ? /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-1 px-2 py-1" }, /* @__PURE__ */ React$2.createElement(
       "input",
       {
         autoFocus: true,
@@ -13832,57 +14065,41 @@
   const BookmarkForm = ({
     bookmark,
     categories,
+    defaultCategoryId,
     onSubmit,
-    onCancel,
-    defaultCategoryId
+    onCancel
   }) => {
-    var _a, _b;
     const [title, setTitle] = reactExports.useState((bookmark == null ? void 0 : bookmark.title) || "");
     const [url, setUrl] = reactExports.useState((bookmark == null ? void 0 : bookmark.url) || "");
     const [description, setDescription] = reactExports.useState((bookmark == null ? void 0 : bookmark.description) || "");
-    const [categoryId, setCategoryId] = reactExports.useState(
-      (bookmark == null ? void 0 : bookmark.categoryId) ?? defaultCategoryId ?? ""
-    );
-    const [favicon, setFavicon] = reactExports.useState((bookmark == null ? void 0 : bookmark.favicon) || "");
-    const [tagsText, setTagsText] = reactExports.useState(
-      (bookmark == null ? void 0 : bookmark.tags) ? bookmark.tags.join(", ") : ""
-    );
+    const [categoryId, setCategoryId] = reactExports.useState((bookmark == null ? void 0 : bookmark.categoryId) ?? defaultCategoryId ?? "");
+    const [tags, setTags] = reactExports.useState((bookmark == null ? void 0 : bookmark.tags) || []);
+    const [tagInput, setTagInput] = reactExports.useState("");
     const [error, setError] = reactExports.useState("");
-    const [fetching, setFetching] = reactExports.useState(false);
+    const tagInputRef = reactExports.useRef(null);
     reactExports.useEffect(() => {
-      if (!bookmark && url && !title) {
-        try {
-          const domain = new URL(normalizeUrl(url)).hostname;
-          setTitle(domain);
-        } catch {
+      if (!categoryId && defaultCategoryId !== void 0) {
+        setCategoryId(defaultCategoryId);
+      }
+    }, [defaultCategoryId, categoryId]);
+    const addTag = (tag) => {
+      const trimmed = tag.trim();
+      if (trimmed && !tags.includes(trimmed)) {
+        setTags([...tags, trimmed]);
+      }
+      setTagInput("");
+    };
+    const removeTag = (tagToRemove) => {
+      setTags(tags.filter((t) => t !== tagToRemove));
+    };
+    const handleTagKeyDown = (e) => {
+      if (e.key === "Enter" || e.key === ",") {
+        e.preventDefault();
+        if (tagInput.trim()) {
+          addTag(tagInput);
         }
-      }
-    }, [url, bookmark, title]);
-    const handleFetchInfo = async () => {
-      if (!url.trim()) {
-        setError("请先输入网址");
-        return;
-      }
-      const normalized = normalizeUrl(url);
-      if (!isValidUrl(normalized)) {
-        setError("请输入有效的 URL 地址");
-        return;
-      }
-      setFetching(true);
-      setError("");
-      try {
-        setFavicon(getFaviconUrl(normalized));
-        if (!title) {
-          try {
-            const domain = new URL(normalized).hostname;
-            setTitle(domain);
-          } catch {
-          }
-        }
-      } catch {
-        setError("获取网站信息失败");
-      } finally {
-        setFetching(false);
+      } else if (e.key === "Backspace" && !tagInput && tags.length > 0) {
+        removeTag(tags[tags.length - 1]);
       }
     };
     const handleSubmit = (e) => {
@@ -13892,145 +14109,124 @@
         return;
       }
       if (!url.trim()) {
-        setError("网址不能为空");
+        setError("URL不能为空");
         return;
       }
-      const normalizedUrl = normalizeUrl(url);
-      if (!isValidUrl(normalizedUrl)) {
-        setError("请输入有效的 URL 地址");
+      let normalizedUrl = url.trim();
+      if (!/^https?:\/\//i.test(normalizedUrl)) {
+        normalizedUrl = "https://" + normalizedUrl;
+      }
+      try {
+        new URL(normalizedUrl);
+      } catch {
+        setError("URL格式不正确");
         return;
       }
-      const tags = tagsText.split(",").map((t) => t.trim()).filter((t) => t);
       onSubmit({
         title: title.trim(),
         url: normalizedUrl,
         description: description.trim(),
         categoryId: categoryId || null,
-        favicon: favicon.trim(),
-        tags
+        tags,
+        order: (bookmark == null ? void 0 : bookmark.order) ?? 0
       });
     };
-    const mainCategories = categories.filter((c) => !c.parentId);
-    const subCategories = categoryId ? categories.filter((c) => c.parentId === categoryId) : [];
-    const isSubCategory = categoryId && ((_a = categories.find((c) => c.id === categoryId)) == null ? void 0 : _a.parentId);
-    reactExports.useEffect(() => {
-      if (isSubCategory) {
-        categories.find(
-          (c) => {
-            var _a2;
-            return c.id === ((_a2 = categories.find((s) => s.id === categoryId)) == null ? void 0 : _a2.parentId);
-          }
-        );
+    return /* @__PURE__ */ React$2.createElement("form", { onSubmit: handleSubmit, className: "space-y-4" }, error && /* @__PURE__ */ React$2.createElement("div", { className: "px-3 py-2 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded" }, error), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" }, "标题 ", /* @__PURE__ */ React$2.createElement("span", { className: "text-red-500" }, "*")), /* @__PURE__ */ React$2.createElement(
+      "input",
+      {
+        type: "text",
+        value: title,
+        onChange: (e) => setTitle(e.target.value),
+        placeholder: "书签标题",
+        className: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
       }
-    }, [categoryId, categories, isSubCategory]);
-    return /* @__PURE__ */ React$2.createElement("form", { onSubmit: handleSubmit, className: "space-y-3" }, error && /* @__PURE__ */ React$2.createElement("div", { className: "px-3 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-xs rounded-md" }, error), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" }, "网址 URL ", /* @__PURE__ */ React$2.createElement("span", { className: "text-red-500" }, "*")), /* @__PURE__ */ React$2.createElement("div", { className: "flex gap-2" }, /* @__PURE__ */ React$2.createElement(
+    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" }, "URL ", /* @__PURE__ */ React$2.createElement("span", { className: "text-red-500" }, "*")), /* @__PURE__ */ React$2.createElement(
       "input",
       {
         type: "url",
         value: url,
         onChange: (e) => setUrl(e.target.value),
         placeholder: "https://example.com",
-        className: "flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary",
-        required: true
+        className: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
       }
-    ), /* @__PURE__ */ React$2.createElement(
-      "button",
-      {
-        type: "button",
-        onClick: handleFetchInfo,
-        disabled: fetching,
-        className: "px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors disabled:opacity-50",
-        title: "获取网站信息"
-      },
-      /* @__PURE__ */ React$2.createElement(Download, { className: "w-4 h-4 text-gray-500 dark:text-gray-400" })
-    ))), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" }, "标题 ", /* @__PURE__ */ React$2.createElement("span", { className: "text-red-500" }, "*")), /* @__PURE__ */ React$2.createElement(
-      "input",
-      {
-        type: "text",
-        value: title,
-        onChange: (e) => setTitle(e.target.value),
-        placeholder: "网站标题",
-        className: "w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary",
-        required: true
-      }
-    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" }, "分类"), /* @__PURE__ */ React$2.createElement("div", { className: "flex gap-2" }, mainCategories.length > 0 && /* @__PURE__ */ React$2.createElement(
-      "select",
-      {
-        value: isSubCategory ? ((_b = categories.find(
-          (c) => {
-            var _a2;
-            return c.id === ((_a2 = categories.find((s) => s.id === categoryId)) == null ? void 0 : _a2.parentId);
-          }
-        )) == null ? void 0 : _b.id) || "" : categoryId || "",
-        onChange: (e) => {
-          const mainId = e.target.value;
-          setCategoryId(mainId);
-        },
-        className: "flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-      },
-      /* @__PURE__ */ React$2.createElement("option", { value: "" }, "未分类"),
-      mainCategories.map((cat) => /* @__PURE__ */ React$2.createElement("option", { key: cat.id, value: cat.id }, cat.name))
-    ), subCategories.length > 0 && /* @__PURE__ */ React$2.createElement(
-      "select",
-      {
-        value: isSubCategory ? categoryId : "",
-        onChange: (e) => setCategoryId(e.target.value),
-        className: "flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-      },
-      /* @__PURE__ */ React$2.createElement("option", { value: "" }, "子分类"),
-      subCategories.map((cat) => /* @__PURE__ */ React$2.createElement("option", { key: cat.id, value: cat.id }, cat.name))
-    ))), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" }, "描述"), /* @__PURE__ */ React$2.createElement(
+    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" }, "描述"), /* @__PURE__ */ React$2.createElement(
       "textarea",
       {
         value: description,
         onChange: (e) => setDescription(e.target.value),
-        placeholder: "添加描述信息...",
-        rows: 3,
-        className: "w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary resize-none"
+        placeholder: "简要描述...",
+        rows: 2,
+        className: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
       }
-    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" }, "标签（逗号分隔）"), /* @__PURE__ */ React$2.createElement("div", { className: "relative" }, /* @__PURE__ */ React$2.createElement(Tag, { className: "absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" }), /* @__PURE__ */ React$2.createElement(
-      "input",
+    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" }, "分类"), /* @__PURE__ */ React$2.createElement(
+      "select",
       {
-        type: "text",
-        value: tagsText,
-        onChange: (e) => setTagsText(e.target.value),
-        placeholder: "标签1, 标签2, 标签3",
-        className: "w-full px-3 py-2 pl-7 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-      }
-    ))), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" }, "Favicon URL（可选）"), /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React$2.createElement(
-      "input",
+        value: categoryId,
+        onChange: (e) => setCategoryId(e.target.value),
+        className: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+      },
+      /* @__PURE__ */ React$2.createElement("option", { value: "" }, "未分类"),
+      categories.map((cat) => /* @__PURE__ */ React$2.createElement("option", { key: cat.id, value: cat.id }, cat.name))
+    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" }, "标签"), /* @__PURE__ */ React$2.createElement(
+      "div",
       {
-        type: "url",
-        value: favicon,
-        onChange: (e) => setFavicon(e.target.value),
-        placeholder: "https://...",
-        className: "flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-      }
-    ), favicon && /* @__PURE__ */ React$2.createElement("div", { className: "w-9 h-9 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden" }, /* @__PURE__ */ React$2.createElement(
-      "img",
-      {
-        src: favicon,
-        alt: "preview",
-        className: "w-full h-full object-contain",
-        onError: (e) => {
-          e.target.style.display = "none";
+        className: "flex flex-wrap items-center gap-1 px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary",
+        onClick: () => {
+          var _a;
+          return (_a = tagInputRef.current) == null ? void 0 : _a.focus();
         }
-      }
-    )), !favicon && /* @__PURE__ */ React$2.createElement("div", { className: "w-9 h-9 border border-gray-200 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 flex items-center justify-center" }, /* @__PURE__ */ React$2.createElement(Globe, { className: "w-4 h-4 text-gray-400" })))), /* @__PURE__ */ React$2.createElement("div", { className: "flex justify-end gap-2 pt-2" }, /* @__PURE__ */ React$2.createElement(
+      },
+      tags.map((tag) => /* @__PURE__ */ React$2.createElement(
+        "span",
+        {
+          key: tag,
+          className: "inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-primary/10 text-primary rounded"
+        },
+        /* @__PURE__ */ React$2.createElement(Tag, { className: "w-3 h-3" }),
+        tag,
+        /* @__PURE__ */ React$2.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: (e) => {
+              e.stopPropagation();
+              removeTag(tag);
+            },
+            className: "p-0.5 hover:bg-primary/20 rounded"
+          },
+          /* @__PURE__ */ React$2.createElement(X, { className: "w-3 h-3" })
+        )
+      )),
+      /* @__PURE__ */ React$2.createElement(
+        "input",
+        {
+          ref: tagInputRef,
+          type: "text",
+          value: tagInput,
+          onChange: (e) => setTagInput(e.target.value),
+          onKeyDown: handleTagKeyDown,
+          onBlur: () => {
+            if (tagInput.trim()) addTag(tagInput);
+          },
+          placeholder: tags.length === 0 ? "输入标签，按回车添加" : "",
+          className: "flex-1 min-w-[80px] text-sm bg-transparent text-gray-800 dark:text-gray-200 focus:outline-none"
+        }
+      )
+    )), /* @__PURE__ */ React$2.createElement("div", { className: "flex justify-center gap-2 pt-2" }, /* @__PURE__ */ React$2.createElement(
       "button",
       {
         type: "button",
         onClick: onCancel,
-        className: "px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className: "px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
       },
       "取消"
     ), /* @__PURE__ */ React$2.createElement(
       "button",
       {
         type: "submit",
-        className: "px-4 py-2 text-sm bg-primary text-button-text rounded-md hover:opacity-90 transition-colors"
+        className: "px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark transition-colors"
       },
-      bookmark ? "保存" : "添加"
+      (bookmark == null ? void 0 : bookmark.id) ? "保存修改" : "添加"
     )));
   };
   function generateBrowserBookmarks(data) {
@@ -14454,11 +14650,15 @@
       settings,
       searchQuery,
       selectedCategoryId,
+      selectedTags,
+      allTags,
       selectedBookmarks,
       filteredBookmarks,
       toasts,
       setSearchQuery,
       setSelectedCategoryId,
+      toggleTag,
+      clearTagFilter,
       addBookmark: addBookmark2,
       updateBookmark: updateBookmark2,
       deleteBookmark,
@@ -14466,6 +14666,10 @@
       toggleBookmarkSelect,
       selectAllBookmarks,
       clearSelection,
+      addCategory: addCategory2,
+      updateCategory,
+      deleteCategory,
+      reorderCategory,
       updateSettings,
       importData,
       resetAllData
@@ -14488,36 +14692,34 @@
       const counts = /* @__PURE__ */ new Map();
       counts.set("__all__", bookmarks.length);
       counts.set(null, bookmarks.filter((b) => !b.categoryId).length);
-      categoryTree.forEach((rootCat) => {
-        const catIds = /* @__PURE__ */ new Set();
-        catIds.add(rootCat.id);
-        const stack = [rootCat];
+      const countForCategory = (catId) => {
+        const childIds = /* @__PURE__ */ new Set([catId]);
+        const stack = [catId];
         while (stack.length > 0) {
           const current = stack.pop();
-          counts.set(current.id, 0);
-          if (current.children) {
-            current.children.forEach((child) => {
-              catIds.add(child.id);
-              stack.push(child);
+          categories.forEach((cat) => {
+            if (cat.parentId === current && !childIds.has(cat.id)) {
+              childIds.add(cat.id);
+              stack.push(cat.id);
+            }
+          });
+        }
+        return bookmarks.filter((b) => b.categoryId && childIds.has(b.categoryId)).length;
+      };
+      categoryTree.forEach((rootCat) => {
+        counts.set(rootCat.id, countForCategory(rootCat.id));
+        const countChildren = (node) => {
+          if (node.children && node.children.length > 0) {
+            node.children.forEach((child) => {
+              counts.set(child.id, bookmarks.filter((b) => b.categoryId === child.id).length);
+              countChildren(child);
             });
           }
-        }
-        const count = bookmarks.filter((b) => b.categoryId && catIds.has(b.categoryId)).length;
-        counts.set(rootCat.id, count);
-        const childStack = [rootCat];
-        while (childStack.length > 0) {
-          const current = childStack.pop();
-          if (current.children) {
-            current.children.forEach((child) => {
-              const childCount = bookmarks.filter((b) => b.categoryId === child.id).length;
-              counts.set(child.id, childCount);
-              childStack.push(child);
-            });
-          }
-        }
+        };
+        countChildren(rootCat);
       });
       return counts;
-    }, [bookmarks, categoryTree]);
+    }, [bookmarks, categories, categoryTree]);
     const handleOpenBookmark = reactExports.useCallback((url) => {
       var _a;
       const normalizedUrl = normalizeUrl(url);
@@ -14629,15 +14831,31 @@
       },
       /* @__PURE__ */ React$2.createElement(Plus, { className: "w-4 h-4" }),
       "添加"
-    )), /* @__PURE__ */ React$2.createElement("div", { className: "flex flex-1 overflow-hidden" }, /* @__PURE__ */ React$2.createElement("aside", { className: "w-56 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 overflow-y-auto" }, /* @__PURE__ */ React$2.createElement(
+    )), allTags.length > 0 && /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-x-auto" }, /* @__PURE__ */ React$2.createElement("span", { className: "text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 flex items-center gap-1" }, /* @__PURE__ */ React$2.createElement(Tag, { className: "w-3 h-3" }), "标签筛选:"), /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-1 flex-wrap" }, selectedTags.size > 0 && /* @__PURE__ */ React$2.createElement(
+      "button",
+      {
+        onClick: clearTagFilter,
+        className: "px-2 py-0.5 text-xs text-red-500 border border-red-300 dark:border-red-700 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+      },
+      "清除"
+    ), allTags.map((tag) => /* @__PURE__ */ React$2.createElement(
+      "button",
+      {
+        key: tag,
+        onClick: () => toggleTag(tag),
+        className: `px-2 py-0.5 text-xs rounded transition-colors ${selectedTags.has(tag) ? "bg-primary text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`
+      },
+      tag
+    )))), /* @__PURE__ */ React$2.createElement("div", { className: "flex flex-1 overflow-hidden" }, /* @__PURE__ */ React$2.createElement("aside", { className: "w-56 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 overflow-y-auto" }, /* @__PURE__ */ React$2.createElement(
       CategoryTree,
       {
         categories: categoryTree,
         selectedCategoryId,
         onSelectCategory: setSelectedCategoryId,
-        onAddCategory: (name, parentId) => addCategory(name, parentId),
+        onAddCategory: (name, parentId) => addCategory2(name, parentId),
         onUpdateCategory: (id, name) => updateCategory(id, name),
         onDeleteCategory: (id) => deleteCategory(id),
+        onReorderCategory: reorderCategory,
         bookmarkCounts
       }
     )), /* @__PURE__ */ React$2.createElement("main", { className: "flex-1 overflow-y-auto p-4" }, selectedBookmarks.size > 0 && /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center justify-between mb-3 px-3 py-2 bg-primary/5 dark:bg-primary/10 rounded-md" }, /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React$2.createElement(

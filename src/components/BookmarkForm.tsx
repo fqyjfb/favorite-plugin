@@ -1,305 +1,213 @@
-import React, { useState, useEffect } from 'react';
-import { Download, Globe, Tag } from 'lucide-react';
-import type { Bookmark, Category } from '../types';
-import { isValidUrl, normalizeUrl, getFaviconUrl } from '../utils/validator';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Tag } from 'lucide-react';
+import type { Bookmark } from '../types';
 
 interface BookmarkFormProps {
-  bookmark?: Bookmark | null;
-  categories: Category[];
-  onSubmit: (data: {
-    title: string;
-    url: string;
-    description: string;
-    categoryId: string | null;
-    favicon: string;
-    tags: string[];
-  }) => void;
-  onCancel: () => void;
+  bookmark?: Partial<Bookmark>;
+  categories: { id: string; name: string }[];
   defaultCategoryId?: string | null;
+  onSubmit: (data: Omit<Bookmark, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onCancel: () => void;
 }
 
 const BookmarkForm: React.FC<BookmarkFormProps> = ({
   bookmark,
   categories,
+  defaultCategoryId,
   onSubmit,
-  onCancel,
-  defaultCategoryId
+  onCancel
 }) => {
   const [title, setTitle] = useState(bookmark?.title || '');
   const [url, setUrl] = useState(bookmark?.url || '');
   const [description, setDescription] = useState(bookmark?.description || '');
-  const [categoryId, setCategoryId] = useState(
-    bookmark?.categoryId ?? defaultCategoryId ?? ''
-  );
-  const [favicon, setFavicon] = useState(bookmark?.favicon || '');
-  const [tagsText, setTagsText] = useState(
-    bookmark?.tags ? bookmark.tags.join(', ') : ''
-  );
+  const [categoryId, setCategoryId] = useState(bookmark?.categoryId ?? defaultCategoryId ?? '');
+  const [tags, setTags] = useState<string[]>(bookmark?.tags || []);
+  const [tagInput, setTagInput] = useState('');
   const [error, setError] = useState('');
-  const [fetching, setFetching] = useState(false);
+  const tagInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!bookmark && url && !title) {
-      try {
-        const domain = new URL(normalizeUrl(url)).hostname;
-        setTitle(domain);
-      } catch {
-        // ignore
+    if (!categoryId && defaultCategoryId !== undefined) {
+      setCategoryId(defaultCategoryId);
+    }
+  }, [defaultCategoryId, categoryId]);
+
+  const addTag = (tag: string) => {
+    const trimmed = tag.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed]);
+    }
+    setTagInput('');
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter((t) => t !== tagToRemove));
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      if (tagInput.trim()) {
+        addTag(tagInput);
       }
-    }
-  }, [url, bookmark, title]);
-
-  const handleFetchInfo = async () => {
-    if (!url.trim()) {
-      setError('请先输入网址');
-      return;
-    }
-
-    const normalized = normalizeUrl(url);
-    if (!isValidUrl(normalized)) {
-      setError('请输入有效的 URL 地址');
-      return;
-    }
-
-    setFetching(true);
-    setError('');
-
-    try {
-      setFavicon(getFaviconUrl(normalized));
-      if (!title) {
-        try {
-          const domain = new URL(normalized).hostname;
-          setTitle(domain);
-        } catch {
-          // ignore
-        }
-      }
-    } catch {
-      setError('获取网站信息失败');
-    } finally {
-      setFetching(false);
+    } else if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
+      removeTag(tags[tags.length - 1]);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!title.trim()) {
       setError('标题不能为空');
       return;
     }
     if (!url.trim()) {
-      setError('网址不能为空');
+      setError('URL不能为空');
       return;
     }
 
-    const normalizedUrl = normalizeUrl(url);
-    if (!isValidUrl(normalizedUrl)) {
-      setError('请输入有效的 URL 地址');
-      return;
+    let normalizedUrl = url.trim();
+    if (!/^https?:\/\//i.test(normalizedUrl)) {
+      normalizedUrl = 'https://' + normalizedUrl;
     }
 
-    const tags = tagsText
-      .split(',')
-      .map((t) => t.trim())
-      .filter((t) => t);
+    try {
+      new URL(normalizedUrl);
+    } catch {
+      setError('URL格式不正确');
+      return;
+    }
 
     onSubmit({
       title: title.trim(),
       url: normalizedUrl,
       description: description.trim(),
       categoryId: categoryId || null,
-      favicon: favicon.trim(),
-      tags
+      tags,
+      order: bookmark?.order ?? 0
     });
   };
 
-  const mainCategories = categories.filter((c) => !c.parentId);
-  const subCategories = categoryId
-    ? categories.filter((c) => c.parentId === categoryId)
-    : [];
-  const isSubCategory =
-    categoryId && categories.find((c) => c.id === categoryId)?.parentId;
-
-  useEffect(() => {
-    if (isSubCategory) {
-      const mainCat = categories.find(
-        (c) => c.id === categories.find((s) => s.id === categoryId)?.parentId
-      );
-      if (mainCat && categoryId) {
-        // keep as is
-      }
-    }
-  }, [categoryId, categories, isSubCategory]);
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="px-3 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 text-xs rounded-md">
+        <div className="px-3 py-2 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded">
           {error}
         </div>
       )}
 
       <div>
-        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-          网址 URL <span className="text-red-500">*</span>
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://example.com"
-            className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-            required
-          />
-          <button
-            type="button"
-            onClick={handleFetchInfo}
-            disabled={fetching}
-            className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
-            title="获取网站信息"
-          >
-            <Download className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-          </button>
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           标题 <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="网站标题"
-          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-          required
+          placeholder="书签标题"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
         />
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-          分类
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          URL <span className="text-red-500">*</span>
         </label>
-        <div className="flex gap-2">
-          {mainCategories.length > 0 && (
-            <select
-              value={
-                isSubCategory
-                  ? categories.find(
-                      (c) =>
-                        c.id ===
-                        categories.find((s) => s.id === categoryId)?.parentId
-                    )?.id || ''
-                  : categoryId || ''
-              }
-              onChange={(e) => {
-                const mainId = e.target.value;
-                setCategoryId(mainId);
-              }}
-              className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-            >
-              <option value="">未分类</option>
-              {mainCategories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          )}
-          {subCategories.length > 0 && (
-            <select
-              value={isSubCategory ? categoryId : ''}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-            >
-              <option value="">子分类</option>
-              {subCategories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+        <input
+          type="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://example.com"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+        />
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           描述
         </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="添加描述信息..."
-          rows={3}
-          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary resize-none"
+          placeholder="简要描述..."
+          rows={2}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
         />
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-          标签（逗号分隔）
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          分类
         </label>
-        <div className="relative">
-          <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-          <input
-            type="text"
-            value={tagsText}
-            onChange={(e) => setTagsText(e.target.value)}
-            placeholder="标签1, 标签2, 标签3"
-            className="w-full px-3 py-2 pl-7 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-          />
-        </div>
+        <select
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+        >
+          <option value="">未分类</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-          Favicon URL（可选）
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          标签
         </label>
-        <div className="flex items-center gap-2">
-          <input
-            type="url"
-            value={favicon}
-            onChange={(e) => setFavicon(e.target.value)}
-            placeholder="https://..."
-            className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-          />
-          {favicon && (
-            <div className="w-9 h-9 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-              <img
-                src={favicon}
-                alt="preview"
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
+        <div
+          className="flex flex-wrap items-center gap-1 px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
+          onClick={() => tagInputRef.current?.focus()}
+        >
+          {tags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-primary/10 text-primary rounded"
+            >
+              <Tag className="w-3 h-3" />
+              {tag}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeTag(tag);
                 }}
-              />
-            </div>
-          )}
-          {!favicon && (
-            <div className="w-9 h-9 border border-gray-200 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
-              <Globe className="w-4 h-4 text-gray-400" />
-            </div>
-          )}
+                className="p-0.5 hover:bg-primary/20 rounded"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+          <input
+            ref={tagInputRef}
+            type="text"
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyDown={handleTagKeyDown}
+            onBlur={() => {
+              if (tagInput.trim()) addTag(tagInput);
+            }}
+            placeholder={tags.length === 0 ? '输入标签，按回车添加' : ''}
+            className="flex-1 min-w-[80px] text-sm bg-transparent text-gray-800 dark:text-gray-200 focus:outline-none"
+          />
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-2">
+      <div className="flex justify-center gap-2 pt-2">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
         >
           取消
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm bg-primary text-button-text rounded-md hover:opacity-90 transition-colors"
+          className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark transition-colors"
         >
-          {bookmark ? '保存' : '添加'}
+          {bookmark?.id ? '保存修改' : '添加'}
         </button>
       </div>
     </form>

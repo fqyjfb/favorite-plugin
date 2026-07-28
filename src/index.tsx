@@ -23,7 +23,7 @@ function registerPlugin(api: any) {
   registerTool({
     id: 'plugin-favorite',
     name: '网址收藏夹',
-    iconName: 'Bookmark',
+    iconName: 'Link',
     color: '#2563eb',
     textColor: '#FFFFFF',
     path: '/tools/plugin-favorite',
@@ -32,7 +32,7 @@ function registerPlugin(api: any) {
 
   registerSidebarButton({
     id: 'plugin-favorite-btn',
-    icon: 'Bookmark',
+    icon: 'Link',
     label: '网址收藏夹',
     onClick: () => {
       openPluginWindow?.('plugin-favorite');

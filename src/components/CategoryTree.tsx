@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, Pencil, Trash2, FolderOpen, ChevronRight, ChevronDown } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Plus, Pencil, Trash2, FolderOpen, ChevronRight, ChevronDown, GripVertical } from 'lucide-react';
 import type { CategoryNode } from '../types';
 
 interface CategoryTreeProps {
@@ -9,6 +9,7 @@ interface CategoryTreeProps {
   onAddCategory: (name: string, parentId: string | null) => void;
   onUpdateCategory: (id: string, name: string) => void;
   onDeleteCategory: (id: string) => void;
+  onReorderCategory: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => void;
   bookmarkCounts: Map<string | null, number>;
 }
 
@@ -20,7 +21,15 @@ interface TreeNodeProps {
   onAddCategory: (name: string, parentId: string | null) => void;
   onUpdateCategory: (id: string, name: string) => void;
   onDeleteCategory: (id: string) => void;
+  onReorderCategory: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => void;
   bookmarkCounts: Map<string | null, number>;
+  onDragStart: (id: string) => void;
+  onDragEnd: () => void;
+  draggingId: string | null;
+  dropTargetId: string | null;
+  dropPosition: string | null;
+  onDragOver: (e: React.DragEvent, id: string) => void;
+  onDrop: (e: React.DragEvent, id: string) => void;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({
@@ -31,7 +40,15 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   onAddCategory,
   onUpdateCategory,
   onDeleteCategory,
-  bookmarkCounts
+  onReorderCategory,
+  bookmarkCounts,
+  onDragStart,
+  onDragEnd,
+  draggingId,
+  dropTargetId,
+  dropPosition,
+  onDragOver,
+  onDrop
 }) => {
   const [expanded, setExpanded] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -42,34 +59,71 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   const hasChildren = category.children && category.children.length > 0;
   const isSelected = selectedCategoryId === category.id;
   const count = bookmarkCounts.get(category.id) || 0;
+  const isDragging = draggingId === category.id;
+  const isDropTarget = dropTargetId === category.id;
 
-  const handleSaveRename = () => {
+  const handleSaveRename = useCallback(() => {
     if (editName.trim()) {
       onUpdateCategory(category.id, editName.trim());
     }
     setIsEditing(false);
-  };
+  }, [editName, category.id, onUpdateCategory]);
 
-  const handleAddSubCategory = () => {
+  const handleAddSubCategory = useCallback(() => {
     if (newCategoryName.trim()) {
       onAddCategory(newCategoryName.trim(), category.id);
-      setNewCategoryName('');
-      setShowAddInput(false);
-      setExpanded(true);
     }
-  };
+    setNewCategoryName('');
+    setShowAddInput(false);
+    setExpanded(true);
+  }, [newCategoryName, category.id, onAddCategory]);
+
+  const handleCancelAdd = useCallback(() => {
+    setShowAddInput(false);
+    setNewCategoryName('');
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddSubCategory();
+    }
+    if (e.key === 'Escape') {
+      handleCancelAdd();
+    }
+  }, [handleAddSubCategory, handleCancelAdd]);
 
   return (
-    <div className="select-none">
+    <div
+      className="select-none"
+      onDragOver={(e) => onDragOver(e, category.id)}
+      onDrop={(e) => onDrop(e, category.id)}
+    >
       <div
         className={`flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer group transition-colors ${
           isSelected
             ? 'bg-primary/10 text-primary'
             : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+        } ${isDragging ? 'opacity-50' : ''} ${
+          isDropTarget && dropPosition === 'before' ? 'border-t-2 border-primary' : ''
+        } ${isDropTarget && dropPosition === 'after' ? 'border-b-2 border-primary' : ''} ${
+          isDropTarget && dropPosition === 'child' ? 'bg-primary/20' : ''
         }`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={() => onSelectCategory(category.id)}
       >
+        <span
+          className="p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+          draggable
+          onDragStart={(e) => {
+            e.stopPropagation();
+            onDragStart(category.id);
+          }}
+          onDragEnd={onDragEnd}
+        >
+          <GripVertical className="w-3 h-3 text-gray-400" />
+        </span>
+
         <button
           className="p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={(e) => {
@@ -158,13 +212,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
             autoFocus
             value={newCategoryName}
             onChange={(e) => setNewCategoryName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleAddSubCategory();
-              if (e.key === 'Escape') {
-                setShowAddInput(false);
-                setNewCategoryName('');
-              }
-            }}
+            onKeyDown={handleKeyDown}
             onBlur={handleAddSubCategory}
             placeholder="分类名称"
             className="flex-1 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
@@ -184,7 +232,15 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               onAddCategory={onAddCategory}
               onUpdateCategory={onUpdateCategory}
               onDeleteCategory={onDeleteCategory}
+              onReorderCategory={onReorderCategory}
               bookmarkCounts={bookmarkCounts}
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
+              draggingId={draggingId}
+              dropTargetId={dropTargetId}
+              dropPosition={dropPosition}
+              onDragOver={onDragOver}
+              onDrop={onDrop}
             />
           ))}
         </div>
@@ -200,12 +256,75 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
   onAddCategory,
   onUpdateCategory,
   onDeleteCategory,
+  onReorderCategory,
   bookmarkCounts
 }) => {
   const [showRootAdd, setShowRootAdd] = useState(false);
   const [rootName, setRootName] = useState('');
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [dropPosition, setDropPosition] = useState<string | null>(null);
 
   const uncategorizedCount = bookmarkCounts.get(null) || 0;
+
+  const handleDragStart = useCallback((id: string) => {
+    setDraggingId(id);
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggingId(null);
+    setDropTargetId(null);
+    setDropPosition(null);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!draggingId || draggingId === id) return;
+
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const height = rect.height;
+
+    let position: 'before' | 'after' | 'child';
+    if (y < height * 0.25) {
+      position = 'before';
+    } else if (y > height * 0.75) {
+      position = 'after';
+    } else {
+      position = 'child';
+    }
+
+    setDropTargetId(id);
+    setDropPosition(position);
+  }, [draggingId]);
+
+  const handleDrop = useCallback((e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!draggingId || draggingId === targetId || !dropPosition) {
+      handleDragEnd();
+      return;
+    }
+    onReorderCategory(draggingId, targetId, dropPosition as 'before' | 'after' | 'child');
+    handleDragEnd();
+  }, [draggingId, dropPosition, onReorderCategory, handleDragEnd]);
+
+  const handleRootDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggingId && categories.some((c) => c.id === draggingId)) {
+      setDropTargetId('__root__');
+      setDropPosition('after');
+    }
+  }, [draggingId, categories]);
+
+  const handleRootDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggingId && dropTargetId === '__root__') {
+      onReorderCategory(draggingId, null, 'after');
+    }
+    handleDragEnd();
+  }, [draggingId, dropTargetId, onReorderCategory, handleDragEnd]);
 
   return (
     <div className="flex flex-col h-full">
@@ -239,7 +358,11 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
         </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-1">
+      <div
+        className="flex-1 overflow-y-auto py-1"
+        onDragOver={handleRootDragOver}
+        onDrop={handleRootDrop}
+      >
         {categories.map((cat) => (
           <TreeNode
             key={cat.id}
@@ -250,7 +373,15 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
             onAddCategory={onAddCategory}
             onUpdateCategory={onUpdateCategory}
             onDeleteCategory={onDeleteCategory}
+            onReorderCategory={onReorderCategory}
             bookmarkCounts={bookmarkCounts}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            draggingId={draggingId}
+            dropTargetId={dropTargetId}
+            dropPosition={dropPosition}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
           />
         ))}
       </div>

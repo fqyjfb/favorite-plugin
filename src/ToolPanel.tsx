@@ -12,7 +12,7 @@ import {
   SortAsc,
   SortDesc,
   Settings,
-  ExternalLink
+  Tag
 } from 'lucide-react';
 import { useBookmarkStore } from './store/useBookmarkStore';
 import BookmarkCard from './components/BookmarkCard';
@@ -36,11 +36,15 @@ const ToolPanel: React.FC = () => {
     settings,
     searchQuery,
     selectedCategoryId,
+    selectedTags,
+    allTags,
     selectedBookmarks,
     filteredBookmarks,
     toasts,
     setSearchQuery,
     setSelectedCategoryId,
+    toggleTag,
+    clearTagFilter,
     addBookmark,
     updateBookmark,
     deleteBookmark,
@@ -48,10 +52,13 @@ const ToolPanel: React.FC = () => {
     toggleBookmarkSelect,
     selectAllBookmarks,
     clearSelection,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    reorderCategory,
     updateSettings,
     importData,
-    resetAllData,
-    addToast
+    resetAllData
   } = store;
 
   const [isFormOpen, setIsFormOpen] = React.useState(false);
@@ -75,38 +82,37 @@ const ToolPanel: React.FC = () => {
     counts.set('__all__', bookmarks.length);
     counts.set(null, bookmarks.filter((b) => !b.categoryId).length);
 
-    categoryTree.forEach((rootCat) => {
-      const catIds = new Set<string>();
-      catIds.add(rootCat.id);
-      const stack = [rootCat];
+    const countForCategory = (catId: string): number => {
+      const childIds = new Set<string>([catId]);
+      const stack = [catId];
       while (stack.length > 0) {
         const current = stack.pop()!;
-        counts.set(current.id, 0);
-        if (current.children) {
-          current.children.forEach((child: any) => {
-            catIds.add(child.id);
-            stack.push(child);
-          });
-        }
+        categories.forEach((cat) => {
+          if (cat.parentId === current && !childIds.has(cat.id)) {
+            childIds.add(cat.id);
+            stack.push(cat.id);
+          }
+        });
       }
-      const count = bookmarks.filter((b) => b.categoryId && catIds.has(b.categoryId)).length;
-      counts.set(rootCat.id, count);
+      return bookmarks.filter((b) => b.categoryId && childIds.has(b.categoryId)).length;
+    };
 
-      const childStack = [rootCat];
-      while (childStack.length > 0) {
-        const current = childStack.pop()!;
-        if (current.children) {
-          current.children.forEach((child: any) => {
-            const childCount = bookmarks.filter((b) => b.categoryId === child.id).length;
-            counts.set(child.id, childCount);
-            childStack.push(child);
+    categoryTree.forEach((rootCat) => {
+      counts.set(rootCat.id, countForCategory(rootCat.id));
+
+      const countChildren = (node: any) => {
+        if (node.children && node.children.length > 0) {
+          node.children.forEach((child: any) => {
+            counts.set(child.id, bookmarks.filter((b) => b.categoryId === child.id).length);
+            countChildren(child);
           });
         }
-      }
+      };
+      countChildren(rootCat);
     });
 
     return counts;
-  }, [bookmarks, categoryTree]);
+  }, [bookmarks, categories, categoryTree]);
 
   const handleOpenBookmark = useCallback((url: string) => {
     const normalizedUrl = normalizeUrl(url);
@@ -257,6 +263,38 @@ const ToolPanel: React.FC = () => {
         </button>
       </div>
 
+      {allTags.length > 0 && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+          <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 flex items-center gap-1">
+            <Tag className="w-3 h-3" />
+            标签筛选:
+          </span>
+          <div className="flex items-center gap-1 flex-wrap">
+            {selectedTags.size > 0 && (
+              <button
+                onClick={clearTagFilter}
+                className="px-2 py-0.5 text-xs text-red-500 border border-red-300 dark:border-red-700 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              >
+                清除
+              </button>
+            )}
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => toggleTag(tag)}
+                className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                  selectedTags.has(tag)
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-56 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 overflow-y-auto">
           <CategoryTree
@@ -266,6 +304,7 @@ const ToolPanel: React.FC = () => {
             onAddCategory={(name, parentId) => addCategory(name, parentId)}
             onUpdateCategory={(id, name) => updateCategory(id, name)}
             onDeleteCategory={(id) => deleteCategory(id)}
+            onReorderCategory={reorderCategory}
             bookmarkCounts={bookmarkCounts}
           />
         </aside>

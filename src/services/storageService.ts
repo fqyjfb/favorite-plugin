@@ -126,6 +126,17 @@ export function buildCategoryTree(categories: Category[]) {
     }
   });
 
+  const sortRecursive = (nodes: any[]) => {
+    nodes.sort((a, b) => a.order - b.order);
+    nodes.forEach((n) => {
+      if (n.children && n.children.length > 0) {
+        sortRecursive(n.children);
+      }
+    });
+  };
+
+  sortRecursive(roots);
+
   return roots;
 }
 

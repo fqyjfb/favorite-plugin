@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import type {
   Bookmark,
   Category,
@@ -25,6 +25,7 @@ export function useBookmarkStore() {
   const [data, setData] = useState<PluginData>(() => loadData());
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>('all');
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [selectedBookmarks, setSelectedBookmarks] = useState<Set<string>>(new Set());
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const initialized = useRef(false);
@@ -57,6 +58,14 @@ export function useBookmarkStore() {
 
   const categoryTree = buildCategoryTree(categories);
 
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    bookmarks.forEach((b) => {
+      if (b.tags) b.tags.forEach((t) => tagSet.add(t));
+    });
+    return Array.from(tagSet).sort();
+  }, [bookmarks]);
+
   const filteredBookmarks = (() => {
     let result = bookmarks;
 
@@ -79,6 +88,12 @@ export function useBookmarkStore() {
       } else {
         result = result.filter((b) => !b.categoryId);
       }
+    }
+
+    if (selectedTags.size > 0) {
+      result = result.filter((b) =>
+        Array.from(selectedTags).every((t) => b.tags?.includes(t))
+      );
     }
 
     if (searchQuery.trim()) {
@@ -218,6 +233,99 @@ export function useBookmarkStore() {
     [data, categories, persist, addToast]
   );
 
+  const reorderCategory = useCallback(
+    (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => {
+      const dragged = categories.find((c) => c.id === draggedId);
+      if (!dragged) return;
+
+      const descendants = new Set<string>();
+      const stack = [draggedId];
+      while (stack.length > 0) {
+        const current = stack.pop()!;
+        descendants.add(current);
+        categories.forEach((cat) => {
+          if (cat.parentId === current && !descendants.has(cat.id)) {
+            stack.push(cat.id);
+          }
+        });
+      }
+
+      if (targetId && descendants.has(targetId)) {
+        addToast('不能将分类移动到其子分类下', 'warning');
+        return;
+      }
+
+      const siblings = categories.filter((c) => {
+        if (position === 'child') {
+          return c.parentId === targetId;
+        }
+        if (targetId) {
+          const target = categories.find((c) => c.id === targetId);
+          return target && c.parentId === target.parentId;
+        }
+        return !c.parentId;
+      });
+
+      let newOrder: number;
+      let newParentId: string | null;
+
+      if (position === 'child') {
+        newParentId = targetId;
+        newOrder = getNextOrder(siblings);
+      } else if (targetId) {
+        const target = categories.find((c) => c.id === targetId)!;
+        newParentId = target.parentId;
+        const sorted = [...siblings].sort((a, b) => a.order - b.order);
+        const targetIdx = sorted.findIndex((c) => c.id === targetId);
+
+        const reordered = sorted.filter((c) => c.id !== draggedId);
+        const insertIdx = position === 'before' ? targetIdx : targetIdx + 1;
+
+        if (insertIdx >= reordered.length) {
+          newOrder = getNextOrder(reordered);
+        } else if (insertIdx <= 0) {
+          newOrder = reordered[0].order - 1;
+        } else {
+          const prev = reordered[insertIdx - 1];
+          const next = reordered[insertIdx];
+          newOrder = (prev.order + next.order) / 2;
+        }
+      } else {
+        newParentId = null;
+        const rootCategories = categories.filter((c) => !c.parentId && c.id !== draggedId);
+        newOrder = getNextOrder(rootCategories);
+      }
+
+      const nextData = {
+        ...data,
+        categories: data.categories.map((c) =>
+          c.id === draggedId
+            ? { ...c, parentId: newParentId, order: newOrder }
+            : c
+        )
+      };
+      persist(nextData);
+      addToast('分类已移动', 'success');
+    },
+    [categories, data, persist, addToast]
+  );
+
+  const toggleTag = useCallback((tag: string) => {
+    setSelectedTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) {
+        next.delete(tag);
+      } else {
+        next.add(tag);
+      }
+      return next;
+    });
+  }, []);
+
+  const clearTagFilter = useCallback(() => {
+    setSelectedTags(new Set());
+  }, []);
+
   const updateSettings = useCallback(
     (changes: Partial<PluginSettings>) => {
       const nextData = {
@@ -309,12 +417,12 @@ export function useBookmarkStore() {
     setData(loadData());
     setSearchQuery('');
     setSelectedCategoryId('all');
+    setSelectedTags(new Set());
     setSelectedBookmarks(new Set());
     addToast('数据已重置', 'success');
   }, [addToast]);
 
   return {
-    // State
     data,
     bookmarks,
     categories,
@@ -322,12 +430,15 @@ export function useBookmarkStore() {
     settings,
     searchQuery,
     selectedCategoryId,
+    selectedTags,
+    allTags,
     selectedBookmarks,
     filteredBookmarks,
     toasts,
-    // Actions
     setSearchQuery,
     setSelectedCategoryId,
+    toggleTag,
+    clearTagFilter,
     addBookmark,
     updateBookmark,
     deleteBookmark,
@@ -338,6 +449,7 @@ export function useBookmarkStore() {
     addCategory,
     updateCategory,
     deleteCategory,
+    reorderCategory,
     updateSettings,
     importData,
     resetAllData,
