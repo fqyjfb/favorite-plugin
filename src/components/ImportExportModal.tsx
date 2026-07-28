@@ -12,6 +12,7 @@ import {
   parseJsonImport,
   parseTextImport
 } from '../services/importService';
+import '../styles.css';
 
 interface ImportExportModalProps {
   mode: 'import' | 'export';
@@ -139,46 +140,115 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
 
   if (!isOpen) return null;
 
+  const overlayStyle: React.CSSProperties = {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 50,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(0,0,0,0.3)'
+  };
+
+  const modalStyle: React.CSSProperties = {
+    width: '100%',
+    maxWidth: '512px',
+    margin: '0 16px',
+    background: 'var(--color-bg-card)',
+    borderRadius: '8px',
+    boxShadow: 'var(--shadow-md)',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    maxHeight: '90vh'
+  };
+
+  const headerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '12px 16px',
+    borderBottom: '1px solid var(--color-neutral-200)'
+  };
+
+  const footerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: '8px',
+    padding: '12px 16px',
+    borderTop: '1px solid var(--color-neutral-200)',
+    background: 'var(--color-neutral-50)'
+  };
+
+  const contentStyle: React.CSSProperties = {
+    padding: '16px',
+    overflowY: 'auto'
+  };
+
+  const formatBtnStyle = (active: boolean): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 12px',
+    fontSize: '13px',
+    borderRadius: '6px',
+    border: '1px solid',
+    borderColor: active ? 'var(--color-primary)' : 'var(--color-neutral-300)',
+    background: active ? 'var(--color-primary)' + '0d' : 'transparent',
+    color: active ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+    cursor: 'pointer',
+    transition: 'background-color 0.15s'
+  });
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="w-full max-w-lg mx-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200">
+    <div style={overlayStyle}>
+      <div style={modalStyle}>
+        <div style={headerStyle}>
+          <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>
             {mode === 'import' ? '导入书签' : '导出书签'}
           </h3>
           <button
             onClick={handleClose}
-            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+            style={{
+              padding: '4px', borderRadius: '4px', background: 'none', border: 'none',
+              cursor: 'pointer', color: 'var(--color-text-tertiary)', display: 'flex'
+            }}
           >
-            <X className="w-4 h-4" />
+            <X size={16} />
           </button>
         </div>
 
-        <div className="p-4">
+        <div style={{ ...contentStyle, display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {mode === 'import' ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {(['html', 'json', 'txt'] as const).map((format) => (
                   <button
                     key={format}
                     onClick={() => setImportFormat(format)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                      importFormat === format
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }`}
+                    style={formatBtnStyle(importFormat === format)}
                   >
-                    {format === 'html' && <Globe className="w-4 h-4" />}
-                    {format === 'json' && <FileJson className="w-4 h-4" />}
-                    {format === 'txt' && <FileText className="w-4 h-4" />}
+                    {format === 'html' && <Globe size={14} />}
+                    {format === 'json' && <FileJson size={14} />}
+                    {format === 'txt' && <FileText size={14} />}
                     {format.toUpperCase()}
                   </button>
                 ))}
               </div>
 
               <div
-                className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-primary dark:hover:border-primary transition-colors"
+                style={{
+                  border: '2px dashed var(--color-neutral-300)',
+                  borderRadius: '8px',
+                  padding: '24px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.15s'
+                }}
                 onClick={() => fileInputRef.current?.click()}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--color-neutral-300)'; }}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault();
@@ -195,24 +265,24 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
                   }
                 }}
               >
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+                <Upload size={32} style={{ color: 'var(--color-neutral-400)', margin: '0 auto 8px' }} />
+                <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: '0 0 4px' }}>
                   {fileName ? fileName : '点击选择文件或拖拽到此处'}
                 </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                <p style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', margin: 0 }}>
                   支持 HTML（浏览器书签）、JSON、TXT 格式
                 </p>
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept=".html,.htm,.json,.txt"
-                  className="hidden"
+                  style={{ display: 'none' }}
                   onChange={handleFileSelect}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '4px' }}>
                   或粘贴内容
                 </label>
                 <textarea
@@ -226,12 +296,28 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
                       : '粘贴 HTML 书签内容'
                   }
                   rows={4}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary font-mono resize-none"
+                  style={{
+                    width: '100%', padding: '8px 12px',
+                    fontSize: '12px', border: '1px solid var(--color-neutral-200)',
+                    borderRadius: '6px', background: 'var(--color-bg-card)',
+                    color: 'var(--color-text)',
+                    outline: 'none',
+                    fontFamily: 'monospace',
+                    resize: 'none'
+                  }}
                 />
                 {rawContent && (
                   <button
                     onClick={handleTextPaste}
-                    className="mt-1 text-xs text-primary hover:underline"
+                    style={{
+                      marginTop: '4px', fontSize: '12px',
+                      color: 'var(--color-primary)',
+                      background: 'none', border: 'none',
+                      cursor: 'pointer', textDecoration: 'none',
+                      padding: 0
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
                   >
                     解析内容
                   </button>
@@ -239,95 +325,100 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
               </div>
 
               {previewData && (
-                <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Check className="w-4 h-4 text-green-500" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                <div style={{
+                  padding: '12px',
+                  background: 'var(--color-neutral-50)',
+                  borderRadius: '6px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <Check size={16} style={{ color: 'var(--color-success)' }} />
+                    <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text)' }}>
                       解析成功
                     </span>
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
-                    将导入 <span className="font-medium text-gray-800 dark:text-gray-200">{previewData.bookmarks.length}</span> 个书签
+                  <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: 0 }}>
+                    将导入 <span style={{ fontWeight: 500, color: 'var(--color-text)' }}>{previewData.bookmarks.length}</span> 个书签
                     {previewData.categories.length > 0 && (
-                      <>，<span className="font-medium text-gray-800 dark:text-gray-200">{previewData.categories.length}</span> 个分类</>
+                      <>，<span style={{ fontWeight: 500, color: 'var(--color-text)' }}>{previewData.categories.length}</span> 个分类</>
                     )}
                   </p>
                   {previewData.conflicts > 0 && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" />
+                    <p style={{ fontSize: '12px', color: 'var(--color-warning)', margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <AlertTriangle size={12} />
                       检测到 {previewData.conflicts} 个重复项
                     </p>
                   )}
                 </div>
               )}
 
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-gray-600 dark:text-gray-400">导入方式：</span>
-                <label className="flex items-center gap-1">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                <span style={{ color: 'var(--color-text-secondary)' }}>导入方式：</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                   <input
                     type="radio"
                     name="importMode"
                     checked={importMode === 'merge'}
                     onChange={() => setImportMode('merge')}
-                    className="text-primary"
+                    style={{ accentColor: 'var(--color-primary)' }}
                   />
                   合并（保留现有数据）
                 </label>
-                <label className="flex items-center gap-1">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                   <input
                     type="radio"
                     name="importMode"
                     checked={importMode === 'replace'}
                     onChange={() => setImportMode('replace')}
-                    className="text-primary"
+                    style={{ accentColor: 'var(--color-primary)' }}
                   />
                   替换（清空现有数据）
                 </label>
               </div>
-            </div>
+            </>
           ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {(['html', 'json', 'txt'] as const).map((format) => (
                   <button
                     key={format}
                     onClick={() => setExportFormat(format)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                      exportFormat === format
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }`}
+                    style={formatBtnStyle(exportFormat === format)}
                   >
-                    {format === 'html' && <Globe className="w-4 h-4" />}
-                    {format === 'json' && <FileJson className="w-4 h-4" />}
-                    {format === 'txt' && <FileText className="w-4 h-4" />}
+                    {format === 'html' && <Globe size={14} />}
+                    {format === 'json' && <FileJson size={14} />}
+                    {format === 'txt' && <FileText size={14} />}
                     {format.toUpperCase()}
                   </button>
                 ))}
               </div>
 
-              <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md">
-                <p className="text-sm text-gray-700 dark:text-gray-200">
-                  将导出 <span className="font-medium">{bookmarks.length}</span> 个书签
+              <div style={{
+                padding: '12px',
+                background: 'var(--color-neutral-50)',
+                borderRadius: '6px'
+              }}>
+                <p style={{ fontSize: '13px', color: 'var(--color-text)', margin: 0 }}>
+                  将导出 <span style={{ fontWeight: 500 }}>{bookmarks.length}</span> 个书签
                   {data.categories.length > 0 && (
-                    <>，<span className="font-medium">{data.categories.length}</span> 个分类</>
+                    <>，<span style={{ fontWeight: 500 }}>{data.categories.length}</span> 个分类</>
                   )}
                 </p>
               </div>
 
-              <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                <p>• HTML 格式：可导入浏览器（Chrome/Edge/Firefox）书签</p>
-                <p>• JSON 格式：完整备份，包含分类结构</p>
-                <p>• TXT 格式：纯 URL 列表，无分类信息</p>
+              <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <p style={{ margin: 0 }}>• HTML 格式：可导入浏览器（Chrome/Edge/Firefox）书签</p>
+                <p style={{ margin: 0 }}>• JSON 格式：完整备份，包含分类结构</p>
+                <p style={{ margin: 0 }}>• TXT 格式：纯 URL 列表，无分类信息</p>
               </div>
-            </div>
+            </>
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30">
+        <div style={footerStyle}>
           <button
             onClick={handleClose}
-            className="px-4 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="fp-btn-secondary"
+            style={{ padding: '6px 16px', fontSize: '13px' }}
           >
             取消
           </button>
@@ -335,16 +426,18 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
             <button
               onClick={handleConfirmImport}
               disabled={!rawContent}
-              className="px-4 py-1.5 text-sm bg-primary text-button-text rounded-md hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="fp-btn-primary"
+              style={{ padding: '6px 16px', fontSize: '13px', opacity: !rawContent ? 0.5 : 1, cursor: !rawContent ? 'not-allowed' : 'pointer' }}
             >
               确认导入
             </button>
           ) : (
             <button
               onClick={handleExport}
-              className="px-4 py-1.5 text-sm bg-primary text-button-text rounded-md hover:opacity-90 transition-colors flex items-center gap-1"
+              className="fp-btn-primary"
+              style={{ padding: '6px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}
             >
-              <Download className="w-4 h-4" />
+              <Download size={14} />
               下载文件
             </button>
           )}

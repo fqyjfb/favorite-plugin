@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
-import { Plus, Pencil, Trash2, FolderOpen, ChevronRight, ChevronDown, GripVertical } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { Plus, Pencil, Trash2, FolderOpen, ChevronRight, ChevronDown, GripVertical, Copy } from 'lucide-react';
 import type { CategoryNode } from '../types';
+import '../styles.css';
 
 interface CategoryTreeProps {
   categories: CategoryNode[];
@@ -11,6 +12,14 @@ interface CategoryTreeProps {
   onDeleteCategory: (id: string) => void;
   onReorderCategory: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => void;
   bookmarkCounts: Map<string | null, number>;
+}
+
+interface ContextMenuState {
+  visible: boolean;
+  x: number;
+  y: number;
+  categoryId: string | null;
+  isRoot: boolean;
 }
 
 interface TreeNodeProps {
@@ -30,6 +39,7 @@ interface TreeNodeProps {
   dropPosition: string | null;
   onDragOver: (e: React.DragEvent, id: string) => void;
   onDrop: (e: React.DragEvent, id: string) => void;
+  onContextMenu: (e: React.MouseEvent, id: string) => void;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({
@@ -48,13 +58,12 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   dropTargetId,
   dropPosition,
   onDragOver,
-  onDrop
+  onDrop,
+  onContextMenu
 }) => {
   const [expanded, setExpanded] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(category.name);
-  const [showAddInput, setShowAddInput] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
 
   const hasChildren = category.children && category.children.length > 0;
   const isSelected = selectedCategoryId === category.id;
@@ -69,51 +78,52 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     setIsEditing(false);
   }, [editName, category.id, onUpdateCategory]);
 
-  const handleAddSubCategory = useCallback(() => {
-    if (newCategoryName.trim()) {
-      onAddCategory(newCategoryName.trim(), category.id);
-    }
-    setNewCategoryName('');
-    setShowAddInput(false);
-    setExpanded(true);
-  }, [newCategoryName, category.id, onAddCategory]);
-
-  const handleCancelAdd = useCallback(() => {
-    setShowAddInput(false);
-    setNewCategoryName('');
-  }, []);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddSubCategory();
-    }
-    if (e.key === 'Escape') {
-      handleCancelAdd();
-    }
-  }, [handleAddSubCategory, handleCancelAdd]);
-
   return (
     <div
-      className="select-none"
+      style={{ userSelect: 'none' }}
       onDragOver={(e) => onDragOver(e, category.id)}
       onDrop={(e) => onDrop(e, category.id)}
     >
       <div
-        className={`flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer group transition-colors ${
-          isSelected
-            ? 'bg-primary/10 text-primary'
-            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-        } ${isDragging ? 'opacity-50' : ''} ${
-          isDropTarget && dropPosition === 'before' ? 'border-t-2 border-primary' : ''
-        } ${isDropTarget && dropPosition === 'after' ? 'border-b-2 border-primary' : ''} ${
-          isDropTarget && dropPosition === 'child' ? 'bg-primary/20' : ''
-        }`}
-        style={{ paddingLeft: `${level * 16 + 8}px` }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '6px 8px',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          transition: 'background-color 0.15s',
+          backgroundColor: isDropTarget && dropPosition === 'child'
+            ? 'var(--color-primary)' + '33'
+            : (isSelected ? 'var(--color-primary)' + '1a' : 'transparent'),
+          color: isSelected ? 'var(--color-primary)' : 'var(--color-text)',
+          opacity: isDragging ? 0.5 : 1,
+          borderTop: isDropTarget && dropPosition === 'before' ? '2px solid var(--color-primary)' : undefined,
+          borderBottom: isDropTarget && dropPosition === 'after' ? '2px solid var(--color-primary)' : undefined,
+          paddingLeft: `${level * 16 + 8}px`
+        }}
+        onMouseEnter={(e) => {
+          if (!isSelected) (e.currentTarget.style.backgroundColor = 'var(--color-neutral-100)');
+        }}
+        onMouseLeave={(e) => {
+          if (!isSelected) (e.currentTarget.style.backgroundColor = 'transparent');
+        }}
         onClick={() => onSelectCategory(category.id)}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onContextMenu(e, category.id);
+        }}
       >
         <span
-          className="p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{
+            padding: '2px',
+            borderRadius: '4px',
+            cursor: 'grab',
+            opacity: 0,
+            display: 'flex'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; }}
           draggable
           onDragStart={(e) => {
             e.stopPropagation();
@@ -121,28 +131,33 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           }}
           onDragEnd={onDragEnd}
         >
-          <GripVertical className="w-3 h-3 text-gray-400" />
+          <GripVertical size={12} style={{ color: 'var(--color-neutral-400)' }} />
         </span>
 
         <button
-          className="p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{
+            padding: '2px',
+            borderRadius: '4px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            color: 'inherit',
+            opacity: hasChildren ? 1 : 0
+          }}
           onClick={(e) => {
             e.stopPropagation();
             setExpanded(!expanded);
           }}
         >
           {hasChildren ? (
-            expanded ? (
-              <ChevronDown className="w-3 h-3" />
-            ) : (
-              <ChevronRight className="w-3 h-3" />
-            )
+            expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />
           ) : (
-            <span className="w-3 h-3" />
+            <span style={{ width: '12px', height: '12px' }} />
           )}
         </button>
 
-        <FolderOpen className="w-4 h-4 flex-shrink-0" />
+        <FolderOpen size={16} style={{ flexShrink: 0 }} />
 
         {isEditing ? (
           <input
@@ -157,68 +172,28 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                 setEditName(category.name);
               }
             }}
-            className="flex-1 px-1 py-0.5 text-sm border border-primary rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+            style={{
+              flex: 1,
+              padding: '2px 4px',
+              fontSize: '13px',
+              border: '1px solid var(--color-primary)',
+              borderRadius: '4px',
+              background: 'var(--color-bg-card)',
+              color: 'var(--color-text)',
+              outline: 'none'
+            }}
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className="flex-1 text-sm truncate">{category.name}</span>
+          <span style={{ flex: 1, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {category.name}
+          </span>
         )}
 
-        <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+        <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', flexShrink: 0 }}>
           {count}
         </span>
-
-        <div className="hidden group-hover:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400"
-            title="添加子分类"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowAddInput(true);
-              setExpanded(true);
-            }}
-          >
-            <Plus className="w-3 h-3" />
-          </button>
-          <button
-            className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400"
-            title="重命名"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsEditing(true);
-            }}
-          >
-            <Pencil className="w-3 h-3" />
-          </button>
-          <button
-            className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 dark:text-gray-400 hover:text-red-500"
-            title="删除"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteCategory(category.id);
-            }}
-          >
-            <Trash2 className="w-3 h-3" />
-          </button>
-        </div>
       </div>
-
-      {showAddInput && (
-        <div
-          className="flex items-center gap-1 px-2 py-1"
-          style={{ paddingLeft: `${(level + 1) * 16 + 8}px` }}
-        >
-          <input
-            autoFocus
-            value={newCategoryName}
-            onChange={(e) => setNewCategoryName(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={handleAddSubCategory}
-            placeholder="分类名称"
-            className="flex-1 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-          />
-        </div>
-      )}
 
       {expanded && hasChildren && (
         <div>
@@ -241,6 +216,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               dropPosition={dropPosition}
               onDragOver={onDragOver}
               onDrop={onDrop}
+              onContextMenu={onContextMenu}
             />
           ))}
         </div>
@@ -259,18 +235,43 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
   onReorderCategory,
   bookmarkCounts
 }) => {
-  const [showRootAdd, setShowRootAdd] = useState(false);
-  const [rootName, setRootName] = useState('');
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [dropPosition, setDropPosition] = useState<string | null>(null);
 
-  const uncategorizedCount = bookmarkCounts.get(null) || 0;
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    visible: false, x: 0, y: 0, categoryId: null, isRoot: false
+  });
 
-  const handleDragStart = useCallback((id: string) => {
-    setDraggingId(id);
+  const [rootContextMenu, setRootContextMenu] = useState<ContextMenuState>({
+    visible: false, x: 0, y: 0, categoryId: null, isRoot: true
+  });
+
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+
+  const closeAllMenus = useCallback(() => {
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+    setRootContextMenu((prev) => ({ ...prev, visible: false }));
   }, []);
 
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+        closeAllMenus();
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeAllMenus();
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [closeAllMenus]);
+
+  const handleDragStart = useCallback((id: string) => setDraggingId(id), []);
   const handleDragEnd = useCallback(() => {
     setDraggingId(null);
     setDropTargetId(null);
@@ -281,20 +282,13 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
     e.preventDefault();
     e.stopPropagation();
     if (!draggingId || draggingId === id) return;
-
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const y = e.clientY - rect.top;
     const height = rect.height;
-
     let position: 'before' | 'after' | 'child';
-    if (y < height * 0.25) {
-      position = 'before';
-    } else if (y > height * 0.75) {
-      position = 'after';
-    } else {
-      position = 'child';
-    }
-
+    if (y < height * 0.25) position = 'before';
+    else if (y > height * 0.75) position = 'after';
+    else position = 'child';
     setDropTargetId(id);
     setDropPosition(position);
   }, [draggingId]);
@@ -310,58 +304,172 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
     handleDragEnd();
   }, [draggingId, dropPosition, onReorderCategory, handleDragEnd]);
 
-  const handleRootDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    if (draggingId && categories.some((c) => c.id === draggingId)) {
-      setDropTargetId('__root__');
-      setDropPosition('after');
-    }
-  }, [draggingId, categories]);
+  const handleContextMenu = useCallback((e: React.MouseEvent, categoryId: string) => {
+    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId, isRoot: false });
+    setRootContextMenu((prev) => ({ ...prev, visible: false }));
+  }, []);
 
-  const handleRootDrop = useCallback((e: React.DragEvent) => {
+  const handleRootContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    if (draggingId && dropTargetId === '__root__') {
-      onReorderCategory(draggingId, null, 'after');
-    }
-    handleDragEnd();
-  }, [draggingId, dropTargetId, onReorderCategory, handleDragEnd]);
+    setRootContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId: null, isRoot: true });
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  }, []);
+
+  const uncategorizedCount = bookmarkCounts.get(null) || 0;
+
+  const renderContextMenu = () => {
+    if (!contextMenu.visible) return null;
+    return (
+      <div
+        ref={contextMenuRef}
+        className="fp-context-menu"
+        style={{ left: contextMenu.x, top: contextMenu.y }}
+      >
+        <div
+          className="fp-context-menu-item"
+          onClick={() => {
+            if (contextMenu.categoryId) {
+              onSelectCategory(contextMenu.categoryId);
+            }
+            closeAllMenus();
+          }}
+        >
+          <FolderOpen size={14} /> 打开
+        </div>
+        <div className="fp-context-menu-separator" />
+        <div
+          className="fp-context-menu-item"
+          onClick={() => {
+            if (contextMenu.categoryId) {
+              onSelectCategory(contextMenu.categoryId);
+            }
+            closeAllMenus();
+            setTimeout(() => {
+              const event = new CustomEvent('category:edit', { detail: contextMenu.categoryId });
+              window.dispatchEvent(event);
+            }, 50);
+          }}
+        >
+          <Pencil size={14} /> 重命名
+        </div>
+        <div
+          className="fp-context-menu-item"
+          onClick={() => {
+            if (contextMenu.categoryId) {
+              onAddCategory('新分类', contextMenu.categoryId);
+            }
+            closeAllMenus();
+          }}
+        >
+          <Plus size={14} /> 添加子分类
+        </div>
+        <div className="fp-context-menu-separator" />
+        <div
+          className="fp-context-menu-item danger"
+          onClick={() => {
+            if (contextMenu.categoryId) {
+              onDeleteCategory(contextMenu.categoryId);
+            }
+            closeAllMenus();
+          }}
+        >
+          <Trash2 size={14} /> 删除
+        </div>
+      </div>
+    );
+  };
+
+  const renderRootContextMenu = () => {
+    if (!rootContextMenu.visible) return null;
+    return (
+      <div
+        ref={contextMenuRef}
+        className="fp-context-menu"
+        style={{ left: rootContextMenu.x, top: rootContextMenu.y }}
+      >
+        <div
+          className="fp-context-menu-item"
+          onClick={() => {
+            onAddCategory('新分类', null);
+            closeAllMenus();
+          }}
+        >
+          <Plus size={14} /> 添加根分类
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="flex flex-col h-full">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div
-        className={`flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer group transition-colors ${
-          selectedCategoryId === 'all'
-            ? 'bg-primary/10 text-primary'
-            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-        }`}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '6px 8px',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          transition: 'background-color 0.15s',
+          backgroundColor: selectedCategoryId === 'all' ? 'var(--color-primary)' + '1a' : 'transparent',
+          color: selectedCategoryId === 'all' ? 'var(--color-primary)' : 'var(--color-text)'
+        }}
+        onMouseEnter={(e) => { if (selectedCategoryId !== 'all') e.currentTarget.style.backgroundColor = 'var(--color-neutral-100)'; }}
+        onMouseLeave={(e) => { if (selectedCategoryId !== 'all') e.currentTarget.style.backgroundColor = 'transparent'; }}
         onClick={() => onSelectCategory('all')}
       >
-        <FolderOpen className="w-4 h-4 flex-shrink-0" />
-        <span className="flex-1 text-sm">全部书签</span>
-        <span className="text-xs text-gray-400 dark:text-gray-500">
+        <FolderOpen size={16} style={{ flexShrink: 0 }} />
+        <span style={{ flex: 1, fontSize: '13px' }}>全部书签</span>
+        <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
           {bookmarkCounts.get('__all__') || 0}
         </span>
       </div>
 
       <div
-        className={`flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer group transition-colors ${
-          selectedCategoryId === null
-            ? 'bg-primary/10 text-primary'
-            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-        }`}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '6px 8px',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          transition: 'background-color 0.15s',
+          backgroundColor: selectedCategoryId === null ? 'var(--color-primary)' + '1a' : 'transparent',
+          color: selectedCategoryId === null ? 'var(--color-primary)' : 'var(--color-text)'
+        }}
+        onMouseEnter={(e) => { if (selectedCategoryId !== null) e.currentTarget.style.backgroundColor = 'var(--color-neutral-100)'; }}
+        onMouseLeave={(e) => { if (selectedCategoryId !== null) e.currentTarget.style.backgroundColor = 'transparent'; }}
         onClick={() => onSelectCategory(null)}
       >
-        <FolderOpen className="w-4 h-4 flex-shrink-0" />
-        <span className="flex-1 text-sm">未分类</span>
-        <span className="text-xs text-gray-400 dark:text-gray-500">
+        <FolderOpen size={16} style={{ flexShrink: 0 }} />
+        <span style={{ flex: 1, fontSize: '13px' }}>未分类</span>
+        <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
           {uncategorizedCount}
         </span>
       </div>
 
       <div
-        className="flex-1 overflow-y-auto py-1"
-        onDragOver={handleRootDragOver}
-        onDrop={handleRootDrop}
+        className="fp-scrollbar"
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '4px 0'
+        }}
+        onContextMenu={handleRootContextMenu}
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (draggingId && categories.some((c) => c.id === draggingId)) {
+            setDropTargetId('__root__');
+            setDropPosition('after');
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (draggingId && dropTargetId === '__root__') {
+            onReorderCategory(draggingId, null, 'after');
+          }
+          handleDragEnd();
+        }}
       >
         {categories.map((cat) => (
           <TreeNode
@@ -382,49 +490,13 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
             dropPosition={dropPosition}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
+            onContextMenu={handleContextMenu}
           />
         ))}
       </div>
 
-      {showRootAdd ? (
-        <div className="flex items-center gap-1 px-2 py-1">
-          <input
-            autoFocus
-            value={rootName}
-            onChange={(e) => setRootName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                if (rootName.trim()) {
-                  onAddCategory(rootName.trim(), null);
-                }
-                setShowRootAdd(false);
-                setRootName('');
-              }
-              if (e.key === 'Escape') {
-                setShowRootAdd(false);
-                setRootName('');
-              }
-            }}
-            onBlur={() => {
-              if (rootName.trim()) {
-                onAddCategory(rootName.trim(), null);
-              }
-              setShowRootAdd(false);
-              setRootName('');
-            }}
-            placeholder="根分类名称"
-            className="flex-1 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-          />
-        </div>
-      ) : (
-        <button
-          onClick={() => setShowRootAdd(true)}
-          className="flex items-center gap-1 px-2 py-1.5 w-full text-xs text-gray-500 dark:text-gray-400 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
-        >
-          <Plus className="w-3 h-3" />
-          添加分类
-        </button>
-      )}
+      {renderContextMenu()}
+      {renderRootContextMenu()}
     </div>
   );
 };

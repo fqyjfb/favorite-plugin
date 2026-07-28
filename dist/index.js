@@ -1,5 +1,238 @@
 (function() {
   "use strict";
+  var __vite_style__ = document.createElement("style");
+  __vite_style__.textContent = `:root {
+  --color-primary: #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-primary-light: #3b82f6;
+  --color-neutral-50: #f9fafb;
+  --color-neutral-100: #f3f4f6;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #6b7280;
+  --color-neutral-600: #4b5563;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #111827;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-bg: #f8f9fa;
+  --color-bg-card: #ffffff;
+  --color-text: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  --button-text: #ffffff;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.dark {
+  --color-bg: #111827;
+  --color-bg-card: #1f2937;
+  --color-neutral-100: #1f2937;
+  --color-neutral-200: #374151;
+  --color-neutral-300: #4b5563;
+  --color-neutral-400: #6b7280;
+  --color-neutral-500: #9ca3af;
+  --color-text: #f3f4f6;
+  --color-text-secondary: #d1d5db;
+  --color-text-tertiary: #9ca3af;
+}
+
+* { box-sizing: border-box; }
+
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.fp-btn-primary {
+  background-color: var(--color-primary);
+  color: var(--button-text);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.fp-btn-primary:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.fp-btn-secondary {
+  background-color: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.fp-btn-secondary:hover {
+  background-color: var(--color-neutral-100);
+}
+
+.fp-btn-danger {
+  background-color: var(--color-error);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.fp-btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.fp-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-card);
+  color: var(--color-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.fp-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.fp-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-lg);
+}
+
+.fp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.fp-modal {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  max-width: 512px;
+  width: 100%;
+  margin: 0 16px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.fp-context-menu {
+  position: fixed;
+  z-index: 100;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  min-width: 160px;
+  padding: 4px 0;
+}
+
+.fp-context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+.fp-context-menu-item:hover {
+  background-color: var(--color-neutral-100);
+}
+.fp-context-menu-item.danger {
+  color: var(--color-error);
+}
+.fp-context-menu-item.danger:hover {
+  background-color: #fef2f2;
+}
+.fp-context-menu-separator {
+  height: 1px;
+  background: var(--color-neutral-200);
+  margin: 4px 0;
+}
+
+.fp-toast {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 200;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: white;
+  box-shadow: var(--shadow-md);
+  animation: slideIn 0.2s ease-out;
+}
+.fp-toast-success { background: var(--color-success); }
+.fp-toast-error { background: var(--color-error); }
+.fp-toast-warning { background: var(--color-warning); }
+.fp-toast-info { background: var(--color-primary); }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.fp-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.fp-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.fp-scrollbar::-webkit-scrollbar-thumb { background: var(--color-neutral-300); border-radius: 3px; }
+.fp-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-neutral-400); }
+
+.fp-checkbox-wrap {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.fp-checkbox-wrap:hover,
+[style*="cursor: pointer"]:hover .fp-checkbox-wrap {
+  opacity: 1;
+}
+
+.fp-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-neutral-300) transparent;
+}/*$vite$:1*/`;
+  document.head.appendChild(__vite_style__);
   function getDefaultExportFromCjs(x) {
     return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
   }
@@ -13506,178 +13739,6 @@
       addToast
     };
   }
-  const FaviconFallback$1 = ({ url }) => {
-    const [error, setError] = reactExports.useState(false);
-    if (!url || error) {
-      return /* @__PURE__ */ React$2.createElement("div", { className: "w-8 h-8 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0" }, /* @__PURE__ */ React$2.createElement(Globe, { className: "w-4 h-4 text-gray-400 dark:text-gray-500" }));
-    }
-    return /* @__PURE__ */ React$2.createElement(
-      "img",
-      {
-        src: url,
-        alt: "favicon",
-        className: "w-8 h-8 rounded object-contain flex-shrink-0",
-        onError: () => setError(true)
-      }
-    );
-  };
-  const BookmarkCard = ({
-    bookmark,
-    category,
-    isSelected,
-    onSelect,
-    onEdit,
-    onDelete,
-    onOpen,
-    showFavicon
-  }) => {
-    const faviconUrl = bookmark.favicon || getFaviconUrl(bookmark.url);
-    return /* @__PURE__ */ React$2.createElement(
-      "div",
-      {
-        className: `group relative bg-white dark:bg-gray-800 border rounded-lg p-3 cursor-pointer transition-all hover:shadow-sm hover:-translate-y-0.5 ${isSelected ? "border-primary ring-1 ring-primary/30" : "border-gray-200 dark:border-gray-700"}`,
-        onClick: onOpen
-      },
-      /* @__PURE__ */ React$2.createElement("div", { className: "absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity" }, /* @__PURE__ */ React$2.createElement(
-        "input",
-        {
-          type: "checkbox",
-          checked: isSelected,
-          onChange: (e) => {
-            e.stopPropagation();
-            onSelect();
-          },
-          onClick: (e) => e.stopPropagation(),
-          className: "w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-        }
-      )),
-      /* @__PURE__ */ React$2.createElement("div", { className: "flex items-start gap-2" }, showFavicon && /* @__PURE__ */ React$2.createElement(FaviconFallback$1, { url: faviconUrl }), /* @__PURE__ */ React$2.createElement("div", { className: "flex-1 min-w-0" }, /* @__PURE__ */ React$2.createElement("h3", { className: "text-sm font-medium text-gray-900 dark:text-gray-100 truncate" }, bookmark.title), /* @__PURE__ */ React$2.createElement("p", { className: "text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5" }, bookmark.url.replace(/^https?:\/\//, "")))),
-      bookmark.description && /* @__PURE__ */ React$2.createElement("p", { className: "text-xs text-gray-500 dark:text-gray-400 mt-2 line-clamp-2" }, truncateText(bookmark.description, 100)),
-      /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2 mt-2 flex-wrap" }, category && /* @__PURE__ */ React$2.createElement("span", { className: "px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded" }, category.name), bookmark.tags.slice(0, 2).map((tag) => /* @__PURE__ */ React$2.createElement(
-        "span",
-        {
-          key: tag,
-          className: "px-1.5 py-0.5 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded flex items-center gap-0.5"
-        },
-        /* @__PURE__ */ React$2.createElement(Tag, { className: "w-2.5 h-2.5" }),
-        tag
-      ))),
-      /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-700/50" }, /* @__PURE__ */ React$2.createElement("span", { className: "text-xs text-gray-400 dark:text-gray-500" }, formatDate(bookmark.updatedAt)), /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" }, /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: (e) => {
-            e.stopPropagation();
-            onOpen();
-          },
-          className: "p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-primary",
-          title: "打开"
-        },
-        /* @__PURE__ */ React$2.createElement(ExternalLink, { className: "w-3.5 h-3.5" })
-      ), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: (e) => {
-            e.stopPropagation();
-            onEdit();
-          },
-          className: "p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-primary",
-          title: "编辑"
-        },
-        /* @__PURE__ */ React$2.createElement(Pencil, { className: "w-3.5 h-3.5" })
-      ), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: (e) => {
-            e.stopPropagation();
-            onDelete();
-          },
-          className: "p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-500",
-          title: "删除"
-        },
-        /* @__PURE__ */ React$2.createElement(Trash2, { className: "w-3.5 h-3.5" })
-      )))
-    );
-  };
-  const FaviconFallback = ({ url }) => {
-    const [error, setError] = reactExports.useState(false);
-    if (!url || error) {
-      return /* @__PURE__ */ React$2.createElement("div", { className: "w-5 h-5 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0" }, /* @__PURE__ */ React$2.createElement(Globe, { className: "w-3 h-3 text-gray-400 dark:text-gray-500" }));
-    }
-    return /* @__PURE__ */ React$2.createElement(
-      "img",
-      {
-        src: url,
-        alt: "favicon",
-        className: "w-5 h-5 rounded object-contain flex-shrink-0",
-        onError: () => setError(true)
-      }
-    );
-  };
-  const BookmarkListItem = ({
-    bookmark,
-    category,
-    isSelected,
-    onSelect,
-    onEdit,
-    onDelete,
-    onOpen,
-    showFavicon
-  }) => {
-    const faviconUrl = bookmark.favicon || getFaviconUrl(bookmark.url);
-    return /* @__PURE__ */ React$2.createElement(
-      "div",
-      {
-        className: `flex items-center gap-3 px-3 py-2 border-b border-gray-100 dark:border-gray-700/50 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isSelected ? "bg-primary/5 dark:bg-primary/10" : ""}`,
-        onClick: onOpen
-      },
-      /* @__PURE__ */ React$2.createElement(
-        "input",
-        {
-          type: "checkbox",
-          checked: isSelected,
-          onChange: () => onSelect(),
-          onClick: (e) => e.stopPropagation(),
-          className: "w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-        }
-      ),
-      showFavicon && /* @__PURE__ */ React$2.createElement(FaviconFallback, { url: faviconUrl }),
-      /* @__PURE__ */ React$2.createElement("div", { className: "flex-1 min-w-0 flex items-center gap-3" }, /* @__PURE__ */ React$2.createElement("span", { className: "text-sm font-medium text-gray-800 dark:text-gray-200 truncate max-w-[160px]" }, bookmark.title), /* @__PURE__ */ React$2.createElement("span", { className: "text-xs text-gray-500 dark:text-gray-400 truncate flex-1" }, truncateText(bookmark.url, 60)), category && /* @__PURE__ */ React$2.createElement("span", { className: "px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded flex-shrink-0" }, category.name)),
-      /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: (e) => {
-            e.stopPropagation();
-            onOpen();
-          },
-          className: "p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 hover:text-primary",
-          title: "打开"
-        },
-        /* @__PURE__ */ React$2.createElement(ExternalLink, { className: "w-3.5 h-3.5" })
-      ), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: (e) => {
-            e.stopPropagation();
-            onEdit();
-          },
-          className: "p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 hover:text-primary",
-          title: "编辑"
-        },
-        /* @__PURE__ */ React$2.createElement(Pencil, { className: "w-3.5 h-3.5" })
-      ), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: (e) => {
-            e.stopPropagation();
-            onDelete();
-          },
-          className: "p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-500",
-          title: "删除"
-        },
-        /* @__PURE__ */ React$2.createElement(Trash2, { className: "w-3.5 h-3.5" })
-      ))
-    );
-  };
   const TreeNode = ({
     category,
     level,
@@ -13694,13 +13755,12 @@
     dropTargetId,
     dropPosition,
     onDragOver,
-    onDrop
+    onDrop,
+    onContextMenu
   }) => {
     const [expanded, setExpanded] = reactExports.useState(true);
     const [isEditing, setIsEditing] = reactExports.useState(false);
     const [editName, setEditName] = reactExports.useState(category.name);
-    const [showAddInput, setShowAddInput] = reactExports.useState(false);
-    const [newCategoryName, setNewCategoryName] = reactExports.useState("");
     const hasChildren = category.children && category.children.length > 0;
     const isSelected = selectedCategoryId === category.id;
     const count = bookmarkCounts.get(category.id) || 0;
@@ -13712,45 +13772,59 @@
       }
       setIsEditing(false);
     }, [editName, category.id, onUpdateCategory]);
-    const handleAddSubCategory = reactExports.useCallback(() => {
-      if (newCategoryName.trim()) {
-        onAddCategory(newCategoryName.trim(), category.id);
-      }
-      setNewCategoryName("");
-      setShowAddInput(false);
-      setExpanded(true);
-    }, [newCategoryName, category.id, onAddCategory]);
-    const handleCancelAdd = reactExports.useCallback(() => {
-      setShowAddInput(false);
-      setNewCategoryName("");
-    }, []);
-    const handleKeyDown = reactExports.useCallback((e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        handleAddSubCategory();
-      }
-      if (e.key === "Escape") {
-        handleCancelAdd();
-      }
-    }, [handleAddSubCategory, handleCancelAdd]);
     return /* @__PURE__ */ React$2.createElement(
       "div",
       {
-        className: "select-none",
+        style: { userSelect: "none" },
         onDragOver: (e) => onDragOver(e, category.id),
         onDrop: (e) => onDrop(e, category.id)
       },
       /* @__PURE__ */ React$2.createElement(
         "div",
         {
-          className: `flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer group transition-colors ${isSelected ? "bg-primary/10 text-primary" : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"} ${isDragging ? "opacity-50" : ""} ${isDropTarget && dropPosition === "before" ? "border-t-2 border-primary" : ""} ${isDropTarget && dropPosition === "after" ? "border-b-2 border-primary" : ""} ${isDropTarget && dropPosition === "child" ? "bg-primary/20" : ""}`,
-          style: { paddingLeft: `${level * 16 + 8}px` },
-          onClick: () => onSelectCategory(category.id)
+          style: {
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            padding: "6px 8px",
+            borderRadius: "6px",
+            cursor: "pointer",
+            transition: "background-color 0.15s",
+            backgroundColor: isDropTarget && dropPosition === "child" ? "var(--color-primary)33" : isSelected ? "var(--color-primary)1a" : "transparent",
+            color: isSelected ? "var(--color-primary)" : "var(--color-text)",
+            opacity: isDragging ? 0.5 : 1,
+            borderTop: isDropTarget && dropPosition === "before" ? "2px solid var(--color-primary)" : void 0,
+            borderBottom: isDropTarget && dropPosition === "after" ? "2px solid var(--color-primary)" : void 0,
+            paddingLeft: `${level * 16 + 8}px`
+          },
+          onMouseEnter: (e) => {
+            if (!isSelected) e.currentTarget.style.backgroundColor = "var(--color-neutral-100)";
+          },
+          onMouseLeave: (e) => {
+            if (!isSelected) e.currentTarget.style.backgroundColor = "transparent";
+          },
+          onClick: () => onSelectCategory(category.id),
+          onContextMenu: (e) => {
+            e.preventDefault();
+            onContextMenu(e, category.id);
+          }
         },
         /* @__PURE__ */ React$2.createElement(
           "span",
           {
-            className: "p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity",
+            style: {
+              padding: "2px",
+              borderRadius: "4px",
+              cursor: "grab",
+              opacity: 0,
+              display: "flex"
+            },
+            onMouseEnter: (e) => {
+              e.currentTarget.style.opacity = "1";
+            },
+            onMouseLeave: (e) => {
+              e.currentTarget.style.opacity = "0";
+            },
             draggable: true,
             onDragStart: (e) => {
               e.stopPropagation();
@@ -13758,20 +13832,29 @@
             },
             onDragEnd
           },
-          /* @__PURE__ */ React$2.createElement(GripVertical, { className: "w-3 h-3 text-gray-400" })
+          /* @__PURE__ */ React$2.createElement(GripVertical, { size: 12, style: { color: "var(--color-neutral-400)" } })
         ),
         /* @__PURE__ */ React$2.createElement(
           "button",
           {
-            className: "p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity",
+            style: {
+              padding: "2px",
+              borderRadius: "4px",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              color: "inherit",
+              opacity: hasChildren ? 1 : 0
+            },
             onClick: (e) => {
               e.stopPropagation();
               setExpanded(!expanded);
             }
           },
-          hasChildren ? expanded ? /* @__PURE__ */ React$2.createElement(ChevronDown, { className: "w-3 h-3" }) : /* @__PURE__ */ React$2.createElement(ChevronRight, { className: "w-3 h-3" }) : /* @__PURE__ */ React$2.createElement("span", { className: "w-3 h-3" })
+          hasChildren ? expanded ? /* @__PURE__ */ React$2.createElement(ChevronDown, { size: 12 }) : /* @__PURE__ */ React$2.createElement(ChevronRight, { size: 12 }) : /* @__PURE__ */ React$2.createElement("span", { style: { width: "12px", height: "12px" } })
         ),
-        /* @__PURE__ */ React$2.createElement(FolderOpen, { className: "w-4 h-4 flex-shrink-0" }),
+        /* @__PURE__ */ React$2.createElement(FolderOpen, { size: 16, style: { flexShrink: 0 } }),
         isEditing ? /* @__PURE__ */ React$2.createElement(
           "input",
           {
@@ -13786,65 +13869,20 @@
                 setEditName(category.name);
               }
             },
-            className: "flex-1 px-1 py-0.5 text-sm border border-primary rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200",
+            style: {
+              flex: 1,
+              padding: "2px 4px",
+              fontSize: "13px",
+              border: "1px solid var(--color-primary)",
+              borderRadius: "4px",
+              background: "var(--color-bg-card)",
+              color: "var(--color-text)",
+              outline: "none"
+            },
             onClick: (e) => e.stopPropagation()
           }
-        ) : /* @__PURE__ */ React$2.createElement("span", { className: "flex-1 text-sm truncate" }, category.name),
-        /* @__PURE__ */ React$2.createElement("span", { className: "text-xs text-gray-400 dark:text-gray-500 flex-shrink-0" }, count),
-        /* @__PURE__ */ React$2.createElement("div", { className: "hidden group-hover:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity" }, /* @__PURE__ */ React$2.createElement(
-          "button",
-          {
-            className: "p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400",
-            title: "添加子分类",
-            onClick: (e) => {
-              e.stopPropagation();
-              setShowAddInput(true);
-              setExpanded(true);
-            }
-          },
-          /* @__PURE__ */ React$2.createElement(Plus, { className: "w-3 h-3" })
-        ), /* @__PURE__ */ React$2.createElement(
-          "button",
-          {
-            className: "p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400",
-            title: "重命名",
-            onClick: (e) => {
-              e.stopPropagation();
-              setIsEditing(true);
-            }
-          },
-          /* @__PURE__ */ React$2.createElement(Pencil, { className: "w-3 h-3" })
-        ), /* @__PURE__ */ React$2.createElement(
-          "button",
-          {
-            className: "p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 dark:text-gray-400 hover:text-red-500",
-            title: "删除",
-            onClick: (e) => {
-              e.stopPropagation();
-              onDeleteCategory(category.id);
-            }
-          },
-          /* @__PURE__ */ React$2.createElement(Trash2, { className: "w-3 h-3" })
-        ))
-      ),
-      showAddInput && /* @__PURE__ */ React$2.createElement(
-        "div",
-        {
-          className: "flex items-center gap-1 px-2 py-1",
-          style: { paddingLeft: `${(level + 1) * 16 + 8}px` }
-        },
-        /* @__PURE__ */ React$2.createElement(
-          "input",
-          {
-            autoFocus: true,
-            value: newCategoryName,
-            onChange: (e) => setNewCategoryName(e.target.value),
-            onKeyDown: handleKeyDown,
-            onBlur: handleAddSubCategory,
-            placeholder: "分类名称",
-            className: "flex-1 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-          }
-        )
+        ) : /* @__PURE__ */ React$2.createElement("span", { style: { flex: 1, fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, category.name),
+        /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-tertiary)", flexShrink: 0 } }, count)
       ),
       expanded && hasChildren && /* @__PURE__ */ React$2.createElement("div", null, category.children.map((child) => /* @__PURE__ */ React$2.createElement(
         TreeNode,
@@ -13865,7 +13903,8 @@
           dropTargetId,
           dropPosition,
           onDragOver,
-          onDrop
+          onDrop,
+          onContextMenu
         }
       )))
     );
@@ -13880,15 +13919,45 @@
     onReorderCategory,
     bookmarkCounts
   }) => {
-    const [showRootAdd, setShowRootAdd] = reactExports.useState(false);
-    const [rootName, setRootName] = reactExports.useState("");
     const [draggingId, setDraggingId] = reactExports.useState(null);
     const [dropTargetId, setDropTargetId] = reactExports.useState(null);
     const [dropPosition, setDropPosition] = reactExports.useState(null);
-    const uncategorizedCount = bookmarkCounts.get(null) || 0;
-    const handleDragStart = reactExports.useCallback((id) => {
-      setDraggingId(id);
+    const [contextMenu, setContextMenu] = reactExports.useState({
+      visible: false,
+      x: 0,
+      y: 0,
+      categoryId: null,
+      isRoot: false
+    });
+    const [rootContextMenu, setRootContextMenu] = reactExports.useState({
+      visible: false,
+      x: 0,
+      y: 0,
+      categoryId: null,
+      isRoot: true
+    });
+    const contextMenuRef = reactExports.useRef(null);
+    const closeAllMenus = reactExports.useCallback(() => {
+      setContextMenu((prev) => ({ ...prev, visible: false }));
+      setRootContextMenu((prev) => ({ ...prev, visible: false }));
     }, []);
+    reactExports.useEffect(() => {
+      const handleClick = (e) => {
+        if (contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
+          closeAllMenus();
+        }
+      };
+      const handleEsc = (e) => {
+        if (e.key === "Escape") closeAllMenus();
+      };
+      document.addEventListener("mousedown", handleClick);
+      document.addEventListener("keydown", handleEsc);
+      return () => {
+        document.removeEventListener("mousedown", handleClick);
+        document.removeEventListener("keydown", handleEsc);
+      };
+    }, [closeAllMenus]);
+    const handleDragStart = reactExports.useCallback((id) => setDraggingId(id), []);
     const handleDragEnd = reactExports.useCallback(() => {
       setDraggingId(null);
       setDropTargetId(null);
@@ -13902,13 +13971,9 @@
       const y = e.clientY - rect.top;
       const height = rect.height;
       let position;
-      if (y < height * 0.25) {
-        position = "before";
-      } else if (y > height * 0.75) {
-        position = "after";
-      } else {
-        position = "child";
-      }
+      if (y < height * 0.25) position = "before";
+      else if (y > height * 0.75) position = "after";
+      else position = "child";
       setDropTargetId(id);
       setDropPosition(position);
     }, [draggingId]);
@@ -13922,44 +13987,186 @@
       onReorderCategory(draggingId, targetId, dropPosition);
       handleDragEnd();
     }, [draggingId, dropPosition, onReorderCategory, handleDragEnd]);
-    const handleRootDragOver = reactExports.useCallback((e) => {
+    const handleContextMenu = reactExports.useCallback((e, categoryId) => {
+      setContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId, isRoot: false });
+      setRootContextMenu((prev) => ({ ...prev, visible: false }));
+    }, []);
+    const handleRootContextMenu = reactExports.useCallback((e) => {
       e.preventDefault();
-      if (draggingId && categories.some((c) => c.id === draggingId)) {
-        setDropTargetId("__root__");
-        setDropPosition("after");
-      }
-    }, [draggingId, categories]);
-    const handleRootDrop = reactExports.useCallback((e) => {
-      e.preventDefault();
-      if (draggingId && dropTargetId === "__root__") {
-        onReorderCategory(draggingId, null, "after");
-      }
-      handleDragEnd();
-    }, [draggingId, dropTargetId, onReorderCategory, handleDragEnd]);
-    return /* @__PURE__ */ React$2.createElement("div", { className: "flex flex-col h-full" }, /* @__PURE__ */ React$2.createElement(
+      setRootContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId: null, isRoot: true });
+      setContextMenu((prev) => ({ ...prev, visible: false }));
+    }, []);
+    const uncategorizedCount = bookmarkCounts.get(null) || 0;
+    const renderContextMenu = () => {
+      if (!contextMenu.visible) return null;
+      return /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          ref: contextMenuRef,
+          className: "fp-context-menu",
+          style: { left: contextMenu.x, top: contextMenu.y }
+        },
+        /* @__PURE__ */ React$2.createElement(
+          "div",
+          {
+            className: "fp-context-menu-item",
+            onClick: () => {
+              if (contextMenu.categoryId) {
+                onSelectCategory(contextMenu.categoryId);
+              }
+              closeAllMenus();
+            }
+          },
+          /* @__PURE__ */ React$2.createElement(FolderOpen, { size: 14 }),
+          " 打开"
+        ),
+        /* @__PURE__ */ React$2.createElement("div", { className: "fp-context-menu-separator" }),
+        /* @__PURE__ */ React$2.createElement(
+          "div",
+          {
+            className: "fp-context-menu-item",
+            onClick: () => {
+              if (contextMenu.categoryId) {
+                onSelectCategory(contextMenu.categoryId);
+              }
+              closeAllMenus();
+              setTimeout(() => {
+                const event = new CustomEvent("category:edit", { detail: contextMenu.categoryId });
+                window.dispatchEvent(event);
+              }, 50);
+            }
+          },
+          /* @__PURE__ */ React$2.createElement(Pencil, { size: 14 }),
+          " 重命名"
+        ),
+        /* @__PURE__ */ React$2.createElement(
+          "div",
+          {
+            className: "fp-context-menu-item",
+            onClick: () => {
+              if (contextMenu.categoryId) {
+                onAddCategory("新分类", contextMenu.categoryId);
+              }
+              closeAllMenus();
+            }
+          },
+          /* @__PURE__ */ React$2.createElement(Plus, { size: 14 }),
+          " 添加子分类"
+        ),
+        /* @__PURE__ */ React$2.createElement("div", { className: "fp-context-menu-separator" }),
+        /* @__PURE__ */ React$2.createElement(
+          "div",
+          {
+            className: "fp-context-menu-item danger",
+            onClick: () => {
+              if (contextMenu.categoryId) {
+                onDeleteCategory(contextMenu.categoryId);
+              }
+              closeAllMenus();
+            }
+          },
+          /* @__PURE__ */ React$2.createElement(Trash2, { size: 14 }),
+          " 删除"
+        )
+      );
+    };
+    const renderRootContextMenu = () => {
+      if (!rootContextMenu.visible) return null;
+      return /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          ref: contextMenuRef,
+          className: "fp-context-menu",
+          style: { left: rootContextMenu.x, top: rootContextMenu.y }
+        },
+        /* @__PURE__ */ React$2.createElement(
+          "div",
+          {
+            className: "fp-context-menu-item",
+            onClick: () => {
+              onAddCategory("新分类", null);
+              closeAllMenus();
+            }
+          },
+          /* @__PURE__ */ React$2.createElement(Plus, { size: 14 }),
+          " 添加根分类"
+        )
+      );
+    };
+    return /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", flexDirection: "column", height: "100%" } }, /* @__PURE__ */ React$2.createElement(
       "div",
       {
-        className: `flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer group transition-colors ${selectedCategoryId === "all" ? "bg-primary/10 text-primary" : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"}`,
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "6px 8px",
+          borderRadius: "6px",
+          cursor: "pointer",
+          transition: "background-color 0.15s",
+          backgroundColor: selectedCategoryId === "all" ? "var(--color-primary)1a" : "transparent",
+          color: selectedCategoryId === "all" ? "var(--color-primary)" : "var(--color-text)"
+        },
+        onMouseEnter: (e) => {
+          if (selectedCategoryId !== "all") e.currentTarget.style.backgroundColor = "var(--color-neutral-100)";
+        },
+        onMouseLeave: (e) => {
+          if (selectedCategoryId !== "all") e.currentTarget.style.backgroundColor = "transparent";
+        },
         onClick: () => onSelectCategory("all")
       },
-      /* @__PURE__ */ React$2.createElement(FolderOpen, { className: "w-4 h-4 flex-shrink-0" }),
-      /* @__PURE__ */ React$2.createElement("span", { className: "flex-1 text-sm" }, "全部书签"),
-      /* @__PURE__ */ React$2.createElement("span", { className: "text-xs text-gray-400 dark:text-gray-500" }, bookmarkCounts.get("__all__") || 0)
+      /* @__PURE__ */ React$2.createElement(FolderOpen, { size: 16, style: { flexShrink: 0 } }),
+      /* @__PURE__ */ React$2.createElement("span", { style: { flex: 1, fontSize: "13px" } }, "全部书签"),
+      /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-tertiary)" } }, bookmarkCounts.get("__all__") || 0)
     ), /* @__PURE__ */ React$2.createElement(
       "div",
       {
-        className: `flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer group transition-colors ${selectedCategoryId === null ? "bg-primary/10 text-primary" : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"}`,
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "6px 8px",
+          borderRadius: "6px",
+          cursor: "pointer",
+          transition: "background-color 0.15s",
+          backgroundColor: selectedCategoryId === null ? "var(--color-primary)1a" : "transparent",
+          color: selectedCategoryId === null ? "var(--color-primary)" : "var(--color-text)"
+        },
+        onMouseEnter: (e) => {
+          if (selectedCategoryId !== null) e.currentTarget.style.backgroundColor = "var(--color-neutral-100)";
+        },
+        onMouseLeave: (e) => {
+          if (selectedCategoryId !== null) e.currentTarget.style.backgroundColor = "transparent";
+        },
         onClick: () => onSelectCategory(null)
       },
-      /* @__PURE__ */ React$2.createElement(FolderOpen, { className: "w-4 h-4 flex-shrink-0" }),
-      /* @__PURE__ */ React$2.createElement("span", { className: "flex-1 text-sm" }, "未分类"),
-      /* @__PURE__ */ React$2.createElement("span", { className: "text-xs text-gray-400 dark:text-gray-500" }, uncategorizedCount)
+      /* @__PURE__ */ React$2.createElement(FolderOpen, { size: 16, style: { flexShrink: 0 } }),
+      /* @__PURE__ */ React$2.createElement("span", { style: { flex: 1, fontSize: "13px" } }, "未分类"),
+      /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-tertiary)" } }, uncategorizedCount)
     ), /* @__PURE__ */ React$2.createElement(
       "div",
       {
-        className: "flex-1 overflow-y-auto py-1",
-        onDragOver: handleRootDragOver,
-        onDrop: handleRootDrop
+        className: "fp-scrollbar",
+        style: {
+          flex: 1,
+          overflowY: "auto",
+          padding: "4px 0"
+        },
+        onContextMenu: handleRootContextMenu,
+        onDragOver: (e) => {
+          e.preventDefault();
+          if (draggingId && categories.some((c) => c.id === draggingId)) {
+            setDropTargetId("__root__");
+            setDropPosition("after");
+          }
+        },
+        onDrop: (e) => {
+          e.preventDefault();
+          if (draggingId && dropTargetId === "__root__") {
+            onReorderCategory(draggingId, null, "after");
+          }
+          handleDragEnd();
+        }
       },
       categories.map((cat) => /* @__PURE__ */ React$2.createElement(
         TreeNode,
@@ -13980,47 +14187,11 @@
           dropTargetId,
           dropPosition,
           onDragOver: handleDragOver,
-          onDrop: handleDrop
+          onDrop: handleDrop,
+          onContextMenu: handleContextMenu
         }
       ))
-    ), showRootAdd ? /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-1 px-2 py-1" }, /* @__PURE__ */ React$2.createElement(
-      "input",
-      {
-        autoFocus: true,
-        value: rootName,
-        onChange: (e) => setRootName(e.target.value),
-        onKeyDown: (e) => {
-          if (e.key === "Enter") {
-            if (rootName.trim()) {
-              onAddCategory(rootName.trim(), null);
-            }
-            setShowRootAdd(false);
-            setRootName("");
-          }
-          if (e.key === "Escape") {
-            setShowRootAdd(false);
-            setRootName("");
-          }
-        },
-        onBlur: () => {
-          if (rootName.trim()) {
-            onAddCategory(rootName.trim(), null);
-          }
-          setShowRootAdd(false);
-          setRootName("");
-        },
-        placeholder: "根分类名称",
-        className: "flex-1 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-      }
-    )) : /* @__PURE__ */ React$2.createElement(
-      "button",
-      {
-        onClick: () => setShowRootAdd(true),
-        className: "flex items-center gap-1 px-2 py-1.5 w-full text-xs text-gray-500 dark:text-gray-400 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
-      },
-      /* @__PURE__ */ React$2.createElement(Plus, { className: "w-3 h-3" }),
-      "添加分类"
-    ));
+    ), renderContextMenu(), renderRootContextMenu());
   };
   const SearchBar = ({
     value,
@@ -14042,7 +14213,22 @@
       window.addEventListener("keydown", handler);
       return () => window.removeEventListener("keydown", handler);
     }, [ref]);
-    return /* @__PURE__ */ React$2.createElement("div", { className: "relative flex-1 max-w-xs" }, /* @__PURE__ */ React$2.createElement(
+    const containerStyle = {
+      position: "relative",
+      width: "100%"
+    };
+    const inputStyle = {
+      width: "100%",
+      padding: "6px 32px 6px 28px",
+      fontSize: "13px",
+      border: "1px solid var(--color-neutral-300)",
+      borderRadius: "6px",
+      background: "var(--color-bg-card)",
+      color: "var(--color-text)",
+      outline: "none",
+      transition: "border-color 0.15s"
+    };
+    return /* @__PURE__ */ React$2.createElement("div", { style: containerStyle }, /* @__PURE__ */ React$2.createElement(
       "input",
       {
         ref,
@@ -14051,15 +14237,48 @@
         onChange: (e) => onChange(e.target.value),
         onFocus,
         placeholder,
-        className: "w-full px-3 py-1.5 pl-8 pr-8 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary transition-colors"
+        style: inputStyle,
+        onFocusCapture: (e) => {
+          e.currentTarget.style.borderColor = "var(--color-primary)";
+        },
+        onBlurCapture: (e) => {
+          e.currentTarget.style.borderColor = "var(--color-neutral-300)";
+        }
       }
-    ), /* @__PURE__ */ React$2.createElement(Search, { className: "absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" }), value && /* @__PURE__ */ React$2.createElement(
+    ), /* @__PURE__ */ React$2.createElement(Search, { size: 14, style: {
+      position: "absolute",
+      left: "8px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      color: "var(--color-text-tertiary)",
+      pointerEvents: "none"
+    } }), value && /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: () => onChange(""),
-        className: "absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        style: {
+          position: "absolute",
+          right: "6px",
+          top: "50%",
+          transform: "translateY(-50%)",
+          padding: "2px",
+          borderRadius: "4px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "var(--color-text-tertiary)",
+          display: "flex"
+        },
+        onMouseEnter: (e) => {
+          e.currentTarget.style.background = "var(--color-neutral-100)";
+          e.currentTarget.style.color = "var(--color-text-secondary)";
+        },
+        onMouseLeave: (e) => {
+          e.currentTarget.style.background = "transparent";
+          e.currentTarget.style.color = "var(--color-text-tertiary)";
+        }
       },
-      /* @__PURE__ */ React$2.createElement(X, { className: "w-3.5 h-3.5" })
+      /* @__PURE__ */ React$2.createElement(X, { size: 12 })
     ));
   };
   const BookmarkForm = ({
@@ -14076,33 +14295,70 @@
     const [tags, setTags] = reactExports.useState((bookmark == null ? void 0 : bookmark.tags) || []);
     const [tagInput, setTagInput] = reactExports.useState("");
     const [error, setError] = reactExports.useState("");
+    const [fetching, setFetching] = reactExports.useState(false);
     const tagInputRef = reactExports.useRef(null);
     reactExports.useEffect(() => {
       if (!categoryId && defaultCategoryId !== void 0) {
         setCategoryId(defaultCategoryId);
       }
     }, [defaultCategoryId, categoryId]);
-    const addTag = (tag) => {
+    const addTag = reactExports.useCallback((tag) => {
       const trimmed = tag.trim();
       if (trimmed && !tags.includes(trimmed)) {
         setTags([...tags, trimmed]);
       }
       setTagInput("");
-    };
-    const removeTag = (tagToRemove) => {
+    }, [tags]);
+    const removeTag = reactExports.useCallback((tagToRemove) => {
       setTags(tags.filter((t) => t !== tagToRemove));
-    };
-    const handleTagKeyDown = (e) => {
+    }, [tags]);
+    const handleTagKeyDown = reactExports.useCallback((e) => {
       if (e.key === "Enter" || e.key === ",") {
         e.preventDefault();
-        if (tagInput.trim()) {
-          addTag(tagInput);
-        }
+        if (tagInput.trim()) addTag(tagInput);
       } else if (e.key === "Backspace" && !tagInput && tags.length > 0) {
         removeTag(tags[tags.length - 1]);
       }
-    };
-    const handleSubmit = (e) => {
+    }, [tagInput, tags, addTag, removeTag]);
+    const fetchUrlInfo = reactExports.useCallback(async () => {
+      if (!url.trim()) {
+        setError("请先输入URL");
+        return;
+      }
+      setError("");
+      setFetching(true);
+      let normalizedUrl = url.trim();
+      if (!/^https?:\/\//i.test(normalizedUrl)) {
+        normalizedUrl = "https://" + normalizedUrl;
+      }
+      setUrl(normalizedUrl);
+      try {
+        const response = await fetch(
+          `https://api.allorigins.win/get?url=${encodeURIComponent(normalizedUrl)}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch");
+        const data = await response.json();
+        const html = data.contents || "";
+        const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+        if (titleMatch && titleMatch[1] && !(bookmark == null ? void 0 : bookmark.title)) {
+          setTitle(titleMatch[1].trim());
+        }
+        const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["'][^>]*>/i) || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*name=["']description["'][^>]*>/i);
+        if (descMatch && descMatch[1] && !(bookmark == null ? void 0 : bookmark.description)) {
+          setDescription(descMatch[1].trim());
+        }
+        if (!titleMatch || !titleMatch[1]) {
+          const urlObj = new URL(normalizedUrl);
+          if (!title) setTitle(urlObj.hostname);
+        }
+      } catch {
+        const urlObj = new URL(normalizedUrl);
+        if (!title) setTitle(urlObj.hostname);
+      } finally {
+        setFetching(false);
+      }
+    }, [url, bookmark == null ? void 0 : bookmark.title, bookmark == null ? void 0 : bookmark.description, title, description]);
+    const handleSubmit = reactExports.useCallback((e) => {
       e.preventDefault();
       if (!title.trim()) {
         setError("标题不能为空");
@@ -14130,47 +14386,95 @@
         tags,
         order: (bookmark == null ? void 0 : bookmark.order) ?? 0
       });
+    }, [title, url, description, categoryId, tags, bookmark == null ? void 0 : bookmark.order, onSubmit]);
+    const labelStyle = {
+      display: "block",
+      fontSize: "13px",
+      fontWeight: 500,
+      color: "var(--color-text)",
+      marginBottom: "4px"
     };
-    return /* @__PURE__ */ React$2.createElement("form", { onSubmit: handleSubmit, className: "space-y-4" }, error && /* @__PURE__ */ React$2.createElement("div", { className: "px-3 py-2 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded" }, error), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" }, "标题 ", /* @__PURE__ */ React$2.createElement("span", { className: "text-red-500" }, "*")), /* @__PURE__ */ React$2.createElement(
+    const starStyle = { color: "var(--color-error)" };
+    return /* @__PURE__ */ React$2.createElement("form", { onSubmit: handleSubmit, style: { display: "flex", flexDirection: "column", gap: "16px" } }, error && /* @__PURE__ */ React$2.createElement("div", { style: {
+      padding: "8px 12px",
+      fontSize: "13px",
+      color: "var(--color-error)",
+      background: "var(--color-error)1a",
+      borderRadius: "6px"
+    } }, error), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { style: labelStyle }, "标题 ", /* @__PURE__ */ React$2.createElement("span", { style: starStyle }, "*")), /* @__PURE__ */ React$2.createElement(
       "input",
       {
         type: "text",
         value: title,
         onChange: (e) => setTitle(e.target.value),
         placeholder: "书签标题",
-        className: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+        className: "fp-input"
       }
-    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" }, "URL ", /* @__PURE__ */ React$2.createElement("span", { className: "text-red-500" }, "*")), /* @__PURE__ */ React$2.createElement(
+    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { style: labelStyle }, "URL ", /* @__PURE__ */ React$2.createElement("span", { style: starStyle }, "*")), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ React$2.createElement(
       "input",
       {
         type: "url",
         value: url,
         onChange: (e) => setUrl(e.target.value),
         placeholder: "https://example.com",
-        className: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+        className: "fp-input",
+        style: { flex: 1 }
       }
-    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" }, "描述"), /* @__PURE__ */ React$2.createElement(
+    ), /* @__PURE__ */ React$2.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: fetchUrlInfo,
+        disabled: fetching,
+        title: "获取网页信息",
+        style: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "36px",
+          height: "36px",
+          padding: "0",
+          background: fetching ? "var(--color-neutral-300)" : "var(--color-neutral-100)",
+          border: "1px solid var(--color-neutral-300)",
+          borderRadius: "6px",
+          cursor: fetching ? "not-allowed" : "pointer",
+          transition: "background-color 0.15s"
+        }
+      },
+      /* @__PURE__ */ React$2.createElement(Globe, { size: 16, style: { color: "var(--color-text-secondary)" } })
+    ))), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { style: labelStyle }, "描述"), /* @__PURE__ */ React$2.createElement(
       "textarea",
       {
         value: description,
         onChange: (e) => setDescription(e.target.value),
         placeholder: "简要描述...",
         rows: 2,
-        className: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+        className: "fp-input",
+        style: { resize: "none" }
       }
-    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" }, "分类"), /* @__PURE__ */ React$2.createElement(
+    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { style: labelStyle }, "分类"), /* @__PURE__ */ React$2.createElement(
       "select",
       {
         value: categoryId,
         onChange: (e) => setCategoryId(e.target.value),
-        className: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+        className: "fp-input"
       },
       /* @__PURE__ */ React$2.createElement("option", { value: "" }, "未分类"),
       categories.map((cat) => /* @__PURE__ */ React$2.createElement("option", { key: cat.id, value: cat.id }, cat.name))
-    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" }, "标签"), /* @__PURE__ */ React$2.createElement(
+    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { style: labelStyle }, "标签"), /* @__PURE__ */ React$2.createElement(
       "div",
       {
-        className: "flex flex-wrap items-center gap-1 px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary",
+        style: {
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: "4px",
+          padding: "8px",
+          border: "1px solid var(--color-neutral-300)",
+          borderRadius: "6px",
+          background: "var(--color-bg-card)",
+          cursor: "text"
+        },
         onClick: () => {
           var _a;
           return (_a = tagInputRef.current) == null ? void 0 : _a.focus();
@@ -14180,9 +14484,18 @@
         "span",
         {
           key: tag,
-          className: "inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-primary/10 text-primary rounded"
+          style: {
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
+            padding: "2px 6px",
+            fontSize: "12px",
+            background: "var(--color-primary)1a",
+            color: "var(--color-primary)",
+            borderRadius: "4px"
+          }
         },
-        /* @__PURE__ */ React$2.createElement(Tag, { className: "w-3 h-3" }),
+        /* @__PURE__ */ React$2.createElement(Tag, { size: 12 }),
         tag,
         /* @__PURE__ */ React$2.createElement(
           "button",
@@ -14192,9 +14505,9 @@
               e.stopPropagation();
               removeTag(tag);
             },
-            className: "p-0.5 hover:bg-primary/20 rounded"
+            style: { padding: "2px", borderRadius: "4px", background: "none", border: "none", cursor: "pointer", color: "inherit" }
           },
-          /* @__PURE__ */ React$2.createElement(X, { className: "w-3 h-3" })
+          /* @__PURE__ */ React$2.createElement(X, { size: 12 })
         )
       )),
       /* @__PURE__ */ React$2.createElement(
@@ -14209,25 +14522,484 @@
             if (tagInput.trim()) addTag(tagInput);
           },
           placeholder: tags.length === 0 ? "输入标签，按回车添加" : "",
-          className: "flex-1 min-w-[80px] text-sm bg-transparent text-gray-800 dark:text-gray-200 focus:outline-none"
+          style: {
+            flex: 1,
+            minWidth: "80px",
+            fontSize: "13px",
+            background: "transparent",
+            color: "var(--color-text)",
+            border: "none",
+            outline: "none"
+          }
         }
       )
-    )), /* @__PURE__ */ React$2.createElement("div", { className: "flex justify-center gap-2 pt-2" }, /* @__PURE__ */ React$2.createElement(
+    )), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", justifyContent: "center", gap: "8px", paddingTop: "8px" } }, /* @__PURE__ */ React$2.createElement(
       "button",
       {
         type: "button",
         onClick: onCancel,
-        className: "px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+        className: "fp-btn-secondary"
       },
       "取消"
     ), /* @__PURE__ */ React$2.createElement(
       "button",
       {
         type: "submit",
-        className: "px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark transition-colors"
+        className: "fp-btn-primary"
       },
       (bookmark == null ? void 0 : bookmark.id) ? "保存修改" : "添加"
     )));
+  };
+  const FaviconFallback$1 = ({ url }) => {
+    const [error, setError] = reactExports.useState(false);
+    if (!url || error) {
+      return /* @__PURE__ */ React$2.createElement("div", { style: {
+        width: "32px",
+        height: "32px",
+        borderRadius: "4px",
+        background: "var(--color-neutral-100)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0
+      } }, /* @__PURE__ */ React$2.createElement(Globe, { size: 16, style: { color: "var(--color-neutral-400)" } }));
+    }
+    return /* @__PURE__ */ React$2.createElement(
+      "img",
+      {
+        src: url,
+        alt: "favicon",
+        style: {
+          width: "32px",
+          height: "32px",
+          borderRadius: "4px",
+          objectFit: "contain",
+          flexShrink: 0
+        },
+        onError: () => setError(true)
+      }
+    );
+  };
+  const BookmarkCard = ({
+    bookmark,
+    category,
+    isSelected,
+    onSelect,
+    onEdit,
+    onDelete,
+    onOpen,
+    onContextMenu,
+    showFavicon
+  }) => {
+    const faviconUrl = bookmark.favicon || getFaviconUrl(bookmark.url);
+    const cardStyle = {
+      position: "relative",
+      background: "var(--color-bg-card)",
+      border: isSelected ? "1px solid var(--color-primary)" : "1px solid var(--color-neutral-200)",
+      borderRadius: "8px",
+      padding: "12px",
+      cursor: "pointer",
+      transition: "box-shadow 0.15s, transform 0.15s",
+      boxShadow: isSelected ? "0 0 0 1px var(--color-primary)" : "none"
+    };
+    const checkboxWrapStyle = {
+      position: "absolute",
+      top: "8px",
+      left: "8px",
+      opacity: isSelected ? 1 : void 0
+    };
+    return /* @__PURE__ */ React$2.createElement(
+      "div",
+      {
+        style: cardStyle,
+        onClick: onOpen,
+        onContextMenu,
+        onMouseEnter: (e) => {
+          e.currentTarget.style.boxShadow = isSelected ? "0 0 0 1px var(--color-primary), var(--shadow-sm)" : "var(--shadow-sm)";
+          if (!isSelected) e.currentTarget.style.transform = "translateY(-1px)";
+        },
+        onMouseLeave: (e) => {
+          e.currentTarget.style.boxShadow = isSelected ? "0 0 0 1px var(--color-primary)" : "none";
+          e.currentTarget.style.transform = "translateY(0)";
+        }
+      },
+      /* @__PURE__ */ React$2.createElement("div", { style: checkboxWrapStyle, className: "fp-checkbox-wrap" }, /* @__PURE__ */ React$2.createElement(
+        "input",
+        {
+          type: "checkbox",
+          checked: isSelected,
+          onChange: (e) => {
+            e.stopPropagation();
+            onSelect();
+          },
+          onClick: (e) => e.stopPropagation(),
+          style: {
+            width: "16px",
+            height: "16px",
+            borderRadius: "4px",
+            borderColor: "var(--color-neutral-300)",
+            cursor: "pointer"
+          }
+        }
+      )),
+      /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "flex-start", gap: "8px" } }, showFavicon && /* @__PURE__ */ React$2.createElement(FaviconFallback$1, { url: faviconUrl }), /* @__PURE__ */ React$2.createElement("div", { style: { flex: 1, minWidth: 0, paddingLeft: showFavicon ? 0 : "24px" } }, /* @__PURE__ */ React$2.createElement("h3", { style: {
+        fontSize: "14px",
+        fontWeight: 500,
+        color: "var(--color-text)",
+        margin: 0,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap"
+      } }, bookmark.title), /* @__PURE__ */ React$2.createElement("p", { style: {
+        fontSize: "12px",
+        color: "var(--color-text-tertiary)",
+        margin: "2px 0 0",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap"
+      } }, bookmark.url.replace(/^https?:\/\//, "")))),
+      bookmark.description && /* @__PURE__ */ React$2.createElement("p", { style: {
+        fontSize: "12px",
+        color: "var(--color-text-secondary)",
+        margin: "8px 0 0",
+        display: "-webkit-box",
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden"
+      } }, truncateText(bookmark.description, 100)),
+      /* @__PURE__ */ React$2.createElement("div", { style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        marginTop: "8px",
+        flexWrap: "wrap"
+      } }, category && /* @__PURE__ */ React$2.createElement("span", { style: {
+        padding: "2px 6px",
+        fontSize: "12px",
+        background: "var(--color-neutral-100)",
+        color: "var(--color-text-secondary)",
+        borderRadius: "4px"
+      } }, category.name), bookmark.tags.slice(0, 2).map((tag) => /* @__PURE__ */ React$2.createElement(
+        "span",
+        {
+          key: tag,
+          style: {
+            padding: "2px 6px",
+            fontSize: "12px",
+            background: "var(--color-primary)1a",
+            color: "var(--color-primary)",
+            borderRadius: "4px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "2px"
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(Tag, { size: 10 }),
+        tag
+      ))),
+      /* @__PURE__ */ React$2.createElement("div", { style: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginTop: "8px",
+        paddingTop: "8px",
+        borderTop: "1px solid var(--color-neutral-100)"
+      } }, /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-tertiary)" } }, formatDate(bookmark.updatedAt)), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "4px" } }, /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          onClick: (e) => {
+            e.stopPropagation();
+            onOpen();
+          },
+          title: "打开",
+          style: {
+            padding: "4px",
+            borderRadius: "4px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--color-text-tertiary)",
+            display: "flex",
+            alignItems: "center",
+            transition: "background-color 0.15s"
+          },
+          onMouseEnter: (e) => {
+            e.currentTarget.style.background = "var(--color-neutral-100)";
+            e.currentTarget.style.color = "var(--color-primary)";
+          },
+          onMouseLeave: (e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--color-text-tertiary)";
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(ExternalLink, { size: 14 })
+      ), /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          onClick: (e) => {
+            e.stopPropagation();
+            onEdit();
+          },
+          title: "编辑",
+          style: {
+            padding: "4px",
+            borderRadius: "4px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--color-text-tertiary)",
+            display: "flex",
+            alignItems: "center",
+            transition: "background-color 0.15s"
+          },
+          onMouseEnter: (e) => {
+            e.currentTarget.style.background = "var(--color-neutral-100)";
+            e.currentTarget.style.color = "var(--color-primary)";
+          },
+          onMouseLeave: (e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--color-text-tertiary)";
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(Pencil, { size: 14 })
+      ), /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          onClick: (e) => {
+            e.stopPropagation();
+            onDelete();
+          },
+          title: "删除",
+          style: {
+            padding: "4px",
+            borderRadius: "4px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--color-text-tertiary)",
+            display: "flex",
+            alignItems: "center",
+            transition: "background-color 0.15s"
+          },
+          onMouseEnter: (e) => {
+            e.currentTarget.style.background = "var(--color-error)0d";
+            e.currentTarget.style.color = "var(--color-error)";
+          },
+          onMouseLeave: (e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--color-text-tertiary)";
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(Trash2, { size: 14 })
+      )))
+    );
+  };
+  const FaviconFallback = ({ url }) => {
+    const [error, setError] = reactExports.useState(false);
+    if (!url || error) {
+      return /* @__PURE__ */ React$2.createElement("div", { style: {
+        width: "20px",
+        height: "20px",
+        borderRadius: "4px",
+        background: "var(--color-neutral-100)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0
+      } }, /* @__PURE__ */ React$2.createElement(Globe, { size: 12, style: { color: "var(--color-neutral-400)" } }));
+    }
+    return /* @__PURE__ */ React$2.createElement(
+      "img",
+      {
+        src: url,
+        alt: "favicon",
+        style: {
+          width: "20px",
+          height: "20px",
+          borderRadius: "4px",
+          objectFit: "contain",
+          flexShrink: 0
+        },
+        onError: () => setError(true)
+      }
+    );
+  };
+  const BookmarkListItem = ({
+    bookmark,
+    category,
+    isSelected,
+    onSelect,
+    onEdit,
+    onDelete,
+    onOpen,
+    onContextMenu,
+    showFavicon
+  }) => {
+    const faviconUrl = bookmark.favicon || getFaviconUrl(bookmark.url);
+    const rowStyle = {
+      display: "flex",
+      alignItems: "center",
+      gap: "12px",
+      padding: "8px 12px",
+      borderBottom: "1px solid var(--color-neutral-100)",
+      cursor: "pointer",
+      transition: "background-color 0.15s",
+      background: isSelected ? "var(--color-primary)0d" : "transparent"
+    };
+    return /* @__PURE__ */ React$2.createElement(
+      "div",
+      {
+        style: rowStyle,
+        onClick: onOpen,
+        onContextMenu,
+        onMouseEnter: (e) => {
+          if (!isSelected) e.currentTarget.style.background = "var(--color-neutral-50)";
+        },
+        onMouseLeave: (e) => {
+          if (!isSelected) e.currentTarget.style.background = "transparent";
+        }
+      },
+      /* @__PURE__ */ React$2.createElement(
+        "input",
+        {
+          type: "checkbox",
+          checked: isSelected,
+          onChange: () => onSelect(),
+          onClick: (e) => e.stopPropagation(),
+          style: {
+            width: "16px",
+            height: "16px",
+            borderRadius: "4px",
+            borderColor: "var(--color-neutral-300)",
+            cursor: "pointer",
+            flexShrink: 0
+          }
+        }
+      ),
+      showFavicon && /* @__PURE__ */ React$2.createElement(FaviconFallback, { url: faviconUrl }),
+      /* @__PURE__ */ React$2.createElement("div", { style: {
+        flex: 1,
+        minWidth: 0,
+        display: "flex",
+        alignItems: "center",
+        gap: "12px"
+      } }, /* @__PURE__ */ React$2.createElement("span", { style: {
+        fontSize: "14px",
+        fontWeight: 500,
+        color: "var(--color-text)",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        maxWidth: "160px"
+      } }, bookmark.title), /* @__PURE__ */ React$2.createElement("span", { style: {
+        fontSize: "12px",
+        color: "var(--color-text-tertiary)",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        flex: 1
+      } }, truncateText(bookmark.url, 60)), category && /* @__PURE__ */ React$2.createElement("span", { style: {
+        padding: "2px 6px",
+        fontSize: "12px",
+        background: "var(--color-neutral-100)",
+        color: "var(--color-text-secondary)",
+        borderRadius: "4px",
+        flexShrink: 0
+      } }, category.name)),
+      /* @__PURE__ */ React$2.createElement("div", { style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+        flexShrink: 0
+      }, onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          onClick: (e) => {
+            e.stopPropagation();
+            onOpen();
+          },
+          title: "打开",
+          style: {
+            padding: "4px",
+            borderRadius: "4px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--color-text-tertiary)",
+            display: "flex",
+            alignItems: "center",
+            transition: "background-color 0.15s"
+          },
+          onMouseEnter: (e) => {
+            e.currentTarget.style.background = "var(--color-neutral-100)";
+            e.currentTarget.style.color = "var(--color-primary)";
+          },
+          onMouseLeave: (e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--color-text-tertiary)";
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(ExternalLink, { size: 14 })
+      ), /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          onClick: (e) => {
+            e.stopPropagation();
+            onEdit();
+          },
+          title: "编辑",
+          style: {
+            padding: "4px",
+            borderRadius: "4px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--color-text-tertiary)",
+            display: "flex",
+            alignItems: "center",
+            transition: "background-color 0.15s"
+          },
+          onMouseEnter: (e) => {
+            e.currentTarget.style.background = "var(--color-neutral-100)";
+            e.currentTarget.style.color = "var(--color-primary)";
+          },
+          onMouseLeave: (e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--color-text-tertiary)";
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(Pencil, { size: 14 })
+      ), /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          onClick: (e) => {
+            e.stopPropagation();
+            onDelete();
+          },
+          title: "删除",
+          style: {
+            padding: "4px",
+            borderRadius: "4px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--color-text-tertiary)",
+            display: "flex",
+            alignItems: "center",
+            transition: "background-color 0.15s"
+          },
+          onMouseEnter: (e) => {
+            e.currentTarget.style.background = "var(--color-error)0d";
+            e.currentTarget.style.color = "var(--color-error)";
+          },
+          onMouseLeave: (e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--color-text-tertiary)";
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(Trash2, { size: 14 })
+      ))
+    );
   };
   function generateBrowserBookmarks(data) {
     const { bookmarks, categories } = data;
@@ -14421,31 +15193,107 @@
       downloadFile(content, filename, mimeType);
     };
     if (!isOpen) return null;
-    return /* @__PURE__ */ React$2.createElement("div", { className: "fixed inset-0 z-50 flex items-center justify-center bg-black/30" }, /* @__PURE__ */ React$2.createElement("div", { className: "w-full max-w-lg mx-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden" }, /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700" }, /* @__PURE__ */ React$2.createElement("h3", { className: "text-base font-semibold text-gray-800 dark:text-gray-200" }, mode === "import" ? "导入书签" : "导出书签"), /* @__PURE__ */ React$2.createElement(
+    const overlayStyle = {
+      position: "fixed",
+      inset: 0,
+      zIndex: 50,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "rgba(0,0,0,0.3)"
+    };
+    const modalStyle = {
+      width: "100%",
+      maxWidth: "512px",
+      margin: "0 16px",
+      background: "var(--color-bg-card)",
+      borderRadius: "8px",
+      boxShadow: "var(--shadow-md)",
+      overflow: "hidden",
+      display: "flex",
+      flexDirection: "column",
+      maxHeight: "90vh"
+    };
+    const headerStyle = {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "12px 16px",
+      borderBottom: "1px solid var(--color-neutral-200)"
+    };
+    const footerStyle = {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: "8px",
+      padding: "12px 16px",
+      borderTop: "1px solid var(--color-neutral-200)",
+      background: "var(--color-neutral-50)"
+    };
+    const contentStyle = {
+      padding: "16px",
+      overflowY: "auto"
+    };
+    const formatBtnStyle = (active) => ({
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
+      padding: "6px 12px",
+      fontSize: "13px",
+      borderRadius: "6px",
+      border: "1px solid",
+      borderColor: active ? "var(--color-primary)" : "var(--color-neutral-300)",
+      background: active ? "var(--color-primary)0d" : "transparent",
+      color: active ? "var(--color-primary)" : "var(--color-text-secondary)",
+      cursor: "pointer",
+      transition: "background-color 0.15s"
+    });
+    return /* @__PURE__ */ React$2.createElement("div", { style: overlayStyle }, /* @__PURE__ */ React$2.createElement("div", { style: modalStyle }, /* @__PURE__ */ React$2.createElement("div", { style: headerStyle }, /* @__PURE__ */ React$2.createElement("h3", { style: { fontSize: "14px", fontWeight: 600, color: "var(--color-text)", margin: 0 } }, mode === "import" ? "导入书签" : "导出书签"), /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: handleClose,
-        className: "p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+        style: {
+          padding: "4px",
+          borderRadius: "4px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "var(--color-text-tertiary)",
+          display: "flex"
+        }
       },
-      /* @__PURE__ */ React$2.createElement(X, { className: "w-4 h-4" })
-    )), /* @__PURE__ */ React$2.createElement("div", { className: "p-4" }, mode === "import" ? /* @__PURE__ */ React$2.createElement("div", { className: "space-y-4" }, /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2" }, ["html", "json", "txt"].map((format) => /* @__PURE__ */ React$2.createElement(
+      /* @__PURE__ */ React$2.createElement(X, { size: 16 })
+    )), /* @__PURE__ */ React$2.createElement("div", { style: { ...contentStyle, display: "flex", flexDirection: "column", gap: "16px" } }, mode === "import" ? /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, ["html", "json", "txt"].map((format) => /* @__PURE__ */ React$2.createElement(
       "button",
       {
         key: format,
         onClick: () => setImportFormat(format),
-        className: `flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors ${importFormat === format ? "border-primary bg-primary/10 text-primary" : "border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}`
+        style: formatBtnStyle(importFormat === format)
       },
-      format === "html" && /* @__PURE__ */ React$2.createElement(Globe, { className: "w-4 h-4" }),
-      format === "json" && /* @__PURE__ */ React$2.createElement(FileJson, { className: "w-4 h-4" }),
-      format === "txt" && /* @__PURE__ */ React$2.createElement(FileText, { className: "w-4 h-4" }),
+      format === "html" && /* @__PURE__ */ React$2.createElement(Globe, { size: 14 }),
+      format === "json" && /* @__PURE__ */ React$2.createElement(FileJson, { size: 14 }),
+      format === "txt" && /* @__PURE__ */ React$2.createElement(FileText, { size: 14 }),
       format.toUpperCase()
     ))), /* @__PURE__ */ React$2.createElement(
       "div",
       {
-        className: "border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-primary dark:hover:border-primary transition-colors",
+        style: {
+          border: "2px dashed var(--color-neutral-300)",
+          borderRadius: "8px",
+          padding: "24px",
+          textAlign: "center",
+          cursor: "pointer",
+          transition: "border-color 0.15s"
+        },
         onClick: () => {
           var _a;
           return (_a = fileInputRef.current) == null ? void 0 : _a.click();
+        },
+        onMouseEnter: (e) => {
+          e.currentTarget.style.borderColor = "var(--color-primary)";
+        },
+        onMouseLeave: (e) => {
+          e.currentTarget.style.borderColor = "var(--color-neutral-300)";
         },
         onDragOver: (e) => e.preventDefault(),
         onDrop: (e) => {
@@ -14464,69 +15312,104 @@
           }
         }
       },
-      /* @__PURE__ */ React$2.createElement(Upload, { className: "w-8 h-8 text-gray-400 mx-auto mb-2" }),
-      /* @__PURE__ */ React$2.createElement("p", { className: "text-sm text-gray-600 dark:text-gray-300" }, fileName ? fileName : "点击选择文件或拖拽到此处"),
-      /* @__PURE__ */ React$2.createElement("p", { className: "text-xs text-gray-400 dark:text-gray-500 mt-1" }, "支持 HTML（浏览器书签）、JSON、TXT 格式"),
+      /* @__PURE__ */ React$2.createElement(Upload, { size: 32, style: { color: "var(--color-neutral-400)", margin: "0 auto 8px" } }),
+      /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "13px", color: "var(--color-text-secondary)", margin: "0 0 4px" } }, fileName ? fileName : "点击选择文件或拖拽到此处"),
+      /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "12px", color: "var(--color-text-tertiary)", margin: 0 } }, "支持 HTML（浏览器书签）、JSON、TXT 格式"),
       /* @__PURE__ */ React$2.createElement(
         "input",
         {
           ref: fileInputRef,
           type: "file",
           accept: ".html,.htm,.json,.txt",
-          className: "hidden",
+          style: { display: "none" },
           onChange: handleFileSelect
         }
       )
-    ), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { className: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" }, "或粘贴内容"), /* @__PURE__ */ React$2.createElement(
+    ), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { style: { display: "block", fontSize: "12px", fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: "4px" } }, "或粘贴内容"), /* @__PURE__ */ React$2.createElement(
       "textarea",
       {
         value: rawContent,
         onChange: (e) => setRawContent(e.target.value),
         placeholder: importFormat === "txt" ? "每行一个 URL" : importFormat === "json" ? "粘贴 JSON 内容" : "粘贴 HTML 书签内容",
         rows: 4,
-        className: "w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary font-mono resize-none"
+        style: {
+          width: "100%",
+          padding: "8px 12px",
+          fontSize: "12px",
+          border: "1px solid var(--color-neutral-200)",
+          borderRadius: "6px",
+          background: "var(--color-bg-card)",
+          color: "var(--color-text)",
+          outline: "none",
+          fontFamily: "monospace",
+          resize: "none"
+        }
       }
     ), rawContent && /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: handleTextPaste,
-        className: "mt-1 text-xs text-primary hover:underline"
+        style: {
+          marginTop: "4px",
+          fontSize: "12px",
+          color: "var(--color-primary)",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          textDecoration: "none",
+          padding: 0
+        },
+        onMouseEnter: (e) => {
+          e.currentTarget.style.textDecoration = "underline";
+        },
+        onMouseLeave: (e) => {
+          e.currentTarget.style.textDecoration = "none";
+        }
       },
       "解析内容"
-    )), previewData && /* @__PURE__ */ React$2.createElement("div", { className: "p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md" }, /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2 mb-2" }, /* @__PURE__ */ React$2.createElement(Check, { className: "w-4 h-4 text-green-500" }), /* @__PURE__ */ React$2.createElement("span", { className: "text-sm font-medium text-gray-700 dark:text-gray-200" }, "解析成功")), /* @__PURE__ */ React$2.createElement("p", { className: "text-xs text-gray-600 dark:text-gray-400" }, "将导入 ", /* @__PURE__ */ React$2.createElement("span", { className: "font-medium text-gray-800 dark:text-gray-200" }, previewData.bookmarks.length), " 个书签", previewData.categories.length > 0 && /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, "，", /* @__PURE__ */ React$2.createElement("span", { className: "font-medium text-gray-800 dark:text-gray-200" }, previewData.categories.length), " 个分类")), previewData.conflicts > 0 && /* @__PURE__ */ React$2.createElement("p", { className: "text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1" }, /* @__PURE__ */ React$2.createElement(TriangleAlert, { className: "w-3 h-3" }), "检测到 ", previewData.conflicts, " 个重复项")), /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2 text-xs" }, /* @__PURE__ */ React$2.createElement("span", { className: "text-gray-600 dark:text-gray-400" }, "导入方式："), /* @__PURE__ */ React$2.createElement("label", { className: "flex items-center gap-1" }, /* @__PURE__ */ React$2.createElement(
+    )), previewData && /* @__PURE__ */ React$2.createElement("div", { style: {
+      padding: "12px",
+      background: "var(--color-neutral-50)",
+      borderRadius: "6px"
+    } }, /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" } }, /* @__PURE__ */ React$2.createElement(Check, { size: 16, style: { color: "var(--color-success)" } }), /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "13px", fontWeight: 500, color: "var(--color-text)" } }, "解析成功")), /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "12px", color: "var(--color-text-secondary)", margin: 0 } }, "将导入 ", /* @__PURE__ */ React$2.createElement("span", { style: { fontWeight: 500, color: "var(--color-text)" } }, previewData.bookmarks.length), " 个书签", previewData.categories.length > 0 && /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, "，", /* @__PURE__ */ React$2.createElement("span", { style: { fontWeight: 500, color: "var(--color-text)" } }, previewData.categories.length), " 个分类")), previewData.conflicts > 0 && /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "12px", color: "var(--color-warning)", margin: "4px 0 0", display: "flex", alignItems: "center", gap: "4px" } }, /* @__PURE__ */ React$2.createElement(TriangleAlert, { size: 12 }), "检测到 ", previewData.conflicts, " 个重复项")), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px", fontSize: "12px" } }, /* @__PURE__ */ React$2.createElement("span", { style: { color: "var(--color-text-secondary)" } }, "导入方式："), /* @__PURE__ */ React$2.createElement("label", { style: { display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" } }, /* @__PURE__ */ React$2.createElement(
       "input",
       {
         type: "radio",
         name: "importMode",
         checked: importMode === "merge",
         onChange: () => setImportMode("merge"),
-        className: "text-primary"
+        style: { accentColor: "var(--color-primary)" }
       }
-    ), "合并（保留现有数据）"), /* @__PURE__ */ React$2.createElement("label", { className: "flex items-center gap-1" }, /* @__PURE__ */ React$2.createElement(
+    ), "合并（保留现有数据）"), /* @__PURE__ */ React$2.createElement("label", { style: { display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" } }, /* @__PURE__ */ React$2.createElement(
       "input",
       {
         type: "radio",
         name: "importMode",
         checked: importMode === "replace",
         onChange: () => setImportMode("replace"),
-        className: "text-primary"
+        style: { accentColor: "var(--color-primary)" }
       }
-    ), "替换（清空现有数据）"))) : /* @__PURE__ */ React$2.createElement("div", { className: "space-y-4" }, /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2" }, ["html", "json", "txt"].map((format) => /* @__PURE__ */ React$2.createElement(
+    ), "替换（清空现有数据）"))) : /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, ["html", "json", "txt"].map((format) => /* @__PURE__ */ React$2.createElement(
       "button",
       {
         key: format,
         onClick: () => setExportFormat(format),
-        className: `flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border transition-colors ${exportFormat === format ? "border-primary bg-primary/10 text-primary" : "border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}`
+        style: formatBtnStyle(exportFormat === format)
       },
-      format === "html" && /* @__PURE__ */ React$2.createElement(Globe, { className: "w-4 h-4" }),
-      format === "json" && /* @__PURE__ */ React$2.createElement(FileJson, { className: "w-4 h-4" }),
-      format === "txt" && /* @__PURE__ */ React$2.createElement(FileText, { className: "w-4 h-4" }),
+      format === "html" && /* @__PURE__ */ React$2.createElement(Globe, { size: 14 }),
+      format === "json" && /* @__PURE__ */ React$2.createElement(FileJson, { size: 14 }),
+      format === "txt" && /* @__PURE__ */ React$2.createElement(FileText, { size: 14 }),
       format.toUpperCase()
-    ))), /* @__PURE__ */ React$2.createElement("div", { className: "p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md" }, /* @__PURE__ */ React$2.createElement("p", { className: "text-sm text-gray-700 dark:text-gray-200" }, "将导出 ", /* @__PURE__ */ React$2.createElement("span", { className: "font-medium" }, bookmarks.length), " 个书签", data.categories.length > 0 && /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, "，", /* @__PURE__ */ React$2.createElement("span", { className: "font-medium" }, data.categories.length), " 个分类"))), /* @__PURE__ */ React$2.createElement("div", { className: "text-xs text-gray-500 dark:text-gray-400 space-y-1" }, /* @__PURE__ */ React$2.createElement("p", null, "• HTML 格式：可导入浏览器（Chrome/Edge/Firefox）书签"), /* @__PURE__ */ React$2.createElement("p", null, "• JSON 格式：完整备份，包含分类结构"), /* @__PURE__ */ React$2.createElement("p", null, "• TXT 格式：纯 URL 列表，无分类信息")))), /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30" }, /* @__PURE__ */ React$2.createElement(
+    ))), /* @__PURE__ */ React$2.createElement("div", { style: {
+      padding: "12px",
+      background: "var(--color-neutral-50)",
+      borderRadius: "6px"
+    } }, /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "13px", color: "var(--color-text)", margin: 0 } }, "将导出 ", /* @__PURE__ */ React$2.createElement("span", { style: { fontWeight: 500 } }, bookmarks.length), " 个书签", data.categories.length > 0 && /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, "，", /* @__PURE__ */ React$2.createElement("span", { style: { fontWeight: 500 } }, data.categories.length), " 个分类"))), /* @__PURE__ */ React$2.createElement("div", { style: { fontSize: "12px", color: "var(--color-text-secondary)", display: "flex", flexDirection: "column", gap: "4px" } }, /* @__PURE__ */ React$2.createElement("p", { style: { margin: 0 } }, "• HTML 格式：可导入浏览器（Chrome/Edge/Firefox）书签"), /* @__PURE__ */ React$2.createElement("p", { style: { margin: 0 } }, "• JSON 格式：完整备份，包含分类结构"), /* @__PURE__ */ React$2.createElement("p", { style: { margin: 0 } }, "• TXT 格式：纯 URL 列表，无分类信息")))), /* @__PURE__ */ React$2.createElement("div", { style: footerStyle }, /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: handleClose,
-        className: "px-4 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className: "fp-btn-secondary",
+        style: { padding: "6px 16px", fontSize: "13px" }
       },
       "取消"
     ), mode === "import" ? /* @__PURE__ */ React$2.createElement(
@@ -14534,16 +15417,18 @@
       {
         onClick: handleConfirmImport,
         disabled: !rawContent,
-        className: "px-4 py-1.5 text-sm bg-primary text-button-text rounded-md hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className: "fp-btn-primary",
+        style: { padding: "6px 16px", fontSize: "13px", opacity: !rawContent ? 0.5 : 1, cursor: !rawContent ? "not-allowed" : "pointer" }
       },
       "确认导入"
     ) : /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: handleExport,
-        className: "px-4 py-1.5 text-sm bg-primary text-button-text rounded-md hover:opacity-90 transition-colors flex items-center gap-1"
+        className: "fp-btn-primary",
+        style: { padding: "6px 16px", fontSize: "13px", display: "flex", alignItems: "center", gap: "4px" }
       },
-      /* @__PURE__ */ React$2.createElement(Download, { className: "w-4 h-4" }),
+      /* @__PURE__ */ React$2.createElement(Download, { size: 14 }),
       "下载文件"
     ))));
   };
@@ -14553,93 +15438,82 @@
     onImport,
     hasCategories
   }) => {
-    return /* @__PURE__ */ React$2.createElement("div", { className: "flex flex-col items-center justify-center py-16 px-8 text-center" }, hasBookmarks ? /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { className: "w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4" }, /* @__PURE__ */ React$2.createElement(FolderOpen, { className: "w-8 h-8 text-gray-400 dark:text-gray-500" })), /* @__PURE__ */ React$2.createElement("h3", { className: "text-base font-medium text-gray-700 dark:text-gray-300 mb-2" }, "没有找到匹配的书签"), /* @__PURE__ */ React$2.createElement("p", { className: "text-sm text-gray-500 dark:text-gray-400 mb-4" }, "尝试调整搜索条件或切换分类")) : /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { className: "w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4" }, /* @__PURE__ */ React$2.createElement(BookmarkPlus, { className: "w-8 h-8 text-gray-400 dark:text-gray-500" })), /* @__PURE__ */ React$2.createElement("h3", { className: "text-base font-medium text-gray-700 dark:text-gray-300 mb-2" }, hasCategories ? "还没有书签" : "开始使用前，先创建一些分类"), /* @__PURE__ */ React$2.createElement("p", { className: "text-sm text-gray-500 dark:text-gray-400 mb-6" }, hasCategories ? "点击下方按钮添加第一个书签" : "分类可以帮助你更好地组织书签"), /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React$2.createElement(
+    const containerStyle = {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "48px 32px",
+      textAlign: "center"
+    };
+    const iconCircleStyle = {
+      width: "64px",
+      height: "64px",
+      borderRadius: "50%",
+      background: "var(--color-neutral-100)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: "16px"
+    };
+    const titleStyle = {
+      fontSize: "16px",
+      fontWeight: 500,
+      color: "var(--color-text)",
+      margin: "0 0 8px"
+    };
+    const descStyle = {
+      fontSize: "14px",
+      color: "var(--color-text-secondary)",
+      margin: "0 0 16px"
+    };
+    const btnGroupStyle = {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px"
+    };
+    return /* @__PURE__ */ React$2.createElement("div", { style: containerStyle }, hasBookmarks ? /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { style: iconCircleStyle }, /* @__PURE__ */ React$2.createElement(FolderOpen, { size: 32, style: { color: "var(--color-neutral-400)" } })), /* @__PURE__ */ React$2.createElement("h3", { style: titleStyle }, "没有找到匹配的书签"), /* @__PURE__ */ React$2.createElement("p", { style: descStyle }, "尝试调整搜索条件或切换分类")) : /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { style: iconCircleStyle }, /* @__PURE__ */ React$2.createElement(BookmarkPlus, { size: 32, style: { color: "var(--color-neutral-400)" } })), /* @__PURE__ */ React$2.createElement("h3", { style: titleStyle }, hasCategories ? "还没有书签" : "开始使用前，先创建一些分类"), /* @__PURE__ */ React$2.createElement("p", { style: { ...descStyle, marginBottom: "24px" } }, hasCategories ? "点击下方按钮添加第一个书签" : "分类可以帮助你更好地组织书签"), /* @__PURE__ */ React$2.createElement("div", { style: btnGroupStyle }, /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: onAddBookmark,
-        className: "px-4 py-2 text-sm bg-primary text-button-text rounded-md hover:opacity-90 transition-colors"
+        className: "fp-btn-primary"
       },
       "添加书签"
     ), /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: onImport,
-        className: "px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className: "fp-btn-secondary"
       },
       "导入书签"
     ))));
   };
-  const sizeClasses = {
-    sm: "max-w-sm",
-    md: "max-w-md",
-    lg: "max-w-lg"
-  };
-  const Modal = ({
-    isOpen,
-    onClose,
-    title,
-    children,
-    confirmText = "确认",
-    cancelText = "取消",
-    onConfirm,
-    onCancel,
-    size = "md"
-  }) => {
-    if (!isOpen) return null;
-    const handleConfirm = () => {
-      onConfirm == null ? void 0 : onConfirm();
-    };
-    const handleCancel = () => {
-      onCancel == null ? void 0 : onCancel();
-      onClose();
-    };
-    return /* @__PURE__ */ React$2.createElement("div", { className: "fixed inset-0 z-50 flex items-center justify-center bg-black/30" }, /* @__PURE__ */ React$2.createElement(
-      "div",
-      {
-        className: `w-full ${sizeClasses[size]} mx-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden`
-      },
-      /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700" }, /* @__PURE__ */ React$2.createElement("h3", { className: "text-base font-semibold text-gray-800 dark:text-gray-200" }, title), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: onClose,
-          className: "p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-400"
-        },
-        /* @__PURE__ */ React$2.createElement(X, { className: "w-4 h-4" })
-      )),
-      /* @__PURE__ */ React$2.createElement("div", { className: "p-4" }, children),
-      (onConfirm || onCancel) && /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30" }, onCancel && /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: handleCancel,
-          className: "px-4 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        },
-        cancelText
-      ), onConfirm && /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: handleConfirm,
-          className: "px-4 py-1.5 text-sm bg-primary text-button-text rounded-md hover:opacity-90 transition-colors"
-        },
-        confirmText
-      ))
-    ));
-  };
-  const toastStyles = {
-    success: "bg-green-600",
-    error: "bg-red-600",
-    warning: "bg-amber-500",
-    info: "bg-blue-600"
+  const toastColors = {
+    success: "var(--color-success)",
+    error: "var(--color-error)",
+    warning: "var(--color-warning)",
+    info: "var(--color-primary)"
   };
   const ToastContainer = ({ toasts }) => {
     if (toasts.length === 0) return null;
-    return /* @__PURE__ */ React$2.createElement("div", { className: "fixed top-4 right-4 z-50 flex flex-col gap-2" }, toasts.map((toast) => /* @__PURE__ */ React$2.createElement(
-      "div",
-      {
-        key: toast.id,
-        className: `px-4 py-2 rounded-lg text-white text-sm shadow-md ${toastStyles[toast.type]}`
-      },
-      toast.message
-    )));
+    const containerStyle = {
+      position: "fixed",
+      top: "16px",
+      right: "16px",
+      zIndex: 200,
+      display: "flex",
+      flexDirection: "column",
+      gap: "8px"
+    };
+    const toastItemStyle = (type) => ({
+      padding: "8px 16px",
+      borderRadius: "6px",
+      fontSize: "13px",
+      color: "white",
+      boxShadow: "var(--shadow-md)",
+      background: toastColors[type]
+    });
+    return /* @__PURE__ */ React$2.createElement("div", { style: containerStyle }, toasts.map((toast) => /* @__PURE__ */ React$2.createElement("div", { key: toast.id, style: toastItemStyle(toast.type) }, toast.message)));
   };
   const ToolPanel = () => {
     const store = useBookmarkStore();
@@ -14674,15 +15548,37 @@
       importData,
       resetAllData
     } = store;
-    const [isFormOpen, setIsFormOpen] = React$2.useState(false);
-    const [editingBookmark, setEditingBookmark] = React$2.useState(null);
-    const [isImportOpen, setIsImportOpen] = React$2.useState(false);
-    const [isExportOpen, setIsExportOpen] = React$2.useState(false);
-    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = React$2.useState(false);
-    const [pendingDeleteId, setPendingDeleteId] = React$2.useState(null);
-    const [pendingBulkDelete, setPendingBulkDelete] = React$2.useState([]);
-    const [isSettingsOpen, setIsSettingsOpen] = React$2.useState(false);
-    const searchInputRef = React$2.useRef(null);
+    const [isFormOpen, setIsFormOpen] = reactExports.useState(false);
+    const [editingBookmark, setEditingBookmark] = reactExports.useState(null);
+    const [isImportOpen, setIsImportOpen] = reactExports.useState(false);
+    const [isExportOpen, setIsExportOpen] = reactExports.useState(false);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = reactExports.useState(false);
+    const [pendingDeleteId, setPendingDeleteId] = reactExports.useState(null);
+    const [pendingBulkDelete, setPendingBulkDelete] = reactExports.useState([]);
+    const [isSettingsOpen, setIsSettingsOpen] = reactExports.useState(false);
+    const [renamingCategoryId, setRenamingCategoryId] = reactExports.useState(null);
+    const [contentMenu, setContentMenu] = reactExports.useState({ visible: false, x: 0, y: 0, bookmarkId: null });
+    const searchInputRef = reactExports.useRef(null);
+    const contentMenuRef = reactExports.useRef(null);
+    const closeContentMenu = reactExports.useCallback(() => {
+      setContentMenu((prev) => ({ ...prev, visible: false }));
+    }, []);
+    reactExports.useEffect(() => {
+      const handleClick = (e) => {
+        if (contentMenuRef.current && !contentMenuRef.current.contains(e.target)) {
+          closeContentMenu();
+        }
+      };
+      const handleEsc = (e) => {
+        if (e.key === "Escape") closeContentMenu();
+      };
+      document.addEventListener("mousedown", handleClick);
+      document.addEventListener("keydown", handleEsc);
+      return () => {
+        document.removeEventListener("mousedown", handleClick);
+        document.removeEventListener("keydown", handleEsc);
+      };
+    }, [closeContentMenu]);
     const categoryMap = reactExports.useMemo(() => {
       const map = /* @__PURE__ */ new Map();
       categories.forEach((c) => map.set(c.id, c));
@@ -14708,15 +15604,6 @@
       };
       categoryTree.forEach((rootCat) => {
         counts.set(rootCat.id, countForCategory(rootCat.id));
-        const countChildren = (node) => {
-          if (node.children && node.children.length > 0) {
-            node.children.forEach((child) => {
-              counts.set(child.id, bookmarks.filter((b) => b.categoryId === child.id).length);
-              countChildren(child);
-            });
-          }
-        };
-        countChildren(rootCat);
       });
       return counts;
     }, [bookmarks, categories, categoryTree]);
@@ -14732,15 +15619,18 @@
     const handleAddClick = reactExports.useCallback(() => {
       setEditingBookmark(null);
       setIsFormOpen(true);
-    }, []);
+      closeContentMenu();
+    }, [closeContentMenu]);
     const handleEditClick = reactExports.useCallback((bookmark) => {
       setEditingBookmark(bookmark);
       setIsFormOpen(true);
-    }, []);
+      closeContentMenu();
+    }, [closeContentMenu]);
     const handleDeleteClick = reactExports.useCallback((id) => {
       setPendingDeleteId(id);
       setIsDeleteConfirmOpen(true);
-    }, []);
+      closeContentMenu();
+    }, [closeContentMenu]);
     const handleBulkDelete = reactExports.useCallback(() => {
       const ids = Array.from(selectedBookmarks);
       setPendingBulkDelete(ids);
@@ -14780,73 +15670,179 @@
         selectAllBookmarks();
       }
     }, [selectedBookmarks, filteredBookmarks, selectAllBookmarks, clearSelection]);
+    const handleContentContextMenu = reactExports.useCallback((e, bookmarkId) => {
+      e.preventDefault();
+      setContentMenu({ visible: true, x: e.clientX, y: e.clientY, bookmarkId });
+    }, []);
     const allSelected = filteredBookmarks.length > 0 && selectedBookmarks.size === filteredBookmarks.length;
-    return /* @__PURE__ */ React$2.createElement("div", { className: "h-full flex flex-col bg-gray-50 dark:bg-gray-900" }, /* @__PURE__ */ React$2.createElement(ToastContainer, { toasts }), /* @__PURE__ */ React$2.createElement("header", { className: "flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700" }, /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React$2.createElement(Bookmark, { className: "w-5 h-5 text-primary" }), /* @__PURE__ */ React$2.createElement("h1", { className: "text-base font-semibold text-gray-800 dark:text-gray-200" }, "网址收藏夹")), /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React$2.createElement(
+    const labelBase = {
+      fontSize: "13px",
+      fontWeight: 500,
+      color: "var(--color-text)"
+    };
+    return /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", flexDirection: "column", height: "100%", background: "var(--color-bg)" } }, /* @__PURE__ */ React$2.createElement(ToastContainer, { toasts }), /* @__PURE__ */ React$2.createElement("header", { style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "12px 16px",
+      background: "var(--color-bg-card)",
+      borderBottom: "1px solid var(--color-neutral-200)"
+    } }, /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ React$2.createElement(Bookmark, { size: 20, style: { color: "var(--color-primary)" } }), /* @__PURE__ */ React$2.createElement("h1", { style: { fontSize: "15px", fontWeight: 600, color: "var(--color-text)", margin: 0 } }, "网址收藏夹")), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "4px" } }, /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: () => setIsExportOpen(true),
-        className: "p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors",
-        title: "导出"
+        title: "导出",
+        style: {
+          padding: "6px",
+          borderRadius: "6px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "var(--color-text-secondary)",
+          display: "flex",
+          alignItems: "center",
+          transition: "background-color 0.15s"
+        },
+        onMouseEnter: (e) => e.currentTarget.style.background = "var(--color-neutral-100)",
+        onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
-      /* @__PURE__ */ React$2.createElement(Download, { className: "w-4 h-4" })
+      /* @__PURE__ */ React$2.createElement(Download, { size: 16 })
     ), /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: () => setIsImportOpen(true),
-        className: "p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors",
-        title: "导入"
+        title: "导入",
+        style: {
+          padding: "6px",
+          borderRadius: "6px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "var(--color-text-secondary)",
+          display: "flex",
+          alignItems: "center",
+          transition: "background-color 0.15s"
+        },
+        onMouseEnter: (e) => e.currentTarget.style.background = "var(--color-neutral-100)",
+        onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
-      /* @__PURE__ */ React$2.createElement(Upload, { className: "w-4 h-4" })
+      /* @__PURE__ */ React$2.createElement(Upload, { size: 16 })
     ), /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: () => setIsSettingsOpen(true),
-        className: "p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors",
-        title: "设置"
+        title: "设置",
+        style: {
+          padding: "6px",
+          borderRadius: "6px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "var(--color-text-secondary)",
+          display: "flex",
+          alignItems: "center",
+          transition: "background-color 0.15s"
+        },
+        onMouseEnter: (e) => e.currentTarget.style.background = "var(--color-neutral-100)",
+        onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
-      /* @__PURE__ */ React$2.createElement(Settings, { className: "w-4 h-4" })
-    ))), /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700" }, /* @__PURE__ */ React$2.createElement(SearchBar, { value: searchQuery, onChange: setSearchQuery, inputRef: searchInputRef }), /* @__PURE__ */ React$2.createElement(
+      /* @__PURE__ */ React$2.createElement(Settings, { size: 16 })
+    ))), /* @__PURE__ */ React$2.createElement("div", { style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "8px 16px",
+      background: "var(--color-bg-card)",
+      borderBottom: "1px solid var(--color-neutral-200)"
+    } }, /* @__PURE__ */ React$2.createElement("div", { style: { flex: "0 1 200px", minWidth: "160px" } }, /* @__PURE__ */ React$2.createElement(SearchBar, { value: searchQuery, onChange: setSearchQuery, inputRef: searchInputRef })), /* @__PURE__ */ React$2.createElement("div", { style: { marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px" } }, /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: toggleSort,
-        className: "p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors",
-        title: `排序: ${settings.sortBy}`
+        title: `排序: ${settings.sortBy}`,
+        style: {
+          padding: "6px",
+          borderRadius: "6px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "var(--color-text-secondary)",
+          display: "flex",
+          alignItems: "center",
+          transition: "background-color 0.15s"
+        },
+        onMouseEnter: (e) => e.currentTarget.style.background = "var(--color-neutral-100)",
+        onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
-      settings.sortOrder === "asc" ? /* @__PURE__ */ React$2.createElement(ArrowUpNarrowWide, { className: "w-4 h-4" }) : /* @__PURE__ */ React$2.createElement(ArrowDownWideNarrow, { className: "w-4 h-4" })
+      settings.sortOrder === "asc" ? /* @__PURE__ */ React$2.createElement(ArrowUpNarrowWide, { size: 16 }) : /* @__PURE__ */ React$2.createElement(ArrowDownWideNarrow, { size: 16 })
     ), /* @__PURE__ */ React$2.createElement(
       "button",
       {
-        onClick: () => updateSettings({
-          viewMode: settings.viewMode === "card" ? "list" : "card"
-        }),
-        className: "p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors",
-        title: settings.viewMode === "card" ? "列表视图" : "卡片视图"
+        onClick: () => updateSettings({ viewMode: settings.viewMode === "card" ? "list" : "card" }),
+        title: settings.viewMode === "card" ? "列表视图" : "卡片视图",
+        style: {
+          padding: "6px",
+          borderRadius: "6px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "var(--color-text-secondary)",
+          display: "flex",
+          alignItems: "center",
+          transition: "background-color 0.15s"
+        },
+        onMouseEnter: (e) => e.currentTarget.style.background = "var(--color-neutral-100)",
+        onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
-      settings.viewMode === "card" ? /* @__PURE__ */ React$2.createElement(List, { className: "w-4 h-4" }) : /* @__PURE__ */ React$2.createElement(LayoutGrid, { className: "w-4 h-4" })
-    ), /* @__PURE__ */ React$2.createElement(
-      "button",
-      {
-        onClick: handleAddClick,
-        className: "flex items-center gap-1 px-3 py-1.5 bg-primary text-button-text rounded-md hover:opacity-90 transition-colors text-sm font-medium"
-      },
-      /* @__PURE__ */ React$2.createElement(Plus, { className: "w-4 h-4" }),
-      "添加"
-    )), allTags.length > 0 && /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-x-auto" }, /* @__PURE__ */ React$2.createElement("span", { className: "text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 flex items-center gap-1" }, /* @__PURE__ */ React$2.createElement(Tag, { className: "w-3 h-3" }), "标签筛选:"), /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-1 flex-wrap" }, selectedTags.size > 0 && /* @__PURE__ */ React$2.createElement(
+      settings.viewMode === "card" ? /* @__PURE__ */ React$2.createElement(List, { size: 16 }) : /* @__PURE__ */ React$2.createElement(LayoutGrid, { size: 16 })
+    ))), allTags.length > 0 && /* @__PURE__ */ React$2.createElement("div", { style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      flexWrap: "wrap",
+      padding: "8px 16px",
+      background: "var(--color-bg-card)",
+      borderBottom: "1px solid var(--color-neutral-200)"
+    } }, /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 } }, /* @__PURE__ */ React$2.createElement(Tag, { size: 12 }), " 标签筛选:"), selectedTags.size > 0 && /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: clearTagFilter,
-        className: "px-2 py-0.5 text-xs text-red-500 border border-red-300 dark:border-red-700 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+        style: {
+          padding: "2px 8px",
+          fontSize: "12px",
+          color: "var(--color-error)",
+          border: "1px solid var(--color-error)4d",
+          borderRadius: "4px",
+          background: "none",
+          cursor: "pointer",
+          transition: "background-color 0.15s"
+        }
       },
       "清除"
-    ), allTags.map((tag) => /* @__PURE__ */ React$2.createElement(
+    ), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap" } }, allTags.map((tag) => /* @__PURE__ */ React$2.createElement(
       "button",
       {
         key: tag,
         onClick: () => toggleTag(tag),
-        className: `px-2 py-0.5 text-xs rounded transition-colors ${selectedTags.has(tag) ? "bg-primary text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`
+        style: {
+          padding: "2px 8px",
+          fontSize: "12px",
+          borderRadius: "4px",
+          cursor: "pointer",
+          border: "none",
+          transition: "background-color 0.15s",
+          background: selectedTags.has(tag) ? "var(--color-primary)" : "var(--color-neutral-100)",
+          color: selectedTags.has(tag) ? "#fff" : "var(--color-text-secondary)"
+        }
       },
       tag
-    )))), /* @__PURE__ */ React$2.createElement("div", { className: "flex flex-1 overflow-hidden" }, /* @__PURE__ */ React$2.createElement("aside", { className: "w-56 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 overflow-y-auto" }, /* @__PURE__ */ React$2.createElement(
+    )))), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", flex: 1, overflow: "hidden" } }, /* @__PURE__ */ React$2.createElement("aside", { style: {
+      width: "224px",
+      flexShrink: 0,
+      borderRight: "1px solid var(--color-neutral-200)",
+      background: "var(--color-bg-card)",
+      padding: "8px",
+      overflow: "auto"
+    }, className: "fp-scrollbar" }, /* @__PURE__ */ React$2.createElement(
       CategoryTree,
       {
         categories: categoryTree,
@@ -14856,75 +15852,128 @@
         onUpdateCategory: (id, name) => updateCategory(id, name),
         onDeleteCategory: (id) => deleteCategory(id),
         onReorderCategory: reorderCategory,
-        bookmarkCounts
+        bookmarkCounts,
+        renamingCategoryId,
+        onStartRename: (id) => setRenamingCategoryId(id),
+        onFinishRename: () => setRenamingCategoryId(null)
       }
-    )), /* @__PURE__ */ React$2.createElement("main", { className: "flex-1 overflow-y-auto p-4" }, selectedBookmarks.size > 0 && /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center justify-between mb-3 px-3 py-2 bg-primary/5 dark:bg-primary/10 rounded-md" }, /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React$2.createElement(
-      "button",
+    )), /* @__PURE__ */ React$2.createElement(
+      "main",
       {
-        onClick: handleSelectAll,
-        className: "p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+        style: { flex: 1, overflow: "auto", padding: "16px" },
+        className: "fp-scrollbar",
+        onContextMenu: (e) => handleContentContextMenu(e, null)
       },
-      allSelected ? /* @__PURE__ */ React$2.createElement(X, { className: "w-4 h-4 text-primary" }) : /* @__PURE__ */ React$2.createElement(SquareCheckBig, { className: "w-4 h-4 text-primary" })
-    ), /* @__PURE__ */ React$2.createElement("span", { className: "text-sm text-gray-700 dark:text-gray-300" }, "已选 ", selectedBookmarks.size, " 个")), /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React$2.createElement(
-      "button",
-      {
-        onClick: clearSelection,
-        className: "px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-      },
-      "取消"
-    ), /* @__PURE__ */ React$2.createElement(
-      "button",
-      {
-        onClick: handleBulkDelete,
-        className: "flex items-center gap-1 px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-      },
-      /* @__PURE__ */ React$2.createElement(Trash2, { className: "w-3 h-3" }),
-      "删除"
-    ))), filteredBookmarks.length === 0 ? /* @__PURE__ */ React$2.createElement(
-      EmptyState,
-      {
-        hasBookmarks: bookmarks.length > 0,
-        onAddBookmark: handleAddClick,
-        onImport: () => setIsImportOpen(true),
-        hasCategories: categories.length > 0
-      }
-    ) : settings.viewMode === "card" ? /* @__PURE__ */ React$2.createElement("div", { className: "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3" }, filteredBookmarks.map((bookmark) => /* @__PURE__ */ React$2.createElement(
-      BookmarkCard,
-      {
-        key: bookmark.id,
-        bookmark,
-        category: categoryMap.get(bookmark.categoryId || ""),
-        isSelected: selectedBookmarks.has(bookmark.id),
-        onSelect: () => toggleBookmarkSelect(bookmark.id),
-        onEdit: () => handleEditClick(bookmark),
-        onDelete: () => handleDeleteClick(bookmark.id),
-        onOpen: () => handleOpenBookmark(bookmark.url),
-        showFavicon: settings.showFavicon
-      }
-    ))) : /* @__PURE__ */ React$2.createElement("div", { className: "border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden" }, /* @__PURE__ */ React$2.createElement("div", { className: "bg-gray-50 dark:bg-gray-700 px-3 py-2 flex items-center gap-3 border-b border-gray-200 dark:border-gray-700" }, /* @__PURE__ */ React$2.createElement("div", { className: "w-4" }), /* @__PURE__ */ React$2.createElement("div", { className: "w-5" }), /* @__PURE__ */ React$2.createElement("span", { className: "flex-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase" }, "书签"), /* @__PURE__ */ React$2.createElement("span", { className: "text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-24" }, "分类"), /* @__PURE__ */ React$2.createElement("div", { className: "w-16" })), filteredBookmarks.map((bookmark) => /* @__PURE__ */ React$2.createElement(
-      BookmarkListItem,
-      {
-        key: bookmark.id,
-        bookmark,
-        category: categoryMap.get(bookmark.categoryId || ""),
-        isSelected: selectedBookmarks.has(bookmark.id),
-        onSelect: () => toggleBookmarkSelect(bookmark.id),
-        onEdit: () => handleEditClick(bookmark),
-        onDelete: () => handleDeleteClick(bookmark.id),
-        onOpen: () => handleOpenBookmark(bookmark.url),
-        showFavicon: settings.showFavicon
-      }
-    ))))), /* @__PURE__ */ React$2.createElement("footer", { className: "flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400" }, /* @__PURE__ */ React$2.createElement("span", null, "共 ", bookmarks.length, " 个书签 · ", categories.length, " 个分类"), /* @__PURE__ */ React$2.createElement("span", null, settings.viewMode === "card" ? "卡片视图" : "列表视图")), isFormOpen && /* @__PURE__ */ React$2.createElement("div", { className: "fixed inset-0 z-50 flex items-center justify-center bg-black/30" }, /* @__PURE__ */ React$2.createElement("div", { className: "w-full max-w-lg mx-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden" }, /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700" }, /* @__PURE__ */ React$2.createElement("h3", { className: "text-base font-semibold text-gray-800 dark:text-gray-200" }, editingBookmark ? "编辑书签" : "添加书签"), /* @__PURE__ */ React$2.createElement(
+      selectedBookmarks.size > 0 && /* @__PURE__ */ React$2.createElement("div", { style: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: "12px",
+        padding: "8px 12px",
+        borderRadius: "6px",
+        background: "var(--color-primary)0d"
+      } }, /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          onClick: handleSelectAll,
+          style: { padding: "4px", borderRadius: "4px", background: "none", border: "none", cursor: "pointer" }
+        },
+        allSelected ? /* @__PURE__ */ React$2.createElement(X, { size: 16, style: { color: "var(--color-primary)" } }) : /* @__PURE__ */ React$2.createElement(SquareCheckBig, { size: 16, style: { color: "var(--color-primary)" } })
+      ), /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "13px", color: "var(--color-text)" } }, "已选 ", selectedBookmarks.size, " 个")), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "4px" } }, /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          onClick: clearSelection,
+          style: { padding: "4px 8px", fontSize: "12px", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-secondary)" }
+        },
+        "取消"
+      ), /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          onClick: handleBulkDelete,
+          className: "fp-btn-danger",
+          style: { padding: "4px 8px", fontSize: "12px" }
+        },
+        /* @__PURE__ */ React$2.createElement(Trash2, { size: 12, style: { marginRight: "4px" } }),
+        "删除"
+      ))),
+      filteredBookmarks.length === 0 ? /* @__PURE__ */ React$2.createElement(
+        EmptyState,
+        {
+          hasBookmarks: bookmarks.length > 0,
+          onAddBookmark: handleAddClick,
+          onImport: () => setIsImportOpen(true),
+          hasCategories: categories.length > 0
+        }
+      ) : settings.viewMode === "card" ? /* @__PURE__ */ React$2.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "12px" } }, filteredBookmarks.map((bookmark) => /* @__PURE__ */ React$2.createElement(
+        BookmarkCard,
+        {
+          key: bookmark.id,
+          bookmark,
+          category: categoryMap.get(bookmark.categoryId || ""),
+          isSelected: selectedBookmarks.has(bookmark.id),
+          onSelect: () => toggleBookmarkSelect(bookmark.id),
+          onEdit: () => handleEditClick(bookmark),
+          onDelete: () => handleDeleteClick(bookmark.id),
+          onOpen: () => handleOpenBookmark(bookmark.url),
+          onContextMenu: (e) => handleContentContextMenu(e, bookmark.id),
+          showFavicon: settings.showFavicon
+        }
+      ))) : /* @__PURE__ */ React$2.createElement("div", { style: { border: "1px solid var(--color-neutral-200)", borderRadius: "8px", overflow: "hidden" } }, /* @__PURE__ */ React$2.createElement("div", { style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        padding: "8px 12px",
+        background: "var(--color-neutral-100)",
+        borderBottom: "1px solid var(--color-neutral-200)"
+      } }, /* @__PURE__ */ React$2.createElement("div", { style: { width: "16px" } }), /* @__PURE__ */ React$2.createElement("div", { style: { width: "20px" } }), /* @__PURE__ */ React$2.createElement("span", { style: { flex: 1, fontSize: "12px", fontWeight: 500, color: "var(--color-text-tertiary)", textTransform: "uppercase" } }, "书签"), /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", fontWeight: 500, color: "var(--color-text-tertiary)", textTransform: "uppercase", width: "96px" } }, "分类"), /* @__PURE__ */ React$2.createElement("div", { style: { width: "64px" } })), filteredBookmarks.map((bookmark) => /* @__PURE__ */ React$2.createElement(
+        BookmarkListItem,
+        {
+          key: bookmark.id,
+          bookmark,
+          category: categoryMap.get(bookmark.categoryId || ""),
+          isSelected: selectedBookmarks.has(bookmark.id),
+          onSelect: () => toggleBookmarkSelect(bookmark.id),
+          onEdit: () => handleEditClick(bookmark),
+          onDelete: () => handleDeleteClick(bookmark.id),
+          onOpen: () => handleOpenBookmark(bookmark.url),
+          onContextMenu: (e) => handleContentContextMenu(e, bookmark.id),
+          showFavicon: settings.showFavicon
+        }
+      )))
+    )), /* @__PURE__ */ React$2.createElement("footer", { style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "8px 16px",
+      background: "var(--color-bg-card)",
+      borderTop: "1px solid var(--color-neutral-200)",
+      fontSize: "12px",
+      color: "var(--color-text-tertiary)"
+    } }, /* @__PURE__ */ React$2.createElement("span", null, "共 ", bookmarks.length, " 个书签 · ", categories.length, " 个分类"), /* @__PURE__ */ React$2.createElement("span", null, settings.viewMode === "card" ? "卡片视图" : "列表视图")), isFormOpen && /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal-overlay" }, /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal" }, /* @__PURE__ */ React$2.createElement("div", { style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "12px 16px",
+      borderBottom: "1px solid var(--color-neutral-200)"
+    } }, /* @__PURE__ */ React$2.createElement("h3", { style: { fontSize: "14px", fontWeight: 600, color: "var(--color-text)", margin: 0 } }, editingBookmark ? "编辑书签" : "添加书签"), /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: () => {
           setIsFormOpen(false);
           setEditingBookmark(null);
         },
-        className: "p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+        style: {
+          padding: "4px",
+          borderRadius: "4px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "var(--color-text-tertiary)",
+          display: "flex"
+        }
       },
-      /* @__PURE__ */ React$2.createElement(X, { className: "w-4 h-4" })
-    )), /* @__PURE__ */ React$2.createElement("div", { className: "p-4" }, /* @__PURE__ */ React$2.createElement(
+      /* @__PURE__ */ React$2.createElement(X, { size: 16 })
+    )), /* @__PURE__ */ React$2.createElement("div", { style: { padding: "16px", overflowY: "auto" }, className: "fp-scrollbar" }, /* @__PURE__ */ React$2.createElement(
       BookmarkForm,
       {
         bookmark: editingBookmark,
@@ -14936,7 +15985,88 @@
           setEditingBookmark(null);
         }
       }
-    )))), /* @__PURE__ */ React$2.createElement(
+    )))), contentMenu.visible && /* @__PURE__ */ React$2.createElement(
+      "div",
+      {
+        ref: contentMenuRef,
+        className: "fp-context-menu",
+        style: { left: contentMenu.x, top: contentMenu.y }
+      },
+      contentMenu.bookmarkId ? /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          className: "fp-context-menu-item",
+          onClick: () => {
+            const b = bookmarks.find((b2) => b2.id === contentMenu.bookmarkId);
+            if (b) handleOpenBookmark(b.url);
+            closeContentMenu();
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(FolderOpen, { size: 14 }),
+        " 打开"
+      ), /* @__PURE__ */ React$2.createElement("div", { className: "fp-context-menu-separator" }), /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          className: "fp-context-menu-item",
+          onClick: () => {
+            const b = bookmarks.find((b2) => b2.id === contentMenu.bookmarkId);
+            if (b) handleEditClick(b);
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(Pencil, { size: 14 }),
+        " 编辑"
+      ), selectedBookmarks.size > 1 && /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          className: "fp-context-menu-item",
+          onClick: () => {
+            if (selectedBookmarks.has(contentMenu.bookmarkId)) {
+              handleBulkDelete();
+            } else {
+              handleDeleteClick(contentMenu.bookmarkId);
+            }
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(Trash2, { size: 14 }),
+        " ",
+        selectedBookmarks.size > 1 ? `删除选中(${selectedBookmarks.size})` : "删除"
+      ), selectedBookmarks.size <= 1 && /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          className: "fp-context-menu-item danger",
+          onClick: () => handleDeleteClick(contentMenu.bookmarkId)
+        },
+        /* @__PURE__ */ React$2.createElement(Trash2, { size: 14 }),
+        " 删除"
+      )) : /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          className: "fp-context-menu-item",
+          onClick: handleAddClick
+        },
+        /* @__PURE__ */ React$2.createElement(Bookmark, { size: 14 }),
+        " 添加书签"
+      ), selectedBookmarks.size > 0 && /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { className: "fp-context-menu-separator" }), /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          className: "fp-context-menu-item",
+          onClick: handleSelectAll
+        },
+        /* @__PURE__ */ React$2.createElement(SquareCheckBig, { size: 14 }),
+        " ",
+        allSelected ? "取消全选" : "全选"
+      ), /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          className: "fp-context-menu-item danger",
+          onClick: handleBulkDelete
+        },
+        /* @__PURE__ */ React$2.createElement(Trash2, { size: 14 }),
+        " 删除选中 (",
+        selectedBookmarks.size,
+        ")"
+      )))
+    ), /* @__PURE__ */ React$2.createElement(
       ImportExportModal,
       {
         mode: "import",
@@ -14957,82 +16087,98 @@
         onImport: () => {
         }
       }
-    ), /* @__PURE__ */ React$2.createElement(
-      Modal,
+    ), isDeleteConfirmOpen && /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal-overlay" }, /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal", style: { maxWidth: "384px" } }, /* @__PURE__ */ React$2.createElement("div", { style: { padding: "16px" } }, /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "13px", color: "var(--color-text-secondary)", margin: 0 } }, pendingBulkDelete.length > 0 ? `确定要删除选中的 ${pendingBulkDelete.length} 个书签吗？此操作无法撤销。` : "确定要删除这个书签吗？此操作无法撤销。"), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "16px" } }, /* @__PURE__ */ React$2.createElement(
+      "button",
       {
-        isOpen: isDeleteConfirmOpen,
-        onClose: () => {
+        onClick: () => {
           setIsDeleteConfirmOpen(false);
           setPendingDeleteId(null);
           setPendingBulkDelete([]);
         },
-        title: "确认删除",
-        size: "sm"
+        className: "fp-btn-secondary",
+        style: { padding: "6px 16px", fontSize: "13px" }
       },
-      /* @__PURE__ */ React$2.createElement("p", { className: "text-sm text-gray-600 dark:text-gray-400" }, pendingBulkDelete.length > 0 ? `确定要删除选中的 ${pendingBulkDelete.length} 个书签吗？此操作无法撤销。` : "确定要删除这个书签吗？此操作无法撤销。"),
-      /* @__PURE__ */ React$2.createElement("div", { className: "flex justify-end gap-2 mt-4" }, /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: () => {
-            setIsDeleteConfirmOpen(false);
-            setPendingDeleteId(null);
-            setPendingBulkDelete([]);
-          },
-          className: "px-4 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        },
-        "取消"
-      ), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: handleConfirmDelete,
-          className: "px-4 py-1.5 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-        },
-        "删除"
-      ))
+      "取消"
     ), /* @__PURE__ */ React$2.createElement(
-      Modal,
+      "button",
       {
-        isOpen: isSettingsOpen,
-        onClose: () => setIsSettingsOpen(false),
-        title: "插件设置",
-        size: "sm"
+        onClick: handleConfirmDelete,
+        className: "fp-btn-danger",
+        style: { padding: "6px 16px", fontSize: "13px" }
       },
-      /* @__PURE__ */ React$2.createElement("div", { className: "space-y-4" }, /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ React$2.createElement("span", { className: "text-sm text-gray-700 dark:text-gray-300" }, "显示 Favicon"), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: () => updateSettings({ showFavicon: !settings.showFavicon }),
-          className: `w-10 h-5 rounded-full transition-colors ${settings.showFavicon ? "bg-primary" : "bg-gray-300 dark:bg-gray-600"}`
+      "删除"
+    ))))), isSettingsOpen && /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal-overlay" }, /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal", style: { maxWidth: "384px" } }, /* @__PURE__ */ React$2.createElement("div", { style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "12px 16px",
+      borderBottom: "1px solid var(--color-neutral-200)"
+    } }, /* @__PURE__ */ React$2.createElement("h3", { style: { fontSize: "14px", fontWeight: 600, color: "var(--color-text)", margin: 0 } }, "插件设置"), /* @__PURE__ */ React$2.createElement(
+      "button",
+      {
+        onClick: () => setIsSettingsOpen(false),
+        style: { padding: "4px", borderRadius: "4px", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-tertiary)", display: "flex" }
+      },
+      /* @__PURE__ */ React$2.createElement(X, { size: 16 })
+    )), /* @__PURE__ */ React$2.createElement("div", { style: { padding: "16px", display: "flex", flexDirection: "column", gap: "16px" } }, /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React$2.createElement("span", { style: labelBase }, "显示 Favicon"), /* @__PURE__ */ React$2.createElement(
+      "button",
+      {
+        onClick: () => updateSettings({ showFavicon: !settings.showFavicon }),
+        style: {
+          width: "40px",
+          height: "20px",
+          borderRadius: "10px",
+          background: settings.showFavicon ? "var(--color-primary)" : "var(--color-neutral-300)",
+          border: "none",
+          cursor: "pointer",
+          position: "relative",
+          transition: "background-color 0.15s"
+        }
+      },
+      /* @__PURE__ */ React$2.createElement("div", { style: {
+        width: "16px",
+        height: "16px",
+        borderRadius: "50%",
+        background: "#fff",
+        position: "absolute",
+        top: "2px",
+        left: settings.showFavicon ? "22px" : "2px",
+        transition: "left 0.15s"
+      } })
+    )), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React$2.createElement("span", { style: labelBase }, "默认排序"), /* @__PURE__ */ React$2.createElement(
+      "select",
+      {
+        value: settings.sortBy,
+        onChange: (e) => updateSettings({ sortBy: e.target.value }),
+        className: "fp-input",
+        style: { width: "120px", padding: "6px 8px" }
+      },
+      /* @__PURE__ */ React$2.createElement("option", { value: "createdAt" }, "创建时间"),
+      /* @__PURE__ */ React$2.createElement("option", { value: "title" }, "标题"),
+      /* @__PURE__ */ React$2.createElement("option", { value: "order" }, "自定义排序")
+    )), /* @__PURE__ */ React$2.createElement("div", { style: { borderTop: "1px solid var(--color-neutral-200)", paddingTop: "16px" } }, /* @__PURE__ */ React$2.createElement(
+      "button",
+      {
+        onClick: () => {
+          resetAllData();
+          setIsSettingsOpen(false);
         },
-        /* @__PURE__ */ React$2.createElement(
-          "div",
-          {
-            className: `w-4 h-4 bg-white rounded-full transition-transform ${settings.showFavicon ? "translate-x-5" : "translate-x-0.5"}`
-          }
-        )
-      )), /* @__PURE__ */ React$2.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ React$2.createElement("span", { className: "text-sm text-gray-700 dark:text-gray-300" }, "默认排序"), /* @__PURE__ */ React$2.createElement(
-        "select",
-        {
-          value: settings.sortBy,
-          onChange: (e) => updateSettings({
-            sortBy: e.target.value
-          }),
-          className: "px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
+        style: {
+          width: "100%",
+          padding: "8px 12px",
+          fontSize: "13px",
+          border: "1px solid var(--color-error)",
+          borderRadius: "6px",
+          background: "none",
+          cursor: "pointer",
+          transition: "background-color 0.15s",
+          color: "var(--color-error)"
         },
-        /* @__PURE__ */ React$2.createElement("option", { value: "createdAt" }, "创建时间"),
-        /* @__PURE__ */ React$2.createElement("option", { value: "title" }, "标题"),
-        /* @__PURE__ */ React$2.createElement("option", { value: "order" }, "自定义排序")
-      )), /* @__PURE__ */ React$2.createElement("div", { className: "border-t border-gray-200 dark:border-gray-700 pt-4" }, /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: () => {
-            resetAllData();
-            setIsSettingsOpen(false);
-          },
-          className: "w-full px-3 py-2 text-sm border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-        },
-        "重置所有数据"
-      ), /* @__PURE__ */ React$2.createElement("p", { className: "text-xs text-gray-400 dark:text-gray-500 mt-1" }, "将清除所有书签和分类数据")))
-    ));
+        onMouseEnter: (e) => e.currentTarget.style.background = "var(--color-error)0d",
+        onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
+      },
+      "重置所有数据"
+    ), /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "12px", color: "var(--color-text-tertiary)", margin: "4px 0 0" } }, "将清除所有书签和分类数据"))))));
   };
   const PluginApp = () => {
     return React$2.createElement(ToolPanel);

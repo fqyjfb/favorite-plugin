@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
+import '../styles.css';
 
 interface SearchBarProps {
   value: string;
@@ -30,8 +31,25 @@ const SearchBar: React.FC<SearchBarProps> = ({
     return () => window.removeEventListener('keydown', handler);
   }, [ref]);
 
+  const containerStyle: React.CSSProperties = {
+    position: 'relative',
+    width: '100%'
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '6px 32px 6px 28px',
+    fontSize: '13px',
+    border: '1px solid var(--color-neutral-300)',
+    borderRadius: '6px',
+    background: 'var(--color-bg-card)',
+    color: 'var(--color-text)',
+    outline: 'none',
+    transition: 'border-color 0.15s'
+  };
+
   return (
-    <div className="relative flex-1 max-w-xs">
+    <div style={containerStyle}>
       <input
         ref={ref}
         type="text"
@@ -39,15 +57,48 @@ const SearchBar: React.FC<SearchBarProps> = ({
         onChange={(e) => onChange(e.target.value)}
         onFocus={onFocus}
         placeholder={placeholder}
-        className="w-full px-3 py-1.5 pl-8 pr-8 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary transition-colors"
+        style={inputStyle}
+        onFocusCapture={(e) => {
+          e.currentTarget.style.borderColor = 'var(--color-primary)';
+        }}
+        onBlurCapture={(e) => {
+          e.currentTarget.style.borderColor = 'var(--color-neutral-300)';
+        }}
       />
-      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+      <Search size={14} style={{
+        position: 'absolute',
+        left: '8px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        color: 'var(--color-text-tertiary)',
+        pointerEvents: 'none'
+      }} />
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          style={{
+            position: 'absolute',
+            right: '6px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            padding: '2px',
+            borderRadius: '4px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--color-text-tertiary)',
+            display: 'flex'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--color-neutral-100)';
+            e.currentTarget.style.color = 'var(--color-text-secondary)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = 'var(--color-text-tertiary)';
+          }}
         >
-          <X className="w-3.5 h-3.5" />
+          <X size={12} />
         </button>
       )}
     </div>

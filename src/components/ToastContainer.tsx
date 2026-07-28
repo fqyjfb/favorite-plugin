@@ -1,29 +1,44 @@
-import React, { useEffect, useCallback } from 'react';
+import React from 'react';
 import type { ToastMessage } from '../types';
+import '../styles.css';
 
 interface ToastContainerProps {
   toasts: ToastMessage[];
 }
 
-const toastStyles: Record<ToastMessage['type'], string> = {
-  success: 'bg-green-600',
-  error: 'bg-red-600',
-  warning: 'bg-amber-500',
-  info: 'bg-blue-600'
+const toastColors: Record<ToastMessage['type'], string> = {
+  success: 'var(--color-success)',
+  error: 'var(--color-error)',
+  warning: 'var(--color-warning)',
+  info: 'var(--color-primary)'
 };
 
 const ToastContainer: React.FC<ToastContainerProps> = ({ toasts }) => {
   if (toasts.length === 0) return null;
 
+  const containerStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: '16px',
+    right: '16px',
+    zIndex: 200,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  };
+
+  const toastItemStyle = (type: ToastMessage['type']): React.CSSProperties => ({
+    padding: '8px 16px',
+    borderRadius: '6px',
+    fontSize: '13px',
+    color: 'white',
+    boxShadow: 'var(--shadow-md)',
+    background: toastColors[type]
+  });
+
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+    <div style={containerStyle}>
       {toasts.map((toast) => (
-        <div
-          key={toast.id}
-          className={`px-4 py-2 rounded-lg text-white text-sm shadow-md ${
-            toastStyles[toast.type]
-          }`}
-        >
+        <div key={toast.id} style={toastItemStyle(toast.type)}>
           {toast.message}
         </div>
       ))}

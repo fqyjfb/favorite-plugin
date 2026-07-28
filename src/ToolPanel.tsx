@@ -1,7 +1,6 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import {
   Bookmark,
-  Plus,
   Download,
   Upload,
   LayoutGrid,
@@ -12,20 +11,22 @@ import {
   SortAsc,
   SortDesc,
   Settings,
-  Tag
+  Tag,
+  Pencil,
+  FolderOpen
 } from 'lucide-react';
 import { useBookmarkStore } from './store/useBookmarkStore';
-import BookmarkCard from './components/BookmarkCard';
-import BookmarkListItem from './components/BookmarkListItem';
 import CategoryTree from './components/CategoryTree';
 import SearchBar from './components/SearchBar';
 import BookmarkForm from './components/BookmarkForm';
+import BookmarkCard from './components/BookmarkCard';
+import BookmarkListItem from './components/BookmarkListItem';
 import ImportExportModal from './components/ImportExportModal';
 import EmptyState from './components/EmptyState';
-import Modal from './components/Modal';
 import ToastContainer from './components/ToastContainer';
 import type { Bookmark as BookmarkType } from './types';
 import { normalizeUrl } from './utils/validator';
+import './styles.css';
 
 const ToolPanel: React.FC = () => {
   const store = useBookmarkStore();
@@ -61,15 +62,44 @@ const ToolPanel: React.FC = () => {
     resetAllData
   } = store;
 
-  const [isFormOpen, setIsFormOpen] = React.useState(false);
-  const [editingBookmark, setEditingBookmark] = React.useState<BookmarkType | null>(null);
-  const [isImportOpen, setIsImportOpen] = React.useState(false);
-  const [isExportOpen, setIsExportOpen] = React.useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = React.useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null);
-  const [pendingBulkDelete, setPendingBulkDelete] = React.useState<string[]>([]);
-  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingBookmark, setEditingBookmark] = useState<BookmarkType | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingBulkDelete, setPendingBulkDelete] = useState<string[]>([]);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [renamingCategoryId, setRenamingCategoryId] = useState<string | null>(null);
+
+  const [contentMenu, setContentMenu] = useState<{
+    visible: boolean; x: number; y: number;
+    bookmarkId: string | null;
+  }>({ visible: false, x: 0, y: 0, bookmarkId: null });
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const contentMenuRef = useRef<HTMLDivElement>(null);
+
+  const closeContentMenu = useCallback(() => {
+    setContentMenu((prev) => ({ ...prev, visible: false }));
+  }, []);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (contentMenuRef.current && !contentMenuRef.current.contains(e.target as Node)) {
+        closeContentMenu();
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeContentMenu();
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [closeContentMenu]);
 
   const categoryMap = useMemo(() => {
     const map = new Map<string, typeof categories[0]>();
@@ -99,16 +129,6 @@ const ToolPanel: React.FC = () => {
 
     categoryTree.forEach((rootCat) => {
       counts.set(rootCat.id, countForCategory(rootCat.id));
-
-      const countChildren = (node: any) => {
-        if (node.children && node.children.length > 0) {
-          node.children.forEach((child: any) => {
-            counts.set(child.id, bookmarks.filter((b) => b.categoryId === child.id).length);
-            countChildren(child);
-          });
-        }
-      };
-      countChildren(rootCat);
     });
 
     return counts;
@@ -126,17 +146,20 @@ const ToolPanel: React.FC = () => {
   const handleAddClick = useCallback(() => {
     setEditingBookmark(null);
     setIsFormOpen(true);
-  }, []);
+    closeContentMenu();
+  }, [closeContentMenu]);
 
   const handleEditClick = useCallback((bookmark: BookmarkType) => {
     setEditingBookmark(bookmark);
     setIsFormOpen(true);
-  }, []);
+    closeContentMenu();
+  }, [closeContentMenu]);
 
   const handleDeleteClick = useCallback((id: string) => {
     setPendingDeleteId(id);
     setIsDeleteConfirmOpen(true);
-  }, []);
+    closeContentMenu();
+  }, [closeContentMenu]);
 
   const handleBulkDelete = useCallback(() => {
     const ids = Array.from(selectedBookmarks);
@@ -182,111 +205,152 @@ const ToolPanel: React.FC = () => {
     }
   }, [selectedBookmarks, filteredBookmarks, selectAllBookmarks, clearSelection]);
 
+  const handleContentContextMenu = useCallback((e: React.MouseEvent, bookmarkId: string | null) => {
+    e.preventDefault();
+    setContentMenu({ visible: true, x: e.clientX, y: e.clientY, bookmarkId });
+  }, []);
+
   const allSelected =
     filteredBookmarks.length > 0 &&
     selectedBookmarks.size === filteredBookmarks.length;
 
+  const labelBase: React.CSSProperties = {
+    fontSize: '13px',
+    fontWeight: 500,
+    color: 'var(--color-text)'
+  };
+
   return (
-    <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-bg)' }}>
       <ToastContainer toasts={toasts} />
 
-      <header className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <Bookmark className="w-5 h-5 text-primary" />
-          <h1 className="text-base font-semibold text-gray-800 dark:text-gray-200">
+      <header style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '12px 16px', background: 'var(--color-bg-card)',
+        borderBottom: '1px solid var(--color-neutral-200)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Bookmark size={20} style={{ color: 'var(--color-primary)' }} />
+          <h1 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>
             网址收藏夹
           </h1>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <button
             onClick={() => setIsExportOpen(true)}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
             title="导出"
+            style={{
+              padding: '6px', borderRadius: '6px', background: 'none', border: 'none',
+              cursor: 'pointer', color: 'var(--color-text-secondary)',
+              display: 'flex', alignItems: 'center', transition: 'background-color 0.15s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-neutral-100)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            <Download className="w-4 h-4" />
+            <Download size={16} />
           </button>
           <button
             onClick={() => setIsImportOpen(true)}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
             title="导入"
+            style={{
+              padding: '6px', borderRadius: '6px', background: 'none', border: 'none',
+              cursor: 'pointer', color: 'var(--color-text-secondary)',
+              display: 'flex', alignItems: 'center', transition: 'background-color 0.15s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-neutral-100)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            <Upload className="w-4 h-4" />
+            <Upload size={16} />
           </button>
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
             title="设置"
+            style={{
+              padding: '6px', borderRadius: '6px', background: 'none', border: 'none',
+              cursor: 'pointer', color: 'var(--color-text-secondary)',
+              display: 'flex', alignItems: 'center', transition: 'background-color 0.15s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-neutral-100)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            <Settings className="w-4 h-4" />
+            <Settings size={16} />
           </button>
         </div>
       </header>
 
-      <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <SearchBar value={searchQuery} onChange={setSearchQuery} inputRef={searchInputRef} />
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '8px',
+        padding: '8px 16px', background: 'var(--color-bg-card)',
+        borderBottom: '1px solid var(--color-neutral-200)'
+      }}>
+        <div style={{ flex: '0 1 200px', minWidth: '160px' }}>
+          <SearchBar value={searchQuery} onChange={setSearchQuery} inputRef={searchInputRef} />
+        </div>
 
-        <button
-          onClick={toggleSort}
-          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
-          title={`排序: ${settings.sortBy}`}
-        >
-          {settings.sortOrder === 'asc' ? (
-            <SortAsc className="w-4 h-4" />
-          ) : (
-            <SortDesc className="w-4 h-4" />
-          )}
-        </button>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button
+            onClick={toggleSort}
+            title={`排序: ${settings.sortBy}`}
+            style={{
+              padding: '6px', borderRadius: '6px', background: 'none', border: 'none',
+              cursor: 'pointer', color: 'var(--color-text-secondary)',
+              display: 'flex', alignItems: 'center', transition: 'background-color 0.15s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-neutral-100)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            {settings.sortOrder === 'asc' ? <SortAsc size={16} /> : <SortDesc size={16} />}
+          </button>
 
-        <button
-          onClick={() =>
-            updateSettings({
-              viewMode: settings.viewMode === 'card' ? 'list' : 'card'
-            })
-          }
-          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
-          title={settings.viewMode === 'card' ? '列表视图' : '卡片视图'}
-        >
-          {settings.viewMode === 'card' ? (
-            <List className="w-4 h-4" />
-          ) : (
-            <LayoutGrid className="w-4 h-4" />
-          )}
-        </button>
-
-        <button
-          onClick={handleAddClick}
-          className="flex items-center gap-1 px-3 py-1.5 bg-primary text-button-text rounded-md hover:opacity-90 transition-colors text-sm font-medium"
-        >
-          <Plus className="w-4 h-4" />
-          添加
-        </button>
+          <button
+            onClick={() => updateSettings({ viewMode: settings.viewMode === 'card' ? 'list' : 'card' })}
+            title={settings.viewMode === 'card' ? '列表视图' : '卡片视图'}
+            style={{
+              padding: '6px', borderRadius: '6px', background: 'none', border: 'none',
+              cursor: 'pointer', color: 'var(--color-text-secondary)',
+              display: 'flex', alignItems: 'center', transition: 'background-color 0.15s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-neutral-100)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            {settings.viewMode === 'card' ? <List size={16} /> : <LayoutGrid size={16} />}
+          </button>
+        </div>
       </div>
 
       {allTags.length > 0 && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
-          <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 flex items-center gap-1">
-            <Tag className="w-3 h-3" />
-            标签筛选:
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap',
+          padding: '8px 16px', background: 'var(--color-bg-card)',
+          borderBottom: '1px solid var(--color-neutral-200)'
+        }}>
+          <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+            <Tag size={12} /> 标签筛选:
           </span>
-          <div className="flex items-center gap-1 flex-wrap">
-            {selectedTags.size > 0 && (
-              <button
-                onClick={clearTagFilter}
-                className="px-2 py-0.5 text-xs text-red-500 border border-red-300 dark:border-red-700 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              >
-                清除
-              </button>
-            )}
+          {selectedTags.size > 0 && (
+            <button
+              onClick={clearTagFilter}
+              style={{
+                padding: '2px 8px', fontSize: '12px', color: 'var(--color-error)',
+                border: '1px solid var(--color-error)' + '4d', borderRadius: '4px',
+                background: 'none', cursor: 'pointer', transition: 'background-color 0.15s'
+              }}
+            >
+              清除
+            </button>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
             {allTags.map((tag) => (
               <button
                 key={tag}
                 onClick={() => toggleTag(tag)}
-                className={`px-2 py-0.5 text-xs rounded transition-colors ${
-                  selectedTags.has(tag)
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
+                style={{
+                  padding: '2px 8px', fontSize: '12px', borderRadius: '4px',
+                  cursor: 'pointer', border: 'none', transition: 'background-color 0.15s',
+                  background: selectedTags.has(tag) ? 'var(--color-primary)' : 'var(--color-neutral-100)',
+                  color: selectedTags.has(tag) ? '#fff' : 'var(--color-text-secondary)'
+                }}
               >
                 {tag}
               </button>
@@ -295,8 +359,11 @@ const ToolPanel: React.FC = () => {
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-56 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 overflow-y-auto">
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <aside style={{
+          width: '224px', flexShrink: 0, borderRight: '1px solid var(--color-neutral-200)',
+          background: 'var(--color-bg-card)', padding: '8px', overflow: 'auto'
+        }} className="fp-scrollbar">
           <CategoryTree
             categories={categoryTree}
             selectedCategoryId={selectedCategoryId}
@@ -306,40 +373,51 @@ const ToolPanel: React.FC = () => {
             onDeleteCategory={(id) => deleteCategory(id)}
             onReorderCategory={reorderCategory}
             bookmarkCounts={bookmarkCounts}
+            renamingCategoryId={renamingCategoryId}
+            onStartRename={(id) => setRenamingCategoryId(id)}
+            onFinishRename={() => setRenamingCategoryId(null)}
           />
         </aside>
 
-        <main className="flex-1 overflow-y-auto p-4">
+        <main
+          style={{ flex: 1, overflow: 'auto', padding: '16px' }}
+          className="fp-scrollbar"
+          onContextMenu={(e) => handleContentContextMenu(e, null)}
+        >
           {selectedBookmarks.size > 0 && (
-            <div className="flex items-center justify-between mb-3 px-3 py-2 bg-primary/5 dark:bg-primary/10 rounded-md">
-              <div className="flex items-center gap-2">
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: '12px', padding: '8px 12px', borderRadius: '6px',
+              background: 'var(--color-primary)' + '0d'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button
                   onClick={handleSelectAll}
-                  className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                  style={{ padding: '4px', borderRadius: '4px', background: 'none', border: 'none', cursor: 'pointer' }}
                 >
                   {allSelected ? (
-                    <X className="w-4 h-4 text-primary" />
+                    <X size={16} style={{ color: 'var(--color-primary)' }} />
                   ) : (
-                    <CheckSquare className="w-4 h-4 text-primary" />
+                    <CheckSquare size={16} style={{ color: 'var(--color-primary)' }} />
                   )}
                 </button>
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span style={{ fontSize: '13px', color: 'var(--color-text)' }}>
                   已选 {selectedBookmarks.size} 个
                 </span>
               </div>
-              <div className="flex items-center gap-1">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <button
                   onClick={clearSelection}
-                  className="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                  style={{ padding: '4px 8px', fontSize: '12px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)' }}
                 >
                   取消
                 </button>
                 <button
                   onClick={handleBulkDelete}
-                  className="flex items-center gap-1 px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                  className="fp-btn-danger"
+                  style={{ padding: '4px 8px', fontSize: '12px' }}
                 >
-                  <Trash2 className="w-3 h-3" />
-                  删除
+                  <Trash2 size={12} style={{ marginRight: '4px' }} />删除
                 </button>
               </div>
             </div>
@@ -353,7 +431,7 @@ const ToolPanel: React.FC = () => {
               hasCategories={categories.length > 0}
             />
           ) : settings.viewMode === 'card' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
               {filteredBookmarks.map((bookmark) => (
                 <BookmarkCard
                   key={bookmark.id}
@@ -364,22 +442,23 @@ const ToolPanel: React.FC = () => {
                   onEdit={() => handleEditClick(bookmark)}
                   onDelete={() => handleDeleteClick(bookmark.id)}
                   onOpen={() => handleOpenBookmark(bookmark.url)}
+                  onContextMenu={(e) => handleContentContextMenu(e, bookmark.id)}
                   showFavicon={settings.showFavicon}
                 />
               ))}
             </div>
           ) : (
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 dark:bg-gray-700 px-3 py-2 flex items-center gap-3 border-b border-gray-200 dark:border-gray-700">
-                <div className="w-4" />
-                <div className="w-5" />
-                <span className="flex-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  书签
-                </span>
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-24">
-                  分类
-                </span>
-                <div className="w-16" />
+            <div style={{ border: '1px solid var(--color-neutral-200)', borderRadius: '8px', overflow: 'hidden' }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '12px',
+                padding: '8px 12px', background: 'var(--color-neutral-100)',
+                borderBottom: '1px solid var(--color-neutral-200)'
+              }}>
+                <div style={{ width: '16px' }} />
+                <div style={{ width: '20px' }} />
+                <span style={{ flex: 1, fontSize: '12px', fontWeight: 500, color: 'var(--color-text-tertiary)', textTransform: 'uppercase' }}>书签</span>
+                <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', width: '96px' }}>分类</span>
+                <div style={{ width: '64px' }} />
               </div>
               {filteredBookmarks.map((bookmark) => (
                 <BookmarkListItem
@@ -391,6 +470,7 @@ const ToolPanel: React.FC = () => {
                   onEdit={() => handleEditClick(bookmark)}
                   onDelete={() => handleDeleteClick(bookmark.id)}
                   onOpen={() => handleOpenBookmark(bookmark.url)}
+                  onContextMenu={(e) => handleContentContextMenu(e, bookmark.id)}
                   showFavicon={settings.showFavicon}
                 />
               ))}
@@ -399,45 +479,127 @@ const ToolPanel: React.FC = () => {
         </main>
       </div>
 
-      <footer className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
-        <span>
-          共 {bookmarks.length} 个书签 · {categories.length} 个分类
-        </span>
-        <span>
-          {settings.viewMode === 'card' ? '卡片视图' : '列表视图'}
-        </span>
+      <footer style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '8px 16px', background: 'var(--color-bg-card)',
+        borderTop: '1px solid var(--color-neutral-200)',
+        fontSize: '12px', color: 'var(--color-text-tertiary)'
+      }}>
+        <span>共 {bookmarks.length} 个书签 · {categories.length} 个分类</span>
+        <span>{settings.viewMode === 'card' ? '卡片视图' : '列表视图'}</span>
       </footer>
 
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-          <div className="w-full max-w-lg mx-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200">
+        <div className="fp-modal-overlay">
+          <div className="fp-modal">
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '12px 16px', borderBottom: '1px solid var(--color-neutral-200)'
+            }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>
                 {editingBookmark ? '编辑书签' : '添加书签'}
               </h3>
               <button
-                onClick={() => {
-                  setIsFormOpen(false);
-                  setEditingBookmark(null);
+                onClick={() => { setIsFormOpen(false); setEditingBookmark(null); }}
+                style={{
+                  padding: '4px', borderRadius: '4px', background: 'none', border: 'none',
+                  cursor: 'pointer', color: 'var(--color-text-tertiary)', display: 'flex'
                 }}
-                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
               >
-                <X className="w-4 h-4" />
+                <X size={16} />
               </button>
             </div>
-            <div className="p-4">
+            <div style={{ padding: '16px', overflowY: 'auto' }} className="fp-scrollbar">
               <BookmarkForm
                 bookmark={editingBookmark}
                 categories={categories}
                 defaultCategoryId={settings.defaultCategory}
                 onSubmit={handleFormSubmit}
-                onCancel={() => {
-                  setIsFormOpen(false);
-                  setEditingBookmark(null);
-                }}
+                onCancel={() => { setIsFormOpen(false); setEditingBookmark(null); }}
               />
             </div>
           </div>
+        </div>
+      )}
+
+      {contentMenu.visible && (
+        <div
+          ref={contentMenuRef}
+          className="fp-context-menu"
+          style={{ left: contentMenu.x, top: contentMenu.y }}
+        >
+          {contentMenu.bookmarkId ? (
+            <>
+              <div
+                className="fp-context-menu-item"
+                onClick={() => {
+                  const b = bookmarks.find((b) => b.id === contentMenu.bookmarkId);
+                  if (b) handleOpenBookmark(b.url);
+                  closeContentMenu();
+                }}
+              >
+                <FolderOpen size={14} /> 打开
+              </div>
+              <div className="fp-context-menu-separator" />
+              <div
+                className="fp-context-menu-item"
+                onClick={() => {
+                  const b = bookmarks.find((b) => b.id === contentMenu.bookmarkId);
+                  if (b) handleEditClick(b);
+                }}
+              >
+                <Pencil size={14} /> 编辑
+              </div>
+              {selectedBookmarks.size > 1 && (
+                <div
+                  className="fp-context-menu-item"
+                  onClick={() => {
+                    if (selectedBookmarks.has(contentMenu.bookmarkId!)) {
+                      handleBulkDelete();
+                    } else {
+                      handleDeleteClick(contentMenu.bookmarkId!);
+                    }
+                  }}
+                >
+                  <Trash2 size={14} /> {selectedBookmarks.size > 1 ? `删除选中(${selectedBookmarks.size})` : '删除'}
+                </div>
+              )}
+              {selectedBookmarks.size <= 1 && (
+                <div
+                  className="fp-context-menu-item danger"
+                  onClick={() => handleDeleteClick(contentMenu.bookmarkId!)}
+                >
+                  <Trash2 size={14} /> 删除
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div
+                className="fp-context-menu-item"
+                onClick={handleAddClick}
+              >
+                <Bookmark size={14} /> 添加书签
+              </div>
+              {selectedBookmarks.size > 0 && (
+                <>
+                  <div className="fp-context-menu-separator" />
+                  <div
+                    className="fp-context-menu-item"
+                    onClick={handleSelectAll}
+                  >
+                    <CheckSquare size={14} /> {allSelected ? '取消全选' : '全选'}
+                  </div>
+                  <div
+                    className="fp-context-menu-item danger"
+                    onClick={handleBulkDelete}
+                  >
+                    <Trash2 size={14} /> 删除选中 ({selectedBookmarks.size})
+                  </div>
+                </>
+              )}
+            </>
+          )}
         </div>
       )}
 
@@ -459,105 +621,111 @@ const ToolPanel: React.FC = () => {
         onImport={() => {}}
       />
 
-      <Modal
-        isOpen={isDeleteConfirmOpen}
-        onClose={() => {
-          setIsDeleteConfirmOpen(false);
-          setPendingDeleteId(null);
-          setPendingBulkDelete([]);
-        }}
-        title="确认删除"
-        size="sm"
-      >
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          {pendingBulkDelete.length > 0
-            ? `确定要删除选中的 ${pendingBulkDelete.length} 个书签吗？此操作无法撤销。`
-            : '确定要删除这个书签吗？此操作无法撤销。'}
-        </p>
-        <div className="flex justify-end gap-2 mt-4">
-          <button
-            onClick={() => {
-              setIsDeleteConfirmOpen(false);
-              setPendingDeleteId(null);
-              setPendingBulkDelete([]);
-            }}
-            className="px-4 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            取消
-          </button>
-          <button
-            onClick={handleConfirmDelete}
-            className="px-4 py-1.5 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-          >
-            删除
-          </button>
-        </div>
-      </Modal>
-
-      <Modal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        title="插件设置"
-        size="sm"
-      >
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              显示 Favicon
-            </span>
-            <button
-              onClick={() =>
-                updateSettings({ showFavicon: !settings.showFavicon })
-              }
-              className={`w-10 h-5 rounded-full transition-colors ${
-                settings.showFavicon
-                  ? 'bg-primary'
-                  : 'bg-gray-300 dark:bg-gray-600'
-              }`}
-            >
-              <div
-                className={`w-4 h-4 bg-white rounded-full transition-transform ${
-                  settings.showFavicon ? 'translate-x-5' : 'translate-x-0.5'
-                }`}
-              />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              默认排序
-            </span>
-            <select
-              value={settings.sortBy}
-              onChange={(e) =>
-                updateSettings({
-                  sortBy: e.target.value as 'createdAt' | 'title' | 'order'
-                })
-              }
-              className="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-primary"
-            >
-              <option value="createdAt">创建时间</option>
-              <option value="title">标题</option>
-              <option value="order">自定义排序</option>
-            </select>
-          </div>
-
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <button
-              onClick={() => {
-                resetAllData();
-                setIsSettingsOpen(false);
-              }}
-              className="w-full px-3 py-2 text-sm border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-            >
-              重置所有数据
-            </button>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-              将清除所有书签和分类数据
-            </p>
+      {isDeleteConfirmOpen && (
+        <div className="fp-modal-overlay">
+          <div className="fp-modal" style={{ maxWidth: '384px' }}>
+            <div style={{ padding: '16px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: 0 }}>
+                {pendingBulkDelete.length > 0
+                  ? `确定要删除选中的 ${pendingBulkDelete.length} 个书签吗？此操作无法撤销。`
+                  : '确定要删除这个书签吗？此操作无法撤销。'}
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
+                <button
+                  onClick={() => {
+                    setIsDeleteConfirmOpen(false);
+                    setPendingDeleteId(null);
+                    setPendingBulkDelete([]);
+                  }}
+                  className="fp-btn-secondary"
+                  style={{ padding: '6px 16px', fontSize: '13px' }}
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className="fp-btn-danger"
+                  style={{ padding: '6px 16px', fontSize: '13px' }}
+                >
+                  删除
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </Modal>
+      )}
+
+      {isSettingsOpen && (
+        <div className="fp-modal-overlay">
+          <div className="fp-modal" style={{ maxWidth: '384px' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '12px 16px', borderBottom: '1px solid var(--color-neutral-200)'
+            }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>插件设置</h3>
+              <button
+                onClick={() => setIsSettingsOpen(false)}
+                style={{ padding: '4px', borderRadius: '4px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)', display: 'flex' }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={labelBase}>显示 Favicon</span>
+                <button
+                  onClick={() => updateSettings({ showFavicon: !settings.showFavicon })}
+                  style={{
+                    width: '40px', height: '20px', borderRadius: '10px',
+                    background: settings.showFavicon ? 'var(--color-primary)' : 'var(--color-neutral-300)',
+                    border: 'none', cursor: 'pointer', position: 'relative', transition: 'background-color 0.15s'
+                  }}
+                >
+                  <div style={{
+                    width: '16px', height: '16px', borderRadius: '50%', background: '#fff',
+                    position: 'absolute', top: '2px',
+                    left: settings.showFavicon ? '22px' : '2px',
+                    transition: 'left 0.15s'
+                  }} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={labelBase}>默认排序</span>
+                <select
+                  value={settings.sortBy}
+                  onChange={(e) => updateSettings({ sortBy: e.target.value as 'createdAt' | 'title' | 'order' })}
+                  className="fp-input"
+                  style={{ width: '120px', padding: '6px 8px' }}
+                >
+                  <option value="createdAt">创建时间</option>
+                  <option value="title">标题</option>
+                  <option value="order">自定义排序</option>
+                </select>
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--color-neutral-200)', paddingTop: '16px' }}>
+                <button
+                  onClick={() => { resetAllData(); setIsSettingsOpen(false); }}
+                  style={{
+                    width: '100%', padding: '8px 12px', fontSize: '13px',
+                    border: '1px solid var(--color-error)', borderRadius: '6px',
+                    background: 'none', cursor: 'pointer', transition: 'background-color 0.15s',
+                    color: 'var(--color-error)'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-error)' + '0d'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  重置所有数据
+                </button>
+                <p style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', margin: '4px 0 0' }}>
+                  将清除所有书签和分类数据
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

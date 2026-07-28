@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ExternalLink, Pencil, Trash2, Globe, Tag } from 'lucide-react';
 import type { Bookmark, Category } from '../types';
 import { getFaviconUrl, truncateText, formatDate } from '../utils/validator';
+import '../styles.css';
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
@@ -11,6 +12,7 @@ interface BookmarkCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onOpen: () => void;
+  onContextMenu: (e: React.MouseEvent) => void;
   showFavicon: boolean;
 }
 
@@ -19,8 +21,13 @@ const FaviconFallback: React.FC<{ url: string }> = ({ url }) => {
 
   if (!url || error) {
     return (
-      <div className="w-8 h-8 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-        <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+      <div style={{
+        width: '32px', height: '32px', borderRadius: '4px',
+        background: 'var(--color-neutral-100)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0
+      }}>
+        <Globe size={16} style={{ color: 'var(--color-neutral-400)' }} />
       </div>
     );
   }
@@ -29,7 +36,10 @@ const FaviconFallback: React.FC<{ url: string }> = ({ url }) => {
     <img
       src={url}
       alt="favicon"
-      className="w-8 h-8 rounded object-contain flex-shrink-0"
+      style={{
+        width: '32px', height: '32px', borderRadius: '4px',
+        objectFit: 'contain', flexShrink: 0
+      }}
       onError={() => setError(true)}
     />
   );
@@ -43,21 +53,46 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
   onEdit,
   onDelete,
   onOpen,
+  onContextMenu,
   showFavicon
 }) => {
-  const faviconUrl =
-    bookmark.favicon || getFaviconUrl(bookmark.url);
+  const faviconUrl = bookmark.favicon || getFaviconUrl(bookmark.url);
+
+  const cardStyle: React.CSSProperties = {
+    position: 'relative',
+    background: 'var(--color-bg-card)',
+    border: isSelected ? '1px solid var(--color-primary)' : '1px solid var(--color-neutral-200)',
+    borderRadius: '8px',
+    padding: '12px',
+    cursor: 'pointer',
+    transition: 'box-shadow 0.15s, transform 0.15s',
+    boxShadow: isSelected ? '0 0 0 1px var(--color-primary)' : 'none'
+  };
+
+  const checkboxWrapStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '8px',
+    left: '8px',
+    opacity: isSelected ? 1 : undefined
+  };
 
   return (
     <div
-      className={`group relative bg-white dark:bg-gray-800 border rounded-lg p-3 cursor-pointer transition-all hover:shadow-sm hover:-translate-y-0.5 ${
-        isSelected
-          ? 'border-primary ring-1 ring-primary/30'
-          : 'border-gray-200 dark:border-gray-700'
-      }`}
+      style={cardStyle}
       onClick={onOpen}
+      onContextMenu={onContextMenu}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = isSelected
+          ? '0 0 0 1px var(--color-primary), var(--shadow-sm)'
+          : 'var(--shadow-sm)';
+        if (!isSelected) e.currentTarget.style.transform = 'translateY(-1px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = isSelected ? '0 0 0 1px var(--color-primary)' : 'none';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
     >
-      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div style={checkboxWrapStyle} className="fp-checkbox-wrap">
         <input
           type="checkbox"
           checked={isSelected}
@@ -66,81 +101,157 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
             onSelect();
           }}
           onClick={(e) => e.stopPropagation()}
-          className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+          style={{
+            width: '16px', height: '16px', borderRadius: '4px',
+            borderColor: 'var(--color-neutral-300)', cursor: 'pointer'
+          }}
         />
       </div>
 
-      <div className="flex items-start gap-2">
-        {showFavicon && (
-          <FaviconFallback url={faviconUrl} />
-        )}
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+        {showFavicon && <FaviconFallback url={faviconUrl} />}
+        <div style={{ flex: 1, minWidth: 0, paddingLeft: showFavicon ? 0 : '24px' }}>
+          <h3 style={{
+            fontSize: '14px', fontWeight: 500,
+            color: 'var(--color-text)',
+            margin: 0, overflow: 'hidden',
+            textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+          }}>
             {bookmark.title}
           </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+          <p style={{
+            fontSize: '12px', color: 'var(--color-text-tertiary)',
+            margin: '2px 0 0', overflow: 'hidden',
+            textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+          }}>
             {bookmark.url.replace(/^https?:\/\//, '')}
           </p>
         </div>
       </div>
 
       {bookmark.description && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">
+        <p style={{
+          fontSize: '12px', color: 'var(--color-text-secondary)',
+          margin: '8px 0 0',
+          display: '-webkit-box', WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical', overflow: 'hidden'
+        }}>
           {truncateText(bookmark.description, 100)}
         </p>
       )}
 
-      <div className="flex items-center gap-2 mt-2 flex-wrap">
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '8px',
+        marginTop: '8px', flexWrap: 'wrap'
+      }}>
         {category && (
-          <span className="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
+          <span style={{
+            padding: '2px 6px', fontSize: '12px',
+            background: 'var(--color-neutral-100)',
+            color: 'var(--color-text-secondary)',
+            borderRadius: '4px'
+          }}>
             {category.name}
           </span>
         )}
         {bookmark.tags.slice(0, 2).map((tag) => (
           <span
             key={tag}
-            className="px-1.5 py-0.5 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded flex items-center gap-0.5"
+            style={{
+              padding: '2px 6px', fontSize: '12px',
+              background: 'var(--color-primary)' + '1a',
+              color: 'var(--color-primary)',
+              borderRadius: '4px',
+              display: 'inline-flex', alignItems: 'center', gap: '2px'
+            }}
           >
-            <Tag className="w-2.5 h-2.5" />
+            <Tag size={10} />
             {tag}
           </span>
         ))}
       </div>
 
-      <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-700/50">
-        <span className="text-xs text-gray-400 dark:text-gray-500">
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: '8px', paddingTop: '8px',
+        borderTop: '1px solid var(--color-neutral-100)'
+      }}>
+        <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
           {formatDate(bookmark.updatedAt)}
         </span>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onOpen();
             }}
-            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-primary"
             title="打开"
+            style={{
+              padding: '4px', borderRadius: '4px', background: 'none',
+              border: 'none', cursor: 'pointer',
+              color: 'var(--color-text-tertiary)',
+              display: 'flex', alignItems: 'center',
+              transition: 'background-color 0.15s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--color-neutral-100)';
+              e.currentTarget.style.color = 'var(--color-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = 'var(--color-text-tertiary)';
+            }}
           >
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink size={14} />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onEdit();
             }}
-            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-primary"
             title="编辑"
+            style={{
+              padding: '4px', borderRadius: '4px', background: 'none',
+              border: 'none', cursor: 'pointer',
+              color: 'var(--color-text-tertiary)',
+              display: 'flex', alignItems: 'center',
+              transition: 'background-color 0.15s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--color-neutral-100)';
+              e.currentTarget.style.color = 'var(--color-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = 'var(--color-text-tertiary)';
+            }}
           >
-            <Pencil className="w-3.5 h-3.5" />
+            <Pencil size={14} />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
-            className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-500"
             title="删除"
+            style={{
+              padding: '4px', borderRadius: '4px', background: 'none',
+              border: 'none', cursor: 'pointer',
+              color: 'var(--color-text-tertiary)',
+              display: 'flex', alignItems: 'center',
+              transition: 'background-color 0.15s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--color-error)' + '0d';
+              e.currentTarget.style.color = 'var(--color-error)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = 'var(--color-text-tertiary)';
+            }}
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 size={14} />
           </button>
         </div>
       </div>
