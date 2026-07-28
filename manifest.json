@@ -1,0 +1,17 @@
+{
+  "id": "plugin-favorite",
+  "name": "网址收藏夹",
+  "version": "1.0.0",
+  "description": "本地书签管理工具，支持分类整理、搜索、导入导出（HTML/JSON/TXT）",
+  "author": "ToolBox Team",
+  "icon": "Bookmark",
+  "color": "#2563eb",
+  "textColor": "#ffffff",
+  "categories": ["工具", "效率"],
+  "tags": ["bookmark", "favorite", "bookmarks", "manager"],
+  "githubRepo": "fqyjfb/favorite-plugin",
+  "entry": "dist/index.js",
+  "isBeta": false,
+  "width": 1000,
+  "height": 680
+}
