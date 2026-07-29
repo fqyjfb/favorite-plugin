@@ -9,64 +9,74 @@ function generateId(prefix: string): string {
 }
 
 export function parseBrowserBookmarks(html: string): ImportResult {
+  const cleanHtml = html
+    .replace(/<p>/gi, '')
+    .replace(/<\/p>/gi, '');
+
   const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
+  const doc = parser.parseFromString(cleanHtml, 'text/html');
   const categories: Category[] = [];
   const bookmarks: Bookmark[] = [];
   const now = new Date().toISOString();
 
-  const dls = doc.querySelectorAll('dl');
-  const categoryMap = new Map<string, string>();
+  function processDl(dl: Element, parentId: string | null) {
+    const children = dl.children;
+    let i = 0;
 
-  function processDl(dl: HTMLDListElement, parentId: string | null) {
-    const h3s = dl.querySelectorAll(':scope > dt > h3');
-    h3s.forEach((h3) => {
-      const categoryName = h3.textContent?.trim() || '未命名分类';
-      const categoryId = generateCategoryId();
-      categories.push({
-        id: categoryId,
-        name: categoryName,
-        parentId,
-        order: categories.length,
-        createdAt: now
-      });
+    while (i < children.length) {
+      const child = children[i];
 
-      const h3Dt = h3.parentElement;
-      const h3Dl = h3Dt?.nextElementSibling as HTMLDListElement | null;
-      if (h3Dl && h3Dl.tagName === 'DL') {
-        processDl(h3Dl, categoryId);
+      if (child.tagName === 'DT') {
+        const h3 = child.querySelector(':scope > h3');
+        if (h3) {
+          const categoryName = h3.textContent?.trim() || '未命名分类';
+          const categoryId = generateCategoryId();
+          categories.push({
+            id: categoryId,
+            name: categoryName,
+            parentId,
+            order: categories.length,
+            createdAt: now
+          });
+
+          const nestedDl = child.querySelector(':scope > dl');
+          if (nestedDl) {
+            processDl(nestedDl, categoryId);
+          }
+        } else {
+          const anchors = child.querySelectorAll(':scope > a');
+          anchors.forEach((a) => {
+            const href = a.getAttribute('href') || '';
+            if (!href) return;
+
+            const title = a.textContent?.trim() || href;
+            const icon = a.getAttribute('icon') || '';
+
+            bookmarks.push({
+              id: generateBookmarkId(),
+              title,
+              url: normalizeUrl(href),
+              description: '',
+              categoryId: parentId,
+              favicon: icon,
+              tags: [],
+              order: bookmarks.length,
+              createdAt: now,
+              updatedAt: now
+            });
+          });
+        }
+      } else if (child.tagName === 'DL') {
+        processDl(child, parentId);
       }
-    });
 
-    const anchors = dl.querySelectorAll(':scope > dt > a');
-    anchors.forEach((a) => {
-      const href = a.getAttribute('href') || '';
-      if (!href) return;
-
-      const title = a.textContent?.trim() || href;
-      const icon = a.getAttribute('icon') || '';
-      const dd = a.parentElement?.nextElementSibling;
-      const description =
-        dd && dd.tagName === 'DD' ? dd.textContent?.trim() || '' : '';
-
-      bookmarks.push({
-        id: generateBookmarkId(),
-        title,
-        url: normalizeUrl(href),
-        description,
-        categoryId: parentId,
-        favicon: icon,
-        tags: [],
-        order: bookmarks.length,
-        createdAt: now,
-        updatedAt: now
-      });
-    });
+      i++;
+    }
   }
 
-  const topDl = doc.querySelector('dl');
-  if (topDl) {
-    processDl(topDl as HTMLDListElement, null);
+  const rootDl = doc.querySelector('dl');
+  if (rootDl) {
+    processDl(rootDl, null);
   }
 
   return {

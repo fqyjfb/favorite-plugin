@@ -49,3 +49,26 @@ export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '...';
 }
+
+export async function fetchFaviconAsBase64(url: string): Promise<string> {
+  if (!url) return '';
+  if (url.startsWith('data:')) return url;
+  try {
+    const response = await fetch(url, { mode: 'cors' });
+    if (!response.ok) return url;
+    const contentType = response.headers.get('content-type') || 'image/png';
+    const buffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize) as unknown as number[]);
+    }
+    const base64 = btoa(binary);
+    const mimeMatch = contentType.match(/image\/(png|jpeg|gif|webp|svg\+xml|ico)/);
+    const mime = mimeMatch ? `image/${mimeMatch[1].replace('svg+xml', 'svg+xml')}` : 'image/png';
+    return `data:${mime};base64,${base64}`;
+  } catch {
+    return url;
+  }
+}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, Pencil, Trash2, Globe } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 import type { Bookmark, Category } from '../types';
 import { getFaviconUrl, truncateText } from '../utils/validator';
 import '../styles.css';
@@ -9,8 +9,6 @@ interface BookmarkListItemProps {
   category?: Category;
   isSelected: boolean;
   onSelect: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
   onOpen: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
   showFavicon: boolean;
@@ -50,8 +48,6 @@ const BookmarkListItem: React.FC<BookmarkListItemProps> = ({
   category,
   isSelected,
   onSelect,
-  onEdit,
-  onDelete,
   onOpen,
   onContextMenu,
   showFavicon
@@ -63,7 +59,6 @@ const BookmarkListItem: React.FC<BookmarkListItemProps> = ({
     alignItems: 'center',
     gap: '12px',
     padding: '8px 12px',
-    borderBottom: '1px solid var(--color-neutral-100)',
     cursor: 'pointer',
     transition: 'background-color 0.15s',
     background: isSelected ? 'var(--color-primary)' + '0d' : 'transparent'
@@ -71,9 +66,10 @@ const BookmarkListItem: React.FC<BookmarkListItemProps> = ({
 
   return (
     <div
+      className="fp-bookmark-item"
       style={rowStyle}
       onClick={onOpen}
-      onContextMenu={onContextMenu}
+      onContextMenu={(e) => { e.stopPropagation(); onContextMenu(e); }}
       onMouseEnter={(e) => {
         if (!isSelected) e.currentTarget.style.background = 'var(--color-neutral-50)';
       }}
@@ -153,54 +149,6 @@ const BookmarkListItem: React.FC<BookmarkListItemProps> = ({
           }}
         >
           <ExternalLink size={14} />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-          }}
-          title="编辑"
-          style={{
-            padding: '4px', borderRadius: '4px', background: 'none',
-            border: 'none', cursor: 'pointer',
-            color: 'var(--color-text-tertiary)',
-            display: 'flex', alignItems: 'center',
-            transition: 'background-color 0.15s'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'var(--color-neutral-100)';
-            e.currentTarget.style.color = 'var(--color-primary)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.color = 'var(--color-text-tertiary)';
-          }}
-        >
-          <Pencil size={14} />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          title="删除"
-          style={{
-            padding: '4px', borderRadius: '4px', background: 'none',
-            border: 'none', cursor: 'pointer',
-            color: 'var(--color-text-tertiary)',
-            display: 'flex', alignItems: 'center',
-            transition: 'background-color 0.15s'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'var(--color-error)' + '0d';
-            e.currentTarget.style.color = 'var(--color-error)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.color = 'var(--color-text-tertiary)';
-          }}
-        >
-          <Trash2 size={14} />
         </button>
       </div>
     </div>

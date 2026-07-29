@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, Pencil, Trash2, Globe, Tag } from 'lucide-react';
+import { ExternalLink, Globe, Tag } from 'lucide-react';
 import type { Bookmark, Category } from '../types';
 import { getFaviconUrl, truncateText, formatDate } from '../utils/validator';
 import '../styles.css';
@@ -9,8 +9,6 @@ interface BookmarkCardProps {
   category?: Category;
   isSelected: boolean;
   onSelect: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
   onOpen: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
   showFavicon: boolean;
@@ -50,8 +48,6 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
   category,
   isSelected,
   onSelect,
-  onEdit,
-  onDelete,
   onOpen,
   onContextMenu,
   showFavicon
@@ -60,13 +56,12 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
 
   const cardStyle: React.CSSProperties = {
     position: 'relative',
-    background: 'var(--color-bg-card)',
-    border: isSelected ? '1px solid var(--color-primary)' : '1px solid var(--color-neutral-200)',
+    background: isSelected ? 'var(--color-primary)' + '0d' : 'var(--color-bg-card)',
     borderRadius: '8px',
     padding: '12px',
     cursor: 'pointer',
     transition: 'box-shadow 0.15s, transform 0.15s',
-    boxShadow: isSelected ? '0 0 0 1px var(--color-primary)' : 'none'
+    boxShadow: isSelected ? '0 0 0 2px var(--color-primary)' : 'none'
   };
 
   const checkboxWrapStyle: React.CSSProperties = {
@@ -78,18 +73,21 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
 
   return (
     <div
+      className="fp-bookmark-card"
       style={cardStyle}
       onClick={onOpen}
-      onContextMenu={onContextMenu}
+      onContextMenu={(e) => { e.stopPropagation(); onContextMenu(e); }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = isSelected
-          ? '0 0 0 1px var(--color-primary), var(--shadow-sm)'
-          : 'var(--shadow-sm)';
-        if (!isSelected) e.currentTarget.style.transform = 'translateY(-1px)';
+        if (!isSelected) {
+          e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+          e.currentTarget.style.transform = 'translateY(-1px)';
+        }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = isSelected ? '0 0 0 1px var(--color-primary)' : 'none';
-        e.currentTarget.style.transform = 'translateY(0)';
+        if (!isSelected) {
+          e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.style.transform = 'translateY(0)';
+        }
       }}
     >
       <div style={checkboxWrapStyle} className="fp-checkbox-wrap">
@@ -174,86 +172,35 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
       <div style={{
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
-        marginTop: '8px', paddingTop: '8px',
-        borderTop: '1px solid var(--color-neutral-100)'
+        marginTop: '8px', paddingTop: '8px'
       }}>
         <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
           {formatDate(bookmark.updatedAt)}
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpen();
-            }}
-            title="打开"
-            style={{
-              padding: '4px', borderRadius: '4px', background: 'none',
-              border: 'none', cursor: 'pointer',
-              color: 'var(--color-text-tertiary)',
-              display: 'flex', alignItems: 'center',
-              transition: 'background-color 0.15s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--color-neutral-100)';
-              e.currentTarget.style.color = 'var(--color-primary)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = 'var(--color-text-tertiary)';
-            }}
-          >
-            <ExternalLink size={14} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-            title="编辑"
-            style={{
-              padding: '4px', borderRadius: '4px', background: 'none',
-              border: 'none', cursor: 'pointer',
-              color: 'var(--color-text-tertiary)',
-              display: 'flex', alignItems: 'center',
-              transition: 'background-color 0.15s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--color-neutral-100)';
-              e.currentTarget.style.color = 'var(--color-primary)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = 'var(--color-text-tertiary)';
-            }}
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            title="删除"
-            style={{
-              padding: '4px', borderRadius: '4px', background: 'none',
-              border: 'none', cursor: 'pointer',
-              color: 'var(--color-text-tertiary)',
-              display: 'flex', alignItems: 'center',
-              transition: 'background-color 0.15s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--color-error)' + '0d';
-              e.currentTarget.style.color = 'var(--color-error)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = 'var(--color-text-tertiary)';
-            }}
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen();
+          }}
+          title="打开"
+          style={{
+            padding: '4px', borderRadius: '4px', background: 'none',
+            border: 'none', cursor: 'pointer',
+            color: 'var(--color-text-tertiary)',
+            display: 'flex', alignItems: 'center',
+            transition: 'background-color 0.15s'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--color-neutral-100)';
+            e.currentTarget.style.color = 'var(--color-primary)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = 'var(--color-text-tertiary)';
+          }}
+        >
+          <ExternalLink size={14} />
+        </button>
       </div>
     </div>
   );

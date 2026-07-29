@@ -1,11 +1,35 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Tag, Globe } from 'lucide-react';
-import type { Bookmark } from '../types';
+import { X, Tag, Globe, Image as ImageIcon } from 'lucide-react';
+import type { Bookmark, CategoryNode } from '../types';
+import { fetchFaviconAsBase64 } from '../utils/validator';
 import '../styles.css';
+
+interface FlatCategory {
+  id: string;
+  name: string;
+  level: number;
+}
+
+function flattenCategoryTree(nodes: CategoryNode[], level = 0): FlatCategory[] {
+  const result: FlatCategory[] = [];
+  nodes.forEach((node) => {
+    result.push({ id: node.id, name: node.name, level });
+    if (node.children && node.children.length > 0) {
+      result.push(...flattenCategoryTree(node.children, level + 1));
+    }
+  });
+  return result;
+}
+
+const PRESET_TAGS = [
+  '搜索','工作', '学习', '工具', '设计', '前端', '后端',
+  'AI','阅读', '参考', '收藏', '重要', '项目', '资源',
+  '教程', '文档', '开源', 'VPN'
+];
 
 interface BookmarkFormProps {
   bookmark?: Partial<Bookmark>;
-  categories: { id: string; name: string }[];
+  categories: CategoryNode[];
   defaultCategoryId?: string | null;
   onSubmit: (data: Omit<Bookmark, 'id' | 'createdAt' | 'updatedAt'>) => void;
   onCancel: () => void;
@@ -24,9 +48,12 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
   const [categoryId, setCategoryId] = useState(bookmark?.categoryId ?? defaultCategoryId ?? '');
   const [tags, setTags] = useState<string[]>(bookmark?.tags || []);
   const [tagInput, setTagInput] = useState('');
+  const [faviconInput, setFaviconInput] = useState(bookmark?.favicon || '');
   const [error, setError] = useState('');
   const [fetching, setFetching] = useState(false);
   const tagInputRef = useRef<HTMLInputElement>(null);
+
+  const flatCategories = flattenCategoryTree(categories);
 
   useEffect(() => {
     if (!categoryId && defaultCategoryId !== undefined) {
@@ -56,44 +83,45 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
   }, [tagInput, tags, addTag, removeTag]);
 
   const fetchUrlInfo = useCallback(async () => {
-    if (!url.trim()) {
-      setError('请先输入URL');
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) {
+      setError('请先输入网址');
       return;
     }
+
+    try {
+      new URL(trimmedUrl);
+    } catch {
+      setError('请输入有效的URL地址');
+      return;
+    }
+
     setError('');
     setFetching(true);
 
-    let normalizedUrl = url.trim();
-    if (!/^https?:\/\//i.test(normalizedUrl)) {
-      normalizedUrl = 'https://' + normalizedUrl;
-    }
-    setUrl(normalizedUrl);
-
     try {
       const response = await fetch(
-        `https://api.allorigins.win/get?url=${encodeURIComponent(normalizedUrl)}`
+        `https://api.ahfi.cn/api/websiteinfo?url=${encodeURIComponent(trimmedUrl)}`
       );
-      if (!response.ok) throw new Error('Failed to fetch');
-      const data = await response.json();
-      const html = data.contents || '';
+      const result = await response.json();
 
-      const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
-      if (titleMatch && titleMatch[1] && !bookmark?.title) {
-        setTitle(titleMatch[1].trim());
-      }
-
-      const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["'][^>]*>/i)
-        || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*name=["']description["'][^>]*>/i);
-      if (descMatch && descMatch[1] && !bookmark?.description) {
-        setDescription(descMatch[1].trim());
-      }
-
-      if (!titleMatch || !titleMatch[1]) {
-        const urlObj = new URL(normalizedUrl);
+      if (result.code === 200 && result.data) {
+        if (result.data.title && !bookmark?.title) {
+          setTitle(result.data.title.trim());
+        }
+        if (result.data.description && !bookmark?.description) {
+          setDescription(result.data.description.trim());
+        }
+        if (result.data.ico_url) {
+          const base64Favicon = await fetchFaviconAsBase64(result.data.ico_url);
+          setFaviconInput(base64Favicon);
+        }
+      } else {
+        const urlObj = new URL(trimmedUrl);
         if (!title) setTitle(urlObj.hostname);
       }
     } catch {
-      const urlObj = new URL(normalizedUrl);
+      const urlObj = new URL(trimmedUrl);
       if (!title) setTitle(urlObj.hostname);
     } finally {
       setFetching(false);
@@ -114,6 +142,7 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
     let normalizedUrl = url.trim();
     if (!/^https?:\/\//i.test(normalizedUrl)) {
       normalizedUrl = 'https://' + normalizedUrl;
+      setUrl(normalizedUrl);
     }
 
     try {
@@ -129,9 +158,10 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
       description: description.trim(),
       categoryId: categoryId || null,
       tags,
+      favicon: faviconInput.trim(),
       order: bookmark?.order ?? 0
     });
-  }, [title, url, description, categoryId, tags, bookmark?.order, onSubmit]);
+  }, [title, url, description, categoryId, tags, faviconInput, bookmark?.order, onSubmit]);
 
   const labelStyle: React.CSSProperties = {
     display: 'block',
@@ -227,12 +257,45 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
           className="fp-input"
         >
           <option value="">未分类</option>
-          {categories.map((cat) => (
+          {flatCategories.map((cat) => (
             <option key={cat.id} value={cat.id}>
-              {cat.name}
+              {'\u00A0\u00A0'.repeat(cat.level)}{cat.level > 0 ? '└ ' : ''}{cat.name}
             </option>
           ))}
         </select>
+      </div>
+
+      <div>
+        <label style={labelStyle}>图标</label>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <input
+            type="text"
+            value={faviconInput}
+            onChange={(e) => setFaviconInput(e.target.value)}
+            placeholder="图标URL（获取后自动填充）"
+            className="fp-input"
+            style={{ flex: 1 }}
+          />
+          {faviconInput ? (
+            <img
+              src={faviconInput}
+              alt="favicon预览"
+              style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '4px',
+                border: '1px solid var(--color-neutral-300)',
+                objectFit: 'contain',
+                flexShrink: 0
+              }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.visibility = 'hidden';
+              }}
+            />
+          ) : (
+            <ImageIcon size={20} style={{ color: 'var(--color-neutral-300)', flexShrink: 0 }} />
+          )}
+        </div>
       </div>
 
       <div>
@@ -295,6 +358,37 @@ const BookmarkForm: React.FC<BookmarkFormProps> = ({
             }}
           />
         </div>
+        {(() => {
+          const available = PRESET_TAGS.filter((t) => !tags.includes(t));
+          if (available.length === 0) return null;
+          return (
+            <div style={{ marginTop: '8px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '4px' }}>
+                常用标签（点击添加）
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                {available.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => addTag(tag)}
+                    style={{
+                      padding: '2px 8px', fontSize: '12px', borderRadius: '4px',
+                      cursor: 'pointer', border: '1px solid var(--color-neutral-200)',
+                      background: 'var(--color-bg-card)',
+                      color: 'var(--color-text-secondary)',
+                      transition: 'background-color 0.15s'
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-neutral-100)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-bg-card)'; }}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', paddingTop: '8px' }}>

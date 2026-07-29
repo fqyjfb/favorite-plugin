@@ -9,7 +9,10 @@ const DEFAULT_SETTINGS: PluginSettings = {
   sortBy: 'createdAt',
   sortOrder: 'desc',
   showFavicon: true,
-  defaultCategory: null
+  defaultCategory: null,
+  tagDisplayLimit: 5,
+  tagOrder: [],
+  hiddenTags: []
 };
 
 function createDefaultData(): PluginData {
@@ -45,6 +48,10 @@ export function loadData(): PluginData {
     }
     if (!parsed.settings) {
       parsed.settings = { ...DEFAULT_SETTINGS };
+    } else {
+      if (parsed.settings.tagDisplayLimit === undefined) parsed.settings.tagDisplayLimit = 5;
+      if (!parsed.settings.tagOrder) parsed.settings.tagOrder = [];
+      if (!parsed.settings.hiddenTags) parsed.settings.hiddenTags = [];
     }
     if (!parsed.bookmarks) parsed.bookmarks = [];
     if (!parsed.categories) parsed.categories = [];

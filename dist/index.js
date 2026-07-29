@@ -127,12 +127,6 @@ input, select, textarea, button {
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
-.fp-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-neutral-200);
-  border-radius: var(--radius-lg);
-}
-
 .fp-modal-overlay {
   position: fixed;
   inset: 0;
@@ -664,7 +658,7 @@ input, select, textarea, button {
   react_production.useTransition = function() {
     return ReactSharedInternals$2.H.useTransition();
   };
-  react_production.version = "19.2.8";
+  react_production.version = "19.2.7";
   {
     react.exports = react_production;
   }
@@ -1087,7 +1081,7 @@ input, select, textarea, button {
   reactDom_production.useFormStatus = function() {
     return ReactSharedInternals$1.H.useHostTransitionStatus();
   };
-  reactDom_production.version = "19.2.8";
+  reactDom_production.version = "19.2.7";
   function checkDCE$1() {
     if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === "undefined" || typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE !== "function") {
       return;
@@ -12529,12 +12523,12 @@ input, select, textarea, button {
     }
   };
   var isomorphicReactPackageVersion$jscomp$inline_1840 = React.version;
-  if ("19.2.8" !== isomorphicReactPackageVersion$jscomp$inline_1840)
+  if ("19.2.7" !== isomorphicReactPackageVersion$jscomp$inline_1840)
     throw Error(
       formatProdErrorMessage(
         527,
         isomorphicReactPackageVersion$jscomp$inline_1840,
-        "19.2.8"
+        "19.2.7"
       )
     );
   ReactDOMSharedInternals.findDOMNode = function(componentOrElement) {
@@ -12552,10 +12546,10 @@ input, select, textarea, button {
   };
   var internals$jscomp$inline_2347 = {
     bundleType: 0,
-    version: "19.2.8",
+    version: "19.2.7",
     rendererPackageName: "react-dom",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.8"
+    reconcilerVersion: "19.2.7"
   };
   if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
     var hook$jscomp$inline_2348 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -12622,7 +12616,7 @@ input, select, textarea, button {
     listenToAllSupportedEvents(container);
     return new ReactDOMHydrationRoot(initialChildren);
   };
-  reactDomClient_production.version = "19.2.8";
+  reactDomClient_production.version = "19.2.7";
   function checkDCE() {
     if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === "undefined" || typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE !== "function") {
       return;
@@ -12865,6 +12859,21 @@ input, select, textarea, button {
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
    */
+  const Folder = createLucideIcon("Folder", [
+    [
+      "path",
+      {
+        d: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z",
+        key: "1kt360"
+      }
+    ]
+  ]);
+  /**
+   * @license lucide-react v0.454.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   */
   const Globe = createLucideIcon("Globe", [
     ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
     ["path", { d: "M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20", key: "13o1zl" }],
@@ -12876,13 +12885,10 @@ input, select, textarea, button {
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
    */
-  const GripVertical = createLucideIcon("GripVertical", [
-    ["circle", { cx: "9", cy: "12", r: "1", key: "1vctgf" }],
-    ["circle", { cx: "9", cy: "5", r: "1", key: "hp0tcf" }],
-    ["circle", { cx: "9", cy: "19", r: "1", key: "fkjjf6" }],
-    ["circle", { cx: "15", cy: "12", r: "1", key: "1tmaij" }],
-    ["circle", { cx: "15", cy: "5", r: "1", key: "19l28e" }],
-    ["circle", { cx: "15", cy: "19", r: "1", key: "f4zoj3" }]
+  const Image = createLucideIcon("Image", [
+    ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
+    ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
+    ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
   ]);
   /**
    * @license lucide-react v0.454.0 - ISC
@@ -13057,7 +13063,10 @@ input, select, textarea, button {
     sortBy: "createdAt",
     sortOrder: "desc",
     showFavicon: true,
-    defaultCategory: null
+    defaultCategory: null,
+    tagDisplayLimit: 5,
+    tagOrder: [],
+    hiddenTags: []
   };
   function createDefaultData() {
     const now2 = (/* @__PURE__ */ new Date()).toISOString();
@@ -13091,6 +13100,10 @@ input, select, textarea, button {
       }
       if (!parsed.settings) {
         parsed.settings = { ...DEFAULT_SETTINGS };
+      } else {
+        if (parsed.settings.tagDisplayLimit === void 0) parsed.settings.tagDisplayLimit = 5;
+        if (!parsed.settings.tagOrder) parsed.settings.tagOrder = [];
+        if (!parsed.settings.hiddenTags) parsed.settings.hiddenTags = [];
       }
       if (!parsed.bookmarks) parsed.bookmarks = [];
       if (!parsed.categories) parsed.categories = [];
@@ -13230,58 +13243,88 @@ input, select, textarea, button {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + "...";
   }
+  async function fetchFaviconAsBase64(url) {
+    if (!url) return "";
+    if (url.startsWith("data:")) return url;
+    try {
+      const response = await fetch(url, { mode: "cors" });
+      if (!response.ok) return url;
+      const contentType = response.headers.get("content-type") || "image/png";
+      const buffer = await response.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      const chunkSize = 32768;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+      }
+      const base64 = btoa(binary);
+      const mimeMatch = contentType.match(/image\/(png|jpeg|gif|webp|svg\+xml|ico)/);
+      const mime = mimeMatch ? `image/${mimeMatch[1].replace("svg+xml", "svg+xml")}` : "image/png";
+      return `data:${mime};base64,${base64}`;
+    } catch {
+      return url;
+    }
+  }
   function parseBrowserBookmarks(html) {
+    const cleanHtml = html.replace(/<p>/gi, "").replace(/<\/p>/gi, "");
     const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
+    const doc = parser.parseFromString(cleanHtml, "text/html");
     const categories = [];
     const bookmarks = [];
     const now2 = (/* @__PURE__ */ new Date()).toISOString();
-    doc.querySelectorAll("dl");
     function processDl(dl, parentId) {
-      const h3s = dl.querySelectorAll(":scope > dt > h3");
-      h3s.forEach((h3) => {
-        var _a;
-        const categoryName = ((_a = h3.textContent) == null ? void 0 : _a.trim()) || "未命名分类";
-        const categoryId = generateCategoryId();
-        categories.push({
-          id: categoryId,
-          name: categoryName,
-          parentId,
-          order: categories.length,
-          createdAt: now2
-        });
-        const h3Dt = h3.parentElement;
-        const h3Dl = h3Dt == null ? void 0 : h3Dt.nextElementSibling;
-        if (h3Dl && h3Dl.tagName === "DL") {
-          processDl(h3Dl, categoryId);
+      var _a;
+      const children = dl.children;
+      let i = 0;
+      while (i < children.length) {
+        const child = children[i];
+        if (child.tagName === "DT") {
+          const h3 = child.querySelector(":scope > h3");
+          if (h3) {
+            const categoryName = ((_a = h3.textContent) == null ? void 0 : _a.trim()) || "未命名分类";
+            const categoryId = generateCategoryId();
+            categories.push({
+              id: categoryId,
+              name: categoryName,
+              parentId,
+              order: categories.length,
+              createdAt: now2
+            });
+            const nestedDl = child.querySelector(":scope > dl");
+            if (nestedDl) {
+              processDl(nestedDl, categoryId);
+            }
+          } else {
+            const anchors = child.querySelectorAll(":scope > a");
+            anchors.forEach((a) => {
+              var _a2;
+              const href = a.getAttribute("href") || "";
+              if (!href) return;
+              const title = ((_a2 = a.textContent) == null ? void 0 : _a2.trim()) || href;
+              const icon = a.getAttribute("icon") || "";
+              bookmarks.push({
+                id: generateBookmarkId(),
+                title,
+                url: normalizeUrl(href),
+                description: "",
+                categoryId: parentId,
+                favicon: icon,
+                tags: [],
+                order: bookmarks.length,
+                createdAt: now2,
+                updatedAt: now2
+              });
+            });
+          }
+        } else if (child.tagName === "DL") {
+          processDl(child, parentId);
         }
-      });
-      const anchors = dl.querySelectorAll(":scope > dt > a");
-      anchors.forEach((a) => {
-        var _a, _b, _c;
-        const href = a.getAttribute("href") || "";
-        if (!href) return;
-        const title = ((_a = a.textContent) == null ? void 0 : _a.trim()) || href;
-        const icon = a.getAttribute("icon") || "";
-        const dd = (_b = a.parentElement) == null ? void 0 : _b.nextElementSibling;
-        const description = dd && dd.tagName === "DD" ? ((_c = dd.textContent) == null ? void 0 : _c.trim()) || "" : "";
-        bookmarks.push({
-          id: generateBookmarkId(),
-          title,
-          url: normalizeUrl(href),
-          description,
-          categoryId: parentId,
-          favicon: icon,
-          tags: [],
-          order: bookmarks.length,
-          createdAt: now2,
-          updatedAt: now2
-        });
-      });
+        i++;
+      }
     }
-    const topDl = doc.querySelector("dl");
-    if (topDl) {
-      processDl(topDl, null);
+    const rootDl = doc.querySelector("dl");
+    if (rootDl) {
+      processDl(rootDl, null);
     }
     return {
       categories,
@@ -13381,8 +13424,17 @@ input, select, textarea, button {
       bookmarks.forEach((b) => {
         if (b.tags) b.tags.forEach((t) => tagSet.add(t));
       });
-      return Array.from(tagSet).sort();
-    }, [bookmarks]);
+      const all = Array.from(tagSet);
+      const orderMap = new Map(settings.tagOrder.map((t, i) => [t, i]));
+      return all.sort((a, b) => {
+        const aIdx = orderMap.get(a);
+        const bIdx = orderMap.get(b);
+        if (aIdx !== void 0 && bIdx !== void 0) return aIdx - bIdx;
+        if (aIdx !== void 0) return -1;
+        if (bIdx !== void 0) return 1;
+        return a.localeCompare(b);
+      });
+    }, [bookmarks, settings.tagOrder]);
     const filteredBookmarks = (() => {
       let result = bookmarks;
       if (selectedCategoryId !== "all") {
@@ -13419,11 +13471,11 @@ input, select, textarea, button {
       return sortBookmarks(result, settings.sortBy, settings.sortOrder);
     })();
     const addBookmark$1 = reactExports.useCallback(
-      (data2) => {
-        const bookmark = addBookmark(data2);
+      (bookmarkData) => {
+        const bookmark = addBookmark(bookmarkData);
         const nextData = {
-          ...data2,
-          bookmarks: [...data2.bookmarks, bookmark]
+          ...data,
+          bookmarks: [...data.bookmarks, bookmark]
         };
         persist(nextData);
         addToast("书签添加成功", "success");
@@ -13510,6 +13562,19 @@ input, select, textarea, button {
         };
         persist(nextData);
         addToast("分类更新成功", "success");
+      },
+      [data, persist, addToast]
+    );
+    const updateCategoryColor = reactExports.useCallback(
+      (id, color) => {
+        const nextData = {
+          ...data,
+          categories: data.categories.map(
+            (c) => c.id === id ? { ...c, color } : c
+          )
+        };
+        persist(nextData);
+        addToast(color ? "已标记颜色" : "已取消标记", "success");
       },
       [data, persist, addToast]
     );
@@ -13731,6 +13796,7 @@ input, select, textarea, button {
       clearSelection,
       addCategory: addCategory$1,
       updateCategory,
+      updateCategoryColor,
       deleteCategory,
       reorderCategory,
       updateSettings,
@@ -13739,9 +13805,24 @@ input, select, textarea, button {
       addToast
     };
   }
+  const CATEGORY_COLORS = [
+    { key: "red", label: "红色", value: "#ef4444" },
+    { key: "orange", label: "橙色", value: "#f97316" },
+    { key: "yellow", label: "黄色", value: "#eab308" },
+    { key: "green", label: "绿色", value: "#22c55e" },
+    { key: "blue", label: "蓝色", value: "#3b82f6" },
+    { key: "purple", label: "紫色", value: "#a855f7" },
+    { key: "pink", label: "粉色", value: "#ec4899" }
+  ];
+  const getColorValue = (color) => {
+    var _a;
+    if (!color) return "#9ca3af";
+    return ((_a = CATEGORY_COLORS.find((c) => c.key === color)) == null ? void 0 : _a.value) || "#9ca3af";
+  };
   const TreeNode = ({
     category,
     level,
+    defaultExpanded = false,
     selectedCategoryId,
     onSelectCategory,
     onAddCategory,
@@ -13756,22 +13837,31 @@ input, select, textarea, button {
     dropPosition,
     onDragOver,
     onDrop,
-    onContextMenu
+    onContextMenu,
+    renamingCategoryId,
+    onFinishRename
   }) => {
-    const [expanded, setExpanded] = reactExports.useState(true);
+    const [expanded, setExpanded] = reactExports.useState(defaultExpanded);
     const [isEditing, setIsEditing] = reactExports.useState(false);
     const [editName, setEditName] = reactExports.useState(category.name);
+    reactExports.useEffect(() => {
+      if (renamingCategoryId === category.id && !isEditing) {
+        setIsEditing(true);
+      }
+    }, [renamingCategoryId, category.id, isEditing]);
     const hasChildren = category.children && category.children.length > 0;
     const isSelected = selectedCategoryId === category.id;
     const count = bookmarkCounts.get(category.id) || 0;
     const isDragging = draggingId === category.id;
     const isDropTarget = dropTargetId === category.id;
+    const colorValue = getColorValue(category.color);
     const handleSaveRename = reactExports.useCallback(() => {
       if (editName.trim()) {
         onUpdateCategory(category.id, editName.trim());
       }
       setIsEditing(false);
-    }, [editName, category.id, onUpdateCategory]);
+      onFinishRename == null ? void 0 : onFinishRename();
+    }, [editName, category.id, onUpdateCategory, onFinishRename]);
     return /* @__PURE__ */ React$2.createElement(
       "div",
       {
@@ -13782,13 +13872,14 @@ input, select, textarea, button {
       /* @__PURE__ */ React$2.createElement(
         "div",
         {
+          draggable: true,
           style: {
             display: "flex",
             alignItems: "center",
             gap: "4px",
             padding: "6px 8px",
             borderRadius: "6px",
-            cursor: "pointer",
+            cursor: isEditing ? "text" : "pointer",
             transition: "background-color 0.15s",
             backgroundColor: isDropTarget && dropPosition === "child" ? "var(--color-primary)33" : isSelected ? "var(--color-primary)1a" : "transparent",
             color: isSelected ? "var(--color-primary)" : "var(--color-text)",
@@ -13803,37 +13894,21 @@ input, select, textarea, button {
           onMouseLeave: (e) => {
             if (!isSelected) e.currentTarget.style.backgroundColor = "transparent";
           },
-          onClick: () => onSelectCategory(category.id),
+          onClick: () => {
+            onSelectCategory(category.id);
+            if (hasChildren) setExpanded(!expanded);
+          },
           onContextMenu: (e) => {
             e.preventDefault();
+            e.stopPropagation();
             onContextMenu(e, category.id);
-          }
-        },
-        /* @__PURE__ */ React$2.createElement(
-          "span",
-          {
-            style: {
-              padding: "2px",
-              borderRadius: "4px",
-              cursor: "grab",
-              opacity: 0,
-              display: "flex"
-            },
-            onMouseEnter: (e) => {
-              e.currentTarget.style.opacity = "1";
-            },
-            onMouseLeave: (e) => {
-              e.currentTarget.style.opacity = "0";
-            },
-            draggable: true,
-            onDragStart: (e) => {
-              e.stopPropagation();
-              onDragStart(category.id);
-            },
-            onDragEnd
           },
-          /* @__PURE__ */ React$2.createElement(GripVertical, { size: 12, style: { color: "var(--color-neutral-400)" } })
-        ),
+          onDragStart: (e) => {
+            e.stopPropagation();
+            onDragStart(category.id);
+          },
+          onDragEnd
+        },
         /* @__PURE__ */ React$2.createElement(
           "button",
           {
@@ -13854,7 +13929,7 @@ input, select, textarea, button {
           },
           hasChildren ? expanded ? /* @__PURE__ */ React$2.createElement(ChevronDown, { size: 12 }) : /* @__PURE__ */ React$2.createElement(ChevronRight, { size: 12 }) : /* @__PURE__ */ React$2.createElement("span", { style: { width: "12px", height: "12px" } })
         ),
-        /* @__PURE__ */ React$2.createElement(FolderOpen, { size: 16, style: { flexShrink: 0 } }),
+        expanded ? /* @__PURE__ */ React$2.createElement(FolderOpen, { size: 16, style: { flexShrink: 0, color: colorValue } }) : /* @__PURE__ */ React$2.createElement(Folder, { size: 16, style: { flexShrink: 0, color: colorValue } }),
         isEditing ? /* @__PURE__ */ React$2.createElement(
           "input",
           {
@@ -13882,6 +13957,18 @@ input, select, textarea, button {
             onClick: (e) => e.stopPropagation()
           }
         ) : /* @__PURE__ */ React$2.createElement("span", { style: { flex: 1, fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, category.name),
+        category.color && /* @__PURE__ */ React$2.createElement(
+          "span",
+          {
+            style: {
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              background: colorValue,
+              flexShrink: 0
+            }
+          }
+        ),
         /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-tertiary)", flexShrink: 0 } }, count)
       ),
       expanded && hasChildren && /* @__PURE__ */ React$2.createElement("div", null, category.children.map((child) => /* @__PURE__ */ React$2.createElement(
@@ -13890,6 +13977,7 @@ input, select, textarea, button {
           key: child.id,
           category: child,
           level: level + 1,
+          defaultExpanded: false,
           selectedCategoryId,
           onSelectCategory,
           onAddCategory,
@@ -13904,7 +13992,9 @@ input, select, textarea, button {
           dropPosition,
           onDragOver,
           onDrop,
-          onContextMenu
+          onContextMenu,
+          renamingCategoryId,
+          onFinishRename
         }
       )))
     );
@@ -13917,7 +14007,11 @@ input, select, textarea, button {
     onUpdateCategory,
     onDeleteCategory,
     onReorderCategory,
-    bookmarkCounts
+    onUpdateCategoryColor,
+    bookmarkCounts,
+    renamingCategoryId,
+    onStartRename,
+    onFinishRename
   }) => {
     const [draggingId, setDraggingId] = reactExports.useState(null);
     const [dropTargetId, setDropTargetId] = reactExports.useState(null);
@@ -13927,19 +14021,21 @@ input, select, textarea, button {
       x: 0,
       y: 0,
       categoryId: null,
-      isRoot: false
+      isRoot: false,
+      showColorMenu: false
     });
     const [rootContextMenu, setRootContextMenu] = reactExports.useState({
       visible: false,
       x: 0,
       y: 0,
       categoryId: null,
-      isRoot: true
+      isRoot: true,
+      showColorMenu: false
     });
     const contextMenuRef = reactExports.useRef(null);
     const closeAllMenus = reactExports.useCallback(() => {
-      setContextMenu((prev) => ({ ...prev, visible: false }));
-      setRootContextMenu((prev) => ({ ...prev, visible: false }));
+      setContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
+      setRootContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
     }, []);
     reactExports.useEffect(() => {
       const handleClick = (e) => {
@@ -13988,85 +14084,174 @@ input, select, textarea, button {
       handleDragEnd();
     }, [draggingId, dropPosition, onReorderCategory, handleDragEnd]);
     const handleContextMenu = reactExports.useCallback((e, categoryId) => {
-      setContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId, isRoot: false });
-      setRootContextMenu((prev) => ({ ...prev, visible: false }));
+      setContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId, isRoot: false, showColorMenu: false });
+      setRootContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
     }, []);
     const handleRootContextMenu = reactExports.useCallback((e) => {
       e.preventDefault();
-      setRootContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId: null, isRoot: true });
-      setContextMenu((prev) => ({ ...prev, visible: false }));
+      setRootContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId: null, isRoot: true, showColorMenu: false });
+      setContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
     }, []);
     const uncategorizedCount = bookmarkCounts.get(null) || 0;
+    const findCategoryById = reactExports.useCallback((id) => {
+      const find = (nodes) => {
+        for (const node of nodes) {
+          if (node.id === id) return node;
+          if (node.children) {
+            const found = find(node.children);
+            if (found) return found;
+          }
+        }
+        return void 0;
+      };
+      return find(categories);
+    }, [categories]);
+    const renderColorMenu = (categoryId, currentColor) => /* @__PURE__ */ React$2.createElement(
+      "div",
+      {
+        className: "fp-context-menu",
+        style: {
+          position: "absolute",
+          left: "100%",
+          top: 0,
+          minWidth: "120px",
+          marginLeft: "4px"
+        }
+      },
+      CATEGORY_COLORS.map((c) => /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          key: c.key,
+          className: "fp-context-menu-item",
+          onMouseDown: (e) => {
+            e.stopPropagation();
+          },
+          onClick: (e) => {
+            e.stopPropagation();
+            onUpdateCategoryColor(categoryId, c.key);
+            closeAllMenus();
+          },
+          style: {
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "6px 12px"
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(
+          "span",
+          {
+            style: {
+              width: "12px",
+              height: "12px",
+              borderRadius: "50%",
+              background: c.value,
+              flexShrink: 0,
+              border: currentColor === c.key ? "2px solid var(--color-text)" : "none"
+            }
+          }
+        ),
+        /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "13px" } }, c.label)
+      )),
+      currentColor && /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { className: "fp-context-menu-separator" }), /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          className: "fp-context-menu-item",
+          onMouseDown: (e) => {
+            e.stopPropagation();
+          },
+          onClick: (e) => {
+            e.stopPropagation();
+            onUpdateCategoryColor(categoryId, null);
+            closeAllMenus();
+          },
+          style: { padding: "6px 12px" }
+        },
+        "清除标记"
+      ))
+    );
     const renderContextMenu = () => {
       if (!contextMenu.visible) return null;
+      const category = contextMenu.categoryId ? findCategoryById(contextMenu.categoryId) : void 0;
+      const currentColor = category == null ? void 0 : category.color;
       return /* @__PURE__ */ React$2.createElement(
         "div",
         {
           ref: contextMenuRef,
-          className: "fp-context-menu",
-          style: { left: contextMenu.x, top: contextMenu.y }
+          style: {
+            position: "fixed",
+            left: contextMenu.x,
+            top: contextMenu.y,
+            zIndex: 9999
+          }
         },
         /* @__PURE__ */ React$2.createElement(
           "div",
           {
-            className: "fp-context-menu-item",
-            onClick: () => {
-              if (contextMenu.categoryId) {
-                onSelectCategory(contextMenu.categoryId);
-              }
-              closeAllMenus();
-            }
+            className: "fp-context-menu",
+            style: { position: "relative" }
           },
-          /* @__PURE__ */ React$2.createElement(FolderOpen, { size: 14 }),
-          " 打开"
-        ),
-        /* @__PURE__ */ React$2.createElement("div", { className: "fp-context-menu-separator" }),
-        /* @__PURE__ */ React$2.createElement(
-          "div",
-          {
-            className: "fp-context-menu-item",
-            onClick: () => {
-              if (contextMenu.categoryId) {
-                onSelectCategory(contextMenu.categoryId);
+          /* @__PURE__ */ React$2.createElement(
+            "div",
+            {
+              className: "fp-context-menu-item",
+              onClick: () => {
+                if (contextMenu.categoryId) {
+                  onSelectCategory(contextMenu.categoryId);
+                  onStartRename == null ? void 0 : onStartRename(contextMenu.categoryId);
+                }
+                closeAllMenus();
               }
-              closeAllMenus();
-              setTimeout(() => {
-                const event = new CustomEvent("category:edit", { detail: contextMenu.categoryId });
-                window.dispatchEvent(event);
-              }, 50);
-            }
-          },
-          /* @__PURE__ */ React$2.createElement(Pencil, { size: 14 }),
-          " 重命名"
-        ),
-        /* @__PURE__ */ React$2.createElement(
-          "div",
-          {
-            className: "fp-context-menu-item",
-            onClick: () => {
-              if (contextMenu.categoryId) {
-                onAddCategory("新分类", contextMenu.categoryId);
+            },
+            /* @__PURE__ */ React$2.createElement(Pencil, { size: 14 }),
+            " 重命名"
+          ),
+          /* @__PURE__ */ React$2.createElement(
+            "div",
+            {
+              className: "fp-context-menu-item",
+              onClick: () => {
+                if (contextMenu.categoryId) {
+                  onAddCategory("新分类", contextMenu.categoryId);
+                }
+                closeAllMenus();
               }
-              closeAllMenus();
-            }
-          },
-          /* @__PURE__ */ React$2.createElement(Plus, { size: 14 }),
-          " 添加子分类"
-        ),
-        /* @__PURE__ */ React$2.createElement("div", { className: "fp-context-menu-separator" }),
-        /* @__PURE__ */ React$2.createElement(
-          "div",
-          {
-            className: "fp-context-menu-item danger",
-            onClick: () => {
-              if (contextMenu.categoryId) {
-                onDeleteCategory(contextMenu.categoryId);
+            },
+            /* @__PURE__ */ React$2.createElement(Plus, { size: 14 }),
+            " 添加子分类"
+          ),
+          /* @__PURE__ */ React$2.createElement(
+            "div",
+            {
+              className: "fp-context-menu-item",
+              onMouseDown: (e) => {
+                e.stopPropagation();
+              },
+              onClick: (e) => {
+                e.stopPropagation();
+                setContextMenu((prev) => ({ ...prev, showColorMenu: !prev.showColorMenu }));
+              },
+              style: { justifyContent: "space-between" }
+            },
+            /* @__PURE__ */ React$2.createElement("span", { style: { display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ React$2.createElement(Tag, { size: 14 }), " 标记"),
+            /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-tertiary)" } }, "▶")
+          ),
+          /* @__PURE__ */ React$2.createElement("div", { className: "fp-context-menu-separator" }),
+          /* @__PURE__ */ React$2.createElement(
+            "div",
+            {
+              className: "fp-context-menu-item danger",
+              onClick: () => {
+                if (contextMenu.categoryId) {
+                  onDeleteCategory(contextMenu.categoryId);
+                }
+                closeAllMenus();
               }
-              closeAllMenus();
-            }
-          },
-          /* @__PURE__ */ React$2.createElement(Trash2, { size: 14 }),
-          " 删除"
+            },
+            /* @__PURE__ */ React$2.createElement(Trash2, { size: 14 }),
+            " 删除"
+          ),
+          contextMenu.showColorMenu && contextMenu.categoryId && renderColorMenu(contextMenu.categoryId, currentColor)
         )
       );
     };
@@ -14077,7 +14262,12 @@ input, select, textarea, button {
         {
           ref: contextMenuRef,
           className: "fp-context-menu",
-          style: { left: rootContextMenu.x, top: rootContextMenu.y }
+          style: {
+            position: "fixed",
+            left: rootContextMenu.x,
+            top: rootContextMenu.y,
+            zIndex: 9999
+          }
         },
         /* @__PURE__ */ React$2.createElement(
           "div",
@@ -14101,6 +14291,7 @@ input, select, textarea, button {
           alignItems: "center",
           gap: "4px",
           padding: "6px 8px",
+          paddingLeft: "28px",
           borderRadius: "6px",
           cursor: "pointer",
           transition: "background-color 0.15s",
@@ -14126,6 +14317,7 @@ input, select, textarea, button {
           alignItems: "center",
           gap: "4px",
           padding: "6px 8px",
+          paddingLeft: "28px",
           borderRadius: "6px",
           cursor: "pointer",
           transition: "background-color 0.15s",
@@ -14174,6 +14366,7 @@ input, select, textarea, button {
           key: cat.id,
           category: cat,
           level: 0,
+          defaultExpanded: true,
           selectedCategoryId,
           onSelectCategory,
           onAddCategory,
@@ -14188,7 +14381,9 @@ input, select, textarea, button {
           dropPosition,
           onDragOver: handleDragOver,
           onDrop: handleDrop,
-          onContextMenu: handleContextMenu
+          onContextMenu: handleContextMenu,
+          renamingCategoryId,
+          onFinishRename
         }
       ))
     ), renderContextMenu(), renderRootContextMenu());
@@ -14281,6 +14476,33 @@ input, select, textarea, button {
       /* @__PURE__ */ React$2.createElement(X, { size: 12 })
     ));
   };
+  function flattenCategoryTree(nodes, level = 0) {
+    const result = [];
+    nodes.forEach((node) => {
+      result.push({ id: node.id, name: node.name, level });
+      if (node.children && node.children.length > 0) {
+        result.push(...flattenCategoryTree(node.children, level + 1));
+      }
+    });
+    return result;
+  }
+  const PRESET_TAGS = [
+    "工作",
+    "学习",
+    "工具",
+    "设计",
+    "前端",
+    "后端",
+    "阅读",
+    "参考",
+    "收藏",
+    "重要",
+    "项目",
+    "资源",
+    "教程",
+    "文档",
+    "开源"
+  ];
   const BookmarkForm = ({
     bookmark,
     categories,
@@ -14294,9 +14516,11 @@ input, select, textarea, button {
     const [categoryId, setCategoryId] = reactExports.useState((bookmark == null ? void 0 : bookmark.categoryId) ?? defaultCategoryId ?? "");
     const [tags, setTags] = reactExports.useState((bookmark == null ? void 0 : bookmark.tags) || []);
     const [tagInput, setTagInput] = reactExports.useState("");
+    const [faviconInput, setFaviconInput] = reactExports.useState((bookmark == null ? void 0 : bookmark.favicon) || "");
     const [error, setError] = reactExports.useState("");
     const [fetching, setFetching] = reactExports.useState(false);
     const tagInputRef = reactExports.useRef(null);
+    const flatCategories = flattenCategoryTree(categories);
     reactExports.useEffect(() => {
       if (!categoryId && defaultCategoryId !== void 0) {
         setCategoryId(defaultCategoryId);
@@ -14321,38 +14545,41 @@ input, select, textarea, button {
       }
     }, [tagInput, tags, addTag, removeTag]);
     const fetchUrlInfo = reactExports.useCallback(async () => {
-      if (!url.trim()) {
-        setError("请先输入URL");
+      const trimmedUrl = url.trim();
+      if (!trimmedUrl) {
+        setError("请先输入网址");
+        return;
+      }
+      try {
+        new URL(trimmedUrl);
+      } catch {
+        setError("请输入有效的URL地址");
         return;
       }
       setError("");
       setFetching(true);
-      let normalizedUrl = url.trim();
-      if (!/^https?:\/\//i.test(normalizedUrl)) {
-        normalizedUrl = "https://" + normalizedUrl;
-      }
-      setUrl(normalizedUrl);
       try {
         const response = await fetch(
-          `https://api.allorigins.win/get?url=${encodeURIComponent(normalizedUrl)}`
+          `https://api.ahfi.cn/api/websiteinfo?url=${encodeURIComponent(trimmedUrl)}`
         );
-        if (!response.ok) throw new Error("Failed to fetch");
-        const data = await response.json();
-        const html = data.contents || "";
-        const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
-        if (titleMatch && titleMatch[1] && !(bookmark == null ? void 0 : bookmark.title)) {
-          setTitle(titleMatch[1].trim());
-        }
-        const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["'][^>]*>/i) || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*name=["']description["'][^>]*>/i);
-        if (descMatch && descMatch[1] && !(bookmark == null ? void 0 : bookmark.description)) {
-          setDescription(descMatch[1].trim());
-        }
-        if (!titleMatch || !titleMatch[1]) {
-          const urlObj = new URL(normalizedUrl);
+        const result = await response.json();
+        if (result.code === 200 && result.data) {
+          if (result.data.title && !(bookmark == null ? void 0 : bookmark.title)) {
+            setTitle(result.data.title.trim());
+          }
+          if (result.data.description && !(bookmark == null ? void 0 : bookmark.description)) {
+            setDescription(result.data.description.trim());
+          }
+          if (result.data.ico_url) {
+            const base64Favicon = await fetchFaviconAsBase64(result.data.ico_url);
+            setFaviconInput(base64Favicon);
+          }
+        } else {
+          const urlObj = new URL(trimmedUrl);
           if (!title) setTitle(urlObj.hostname);
         }
       } catch {
-        const urlObj = new URL(normalizedUrl);
+        const urlObj = new URL(trimmedUrl);
         if (!title) setTitle(urlObj.hostname);
       } finally {
         setFetching(false);
@@ -14371,6 +14598,7 @@ input, select, textarea, button {
       let normalizedUrl = url.trim();
       if (!/^https?:\/\//i.test(normalizedUrl)) {
         normalizedUrl = "https://" + normalizedUrl;
+        setUrl(normalizedUrl);
       }
       try {
         new URL(normalizedUrl);
@@ -14384,9 +14612,10 @@ input, select, textarea, button {
         description: description.trim(),
         categoryId: categoryId || null,
         tags,
+        favicon: faviconInput.trim(),
         order: (bookmark == null ? void 0 : bookmark.order) ?? 0
       });
-    }, [title, url, description, categoryId, tags, bookmark == null ? void 0 : bookmark.order, onSubmit]);
+    }, [title, url, description, categoryId, tags, faviconInput, bookmark == null ? void 0 : bookmark.order, onSubmit]);
     const labelStyle = {
       display: "block",
       fontSize: "13px",
@@ -14460,8 +14689,35 @@ input, select, textarea, button {
         className: "fp-input"
       },
       /* @__PURE__ */ React$2.createElement("option", { value: "" }, "未分类"),
-      categories.map((cat) => /* @__PURE__ */ React$2.createElement("option", { key: cat.id, value: cat.id }, cat.name))
-    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { style: labelStyle }, "标签"), /* @__PURE__ */ React$2.createElement(
+      flatCategories.map((cat) => /* @__PURE__ */ React$2.createElement("option", { key: cat.id, value: cat.id }, "  ".repeat(cat.level), cat.level > 0 ? "└ " : "", cat.name))
+    )), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { style: labelStyle }, "图标"), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", gap: "8px", alignItems: "center" } }, /* @__PURE__ */ React$2.createElement(
+      "input",
+      {
+        type: "text",
+        value: faviconInput,
+        onChange: (e) => setFaviconInput(e.target.value),
+        placeholder: "图标URL（获取后自动填充）",
+        className: "fp-input",
+        style: { flex: 1 }
+      }
+    ), faviconInput ? /* @__PURE__ */ React$2.createElement(
+      "img",
+      {
+        src: faviconInput,
+        alt: "favicon预览",
+        style: {
+          width: "20px",
+          height: "20px",
+          borderRadius: "4px",
+          border: "1px solid var(--color-neutral-300)",
+          objectFit: "contain",
+          flexShrink: 0
+        },
+        onError: (e) => {
+          e.target.style.visibility = "hidden";
+        }
+      }
+    ) : /* @__PURE__ */ React$2.createElement(Image, { size: 20, style: { color: "var(--color-neutral-300)", flexShrink: 0 } }))), /* @__PURE__ */ React$2.createElement("div", null, /* @__PURE__ */ React$2.createElement("label", { style: labelStyle }, "标签"), /* @__PURE__ */ React$2.createElement(
       "div",
       {
         style: {
@@ -14533,7 +14789,35 @@ input, select, textarea, button {
           }
         }
       )
-    )), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", justifyContent: "center", gap: "8px", paddingTop: "8px" } }, /* @__PURE__ */ React$2.createElement(
+    ), (() => {
+      const available = PRESET_TAGS.filter((t) => !tags.includes(t));
+      if (available.length === 0) return null;
+      return /* @__PURE__ */ React$2.createElement("div", { style: { marginTop: "8px" } }, /* @__PURE__ */ React$2.createElement("div", { style: { fontSize: "12px", color: "var(--color-text-tertiary)", marginBottom: "4px" } }, "常用标签（点击添加）"), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: "4px" } }, available.map((tag) => /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          key: tag,
+          type: "button",
+          onClick: () => addTag(tag),
+          style: {
+            padding: "2px 8px",
+            fontSize: "12px",
+            borderRadius: "4px",
+            cursor: "pointer",
+            border: "1px solid var(--color-neutral-200)",
+            background: "var(--color-bg-card)",
+            color: "var(--color-text-secondary)",
+            transition: "background-color 0.15s"
+          },
+          onMouseEnter: (e) => {
+            e.currentTarget.style.background = "var(--color-neutral-100)";
+          },
+          onMouseLeave: (e) => {
+            e.currentTarget.style.background = "var(--color-bg-card)";
+          }
+        },
+        tag
+      ))));
+    })()), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", justifyContent: "center", gap: "8px", paddingTop: "8px" } }, /* @__PURE__ */ React$2.createElement(
       "button",
       {
         type: "button",
@@ -14585,8 +14869,6 @@ input, select, textarea, button {
     category,
     isSelected,
     onSelect,
-    onEdit,
-    onDelete,
     onOpen,
     onContextMenu,
     showFavicon
@@ -14594,13 +14876,12 @@ input, select, textarea, button {
     const faviconUrl = bookmark.favicon || getFaviconUrl(bookmark.url);
     const cardStyle = {
       position: "relative",
-      background: "var(--color-bg-card)",
-      border: isSelected ? "1px solid var(--color-primary)" : "1px solid var(--color-neutral-200)",
+      background: isSelected ? "var(--color-primary)0d" : "var(--color-bg-card)",
       borderRadius: "8px",
       padding: "12px",
       cursor: "pointer",
       transition: "box-shadow 0.15s, transform 0.15s",
-      boxShadow: isSelected ? "0 0 0 1px var(--color-primary)" : "none"
+      boxShadow: isSelected ? "0 0 0 2px var(--color-primary)" : "none"
     };
     const checkboxWrapStyle = {
       position: "absolute",
@@ -14611,16 +14892,24 @@ input, select, textarea, button {
     return /* @__PURE__ */ React$2.createElement(
       "div",
       {
+        className: "fp-bookmark-card",
         style: cardStyle,
         onClick: onOpen,
-        onContextMenu,
+        onContextMenu: (e) => {
+          e.stopPropagation();
+          onContextMenu(e);
+        },
         onMouseEnter: (e) => {
-          e.currentTarget.style.boxShadow = isSelected ? "0 0 0 1px var(--color-primary), var(--shadow-sm)" : "var(--shadow-sm)";
-          if (!isSelected) e.currentTarget.style.transform = "translateY(-1px)";
+          if (!isSelected) {
+            e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+            e.currentTarget.style.transform = "translateY(-1px)";
+          }
         },
         onMouseLeave: (e) => {
-          e.currentTarget.style.boxShadow = isSelected ? "0 0 0 1px var(--color-primary)" : "none";
-          e.currentTarget.style.transform = "translateY(0)";
+          if (!isSelected) {
+            e.currentTarget.style.boxShadow = "none";
+            e.currentTarget.style.transform = "translateY(0)";
+          }
         }
       },
       /* @__PURE__ */ React$2.createElement("div", { style: checkboxWrapStyle, className: "fp-checkbox-wrap" }, /* @__PURE__ */ React$2.createElement(
@@ -14702,9 +14991,8 @@ input, select, textarea, button {
         alignItems: "center",
         justifyContent: "space-between",
         marginTop: "8px",
-        paddingTop: "8px",
-        borderTop: "1px solid var(--color-neutral-100)"
-      } }, /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-tertiary)" } }, formatDate(bookmark.updatedAt)), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "4px" } }, /* @__PURE__ */ React$2.createElement(
+        paddingTop: "8px"
+      } }, /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-tertiary)" } }, formatDate(bookmark.updatedAt)), /* @__PURE__ */ React$2.createElement(
         "button",
         {
           onClick: (e) => {
@@ -14733,65 +15021,7 @@ input, select, textarea, button {
           }
         },
         /* @__PURE__ */ React$2.createElement(ExternalLink, { size: 14 })
-      ), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: (e) => {
-            e.stopPropagation();
-            onEdit();
-          },
-          title: "编辑",
-          style: {
-            padding: "4px",
-            borderRadius: "4px",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "var(--color-text-tertiary)",
-            display: "flex",
-            alignItems: "center",
-            transition: "background-color 0.15s"
-          },
-          onMouseEnter: (e) => {
-            e.currentTarget.style.background = "var(--color-neutral-100)";
-            e.currentTarget.style.color = "var(--color-primary)";
-          },
-          onMouseLeave: (e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "var(--color-text-tertiary)";
-          }
-        },
-        /* @__PURE__ */ React$2.createElement(Pencil, { size: 14 })
-      ), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: (e) => {
-            e.stopPropagation();
-            onDelete();
-          },
-          title: "删除",
-          style: {
-            padding: "4px",
-            borderRadius: "4px",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "var(--color-text-tertiary)",
-            display: "flex",
-            alignItems: "center",
-            transition: "background-color 0.15s"
-          },
-          onMouseEnter: (e) => {
-            e.currentTarget.style.background = "var(--color-error)0d";
-            e.currentTarget.style.color = "var(--color-error)";
-          },
-          onMouseLeave: (e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "var(--color-text-tertiary)";
-          }
-        },
-        /* @__PURE__ */ React$2.createElement(Trash2, { size: 14 })
-      )))
+      ))
     );
   };
   const FaviconFallback = ({ url }) => {
@@ -14829,8 +15059,6 @@ input, select, textarea, button {
     category,
     isSelected,
     onSelect,
-    onEdit,
-    onDelete,
     onOpen,
     onContextMenu,
     showFavicon
@@ -14841,7 +15069,6 @@ input, select, textarea, button {
       alignItems: "center",
       gap: "12px",
       padding: "8px 12px",
-      borderBottom: "1px solid var(--color-neutral-100)",
       cursor: "pointer",
       transition: "background-color 0.15s",
       background: isSelected ? "var(--color-primary)0d" : "transparent"
@@ -14849,9 +15076,13 @@ input, select, textarea, button {
     return /* @__PURE__ */ React$2.createElement(
       "div",
       {
+        className: "fp-bookmark-item",
         style: rowStyle,
         onClick: onOpen,
-        onContextMenu,
+        onContextMenu: (e) => {
+          e.stopPropagation();
+          onContextMenu(e);
+        },
         onMouseEnter: (e) => {
           if (!isSelected) e.currentTarget.style.background = "var(--color-neutral-50)";
         },
@@ -14940,64 +15171,6 @@ input, select, textarea, button {
           }
         },
         /* @__PURE__ */ React$2.createElement(ExternalLink, { size: 14 })
-      ), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: (e) => {
-            e.stopPropagation();
-            onEdit();
-          },
-          title: "编辑",
-          style: {
-            padding: "4px",
-            borderRadius: "4px",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "var(--color-text-tertiary)",
-            display: "flex",
-            alignItems: "center",
-            transition: "background-color 0.15s"
-          },
-          onMouseEnter: (e) => {
-            e.currentTarget.style.background = "var(--color-neutral-100)";
-            e.currentTarget.style.color = "var(--color-primary)";
-          },
-          onMouseLeave: (e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "var(--color-text-tertiary)";
-          }
-        },
-        /* @__PURE__ */ React$2.createElement(Pencil, { size: 14 })
-      ), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: (e) => {
-            e.stopPropagation();
-            onDelete();
-          },
-          title: "删除",
-          style: {
-            padding: "4px",
-            borderRadius: "4px",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "var(--color-text-tertiary)",
-            display: "flex",
-            alignItems: "center",
-            transition: "background-color 0.15s"
-          },
-          onMouseEnter: (e) => {
-            e.currentTarget.style.background = "var(--color-error)0d";
-            e.currentTarget.style.color = "var(--color-error)";
-          },
-          onMouseLeave: (e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "var(--color-text-tertiary)";
-          }
-        },
-        /* @__PURE__ */ React$2.createElement(Trash2, { size: 14 })
       ))
     );
   };
@@ -15542,6 +15715,7 @@ input, select, textarea, button {
       clearSelection,
       addCategory: addCategory2,
       updateCategory,
+      updateCategoryColor,
       deleteCategory,
       reorderCategory,
       updateSettings,
@@ -15557,9 +15731,14 @@ input, select, textarea, button {
     const [pendingBulkDelete, setPendingBulkDelete] = reactExports.useState([]);
     const [isSettingsOpen, setIsSettingsOpen] = reactExports.useState(false);
     const [renamingCategoryId, setRenamingCategoryId] = reactExports.useState(null);
+    const [tagDropdownOpen, setTagDropdownOpen] = reactExports.useState(false);
+    const [isResetConfirmOpen, setIsResetConfirmOpen] = reactExports.useState(false);
     const [contentMenu, setContentMenu] = reactExports.useState({ visible: false, x: 0, y: 0, bookmarkId: null });
     const searchInputRef = reactExports.useRef(null);
     const contentMenuRef = reactExports.useRef(null);
+    const tagDropdownRef = reactExports.useRef(null);
+    const moreBtnRef = reactExports.useRef(null);
+    const [dropdownPos, setDropdownPos] = reactExports.useState({ top: 0, left: 0 });
     const closeContentMenu = reactExports.useCallback(() => {
       setContentMenu((prev) => ({ ...prev, visible: false }));
     }, []);
@@ -15579,6 +15758,16 @@ input, select, textarea, button {
         document.removeEventListener("keydown", handleEsc);
       };
     }, [closeContentMenu]);
+    reactExports.useEffect(() => {
+      if (!tagDropdownOpen) return;
+      const handleClick = (e) => {
+        if (tagDropdownRef.current && !tagDropdownRef.current.contains(e.target)) {
+          setTagDropdownOpen(false);
+        }
+      };
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }, [tagDropdownOpen]);
     const categoryMap = reactExports.useMemo(() => {
       const map = /* @__PURE__ */ new Map();
       categories.forEach((c) => map.set(c.id, c));
@@ -15588,22 +15777,28 @@ input, select, textarea, button {
       const counts = /* @__PURE__ */ new Map();
       counts.set("__all__", bookmarks.length);
       counts.set(null, bookmarks.filter((b) => !b.categoryId).length);
-      const countForCategory = (catId) => {
-        const childIds = /* @__PURE__ */ new Set([catId]);
-        const stack = [catId];
-        while (stack.length > 0) {
-          const current = stack.pop();
+      const allIds = [];
+      const stack = [...categoryTree];
+      while (stack.length > 0) {
+        const node = stack.pop();
+        allIds.push(node.id);
+        if (node.children && node.children.length > 0) {
+          stack.push(...node.children);
+        }
+      }
+      allIds.forEach((id) => {
+        const childIds = /* @__PURE__ */ new Set([id]);
+        const idStack2 = [id];
+        while (idStack2.length > 0) {
+          const current = idStack2.pop();
           categories.forEach((cat) => {
             if (cat.parentId === current && !childIds.has(cat.id)) {
               childIds.add(cat.id);
-              stack.push(cat.id);
+              idStack2.push(cat.id);
             }
           });
         }
-        return bookmarks.filter((b) => b.categoryId && childIds.has(b.categoryId)).length;
-      };
-      categoryTree.forEach((rootCat) => {
-        counts.set(rootCat.id, countForCategory(rootCat.id));
+        counts.set(id, bookmarks.filter((b) => b.categoryId && childIds.has(b.categoryId)).length);
       });
       return counts;
     }, [bookmarks, categories, categoryTree]);
@@ -15680,13 +15875,19 @@ input, select, textarea, button {
       fontWeight: 500,
       color: "var(--color-text)"
     };
+    const singleSelectedBookmark = reactExports.useMemo(() => {
+      if (selectedBookmarks.size === 1) {
+        const id = Array.from(selectedBookmarks)[0];
+        return bookmarks.find((b) => b.id === id);
+      }
+      return null;
+    }, [selectedBookmarks, bookmarks]);
     return /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", flexDirection: "column", height: "100%", background: "var(--color-bg)" } }, /* @__PURE__ */ React$2.createElement(ToastContainer, { toasts }), /* @__PURE__ */ React$2.createElement("header", { style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
       padding: "12px 16px",
-      background: "var(--color-bg-card)",
-      borderBottom: "1px solid var(--color-neutral-200)"
+      background: "var(--color-bg-card)"
     } }, /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ React$2.createElement(Bookmark, { size: 20, style: { color: "var(--color-primary)" } }), /* @__PURE__ */ React$2.createElement("h1", { style: { fontSize: "15px", fontWeight: 600, color: "var(--color-text)", margin: 0 } }, "网址收藏夹")), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "4px" } }, /* @__PURE__ */ React$2.createElement(
       "button",
       {
@@ -15753,8 +15954,162 @@ input, select, textarea, button {
       gap: "8px",
       padding: "8px 16px",
       background: "var(--color-bg-card)",
-      borderBottom: "1px solid var(--color-neutral-200)"
-    } }, /* @__PURE__ */ React$2.createElement("div", { style: { flex: "0 1 200px", minWidth: "160px" } }, /* @__PURE__ */ React$2.createElement(SearchBar, { value: searchQuery, onChange: setSearchQuery, inputRef: searchInputRef })), /* @__PURE__ */ React$2.createElement("div", { style: { marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px" } }, /* @__PURE__ */ React$2.createElement(
+      position: "relative",
+      zIndex: 10
+    } }, /* @__PURE__ */ React$2.createElement("div", { style: { flex: "0 1 200px", minWidth: "160px" } }, /* @__PURE__ */ React$2.createElement(SearchBar, { value: searchQuery, onChange: setSearchQuery, inputRef: searchInputRef })), allTags.length > 0 && /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "4px", flex: 1, overflow: "hidden" } }, (() => {
+      const visiblePool = allTags.filter((t) => !settings.hiddenTags.includes(t));
+      const limit = Math.max(1, settings.tagDisplayLimit || 5);
+      const visibleTags = visiblePool.slice(0, limit);
+      const hiddenOverflow = visiblePool.slice(limit);
+      return /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, visibleTags.map((tag) => /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          key: tag,
+          draggable: true,
+          onDragStart: (e) => {
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", tag);
+          },
+          onDragOver: (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+          },
+          onDrop: (e) => {
+            e.preventDefault();
+            const draggedTag = e.dataTransfer.getData("text/plain");
+            if (draggedTag && draggedTag !== tag) {
+              const baseOrder = settings.tagOrder.length ? settings.tagOrder : allTags;
+              const newOrder = [...baseOrder];
+              const fromIdx = newOrder.indexOf(draggedTag);
+              const toIdx = newOrder.indexOf(tag);
+              if (fromIdx !== -1 && toIdx !== -1) {
+                newOrder.splice(fromIdx, 1);
+                newOrder.splice(toIdx, 0, draggedTag);
+                updateSettings({ tagOrder: newOrder });
+              }
+            }
+          },
+          onClick: () => toggleTag(tag),
+          title: tag,
+          style: {
+            padding: "2px 8px",
+            fontSize: "12px",
+            borderRadius: "4px",
+            cursor: "pointer",
+            border: "none",
+            transition: "background-color 0.15s",
+            background: selectedTags.has(tag) ? "var(--color-primary)" : "var(--color-neutral-100)",
+            color: selectedTags.has(tag) ? "#fff" : "var(--color-text-secondary)",
+            whiteSpace: "nowrap",
+            flexShrink: 0
+          }
+        },
+        tag
+      )), hiddenOverflow.length > 0 && /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          ref: moreBtnRef,
+          onClick: () => {
+            if (moreBtnRef.current) {
+              const rect = moreBtnRef.current.getBoundingClientRect();
+              setDropdownPos({ top: rect.bottom + 4, left: rect.left });
+            }
+            setTagDropdownOpen(!tagDropdownOpen);
+          },
+          title: `更多 (${hiddenOverflow.length})`,
+          style: {
+            padding: "2px 6px",
+            fontSize: "12px",
+            borderRadius: "4px",
+            cursor: "pointer",
+            border: "none",
+            background: "var(--color-neutral-100)",
+            color: "var(--color-text-secondary)",
+            display: "flex",
+            alignItems: "center",
+            gap: "2px",
+            whiteSpace: "nowrap",
+            flexShrink: 0
+          }
+        },
+        "更多",
+        /* @__PURE__ */ React$2.createElement(ChevronDown, { size: 12, style: {
+          transition: "transform 0.15s",
+          transform: tagDropdownOpen ? "rotate(180deg)" : "rotate(0deg)"
+        } })
+      ), tagDropdownOpen && reactDomExports.createPortal(
+        /* @__PURE__ */ React$2.createElement(
+          "div",
+          {
+            ref: tagDropdownRef,
+            style: {
+              position: "fixed",
+              top: dropdownPos.top,
+              left: dropdownPos.left,
+              background: "var(--color-bg-card)",
+              border: "1px solid var(--color-neutral-200)",
+              borderRadius: "6px",
+              boxShadow: "var(--shadow-md)",
+              minWidth: "140px",
+              padding: "4px 0",
+              zIndex: 9999,
+              maxHeight: "200px",
+              overflowY: "auto"
+            },
+            className: "fp-scrollbar"
+          },
+          hiddenOverflow.map((tag) => /* @__PURE__ */ React$2.createElement(
+            "button",
+            {
+              key: tag,
+              onClick: () => {
+                toggleTag(tag);
+                setTagDropdownOpen(false);
+              },
+              title: tag,
+              style: {
+                display: "block",
+                width: "100%",
+                textAlign: "left",
+                padding: "6px 12px",
+                fontSize: "12px",
+                border: "none",
+                cursor: "pointer",
+                background: selectedTags.has(tag) ? "var(--color-primary)" : "transparent",
+                color: selectedTags.has(tag) ? "#fff" : "var(--color-text-secondary)",
+                transition: "background-color 0.1s"
+              },
+              onMouseEnter: (e) => {
+                if (!selectedTags.has(tag)) e.currentTarget.style.background = "var(--color-neutral-100)";
+              },
+              onMouseLeave: (e) => {
+                if (!selectedTags.has(tag)) e.currentTarget.style.background = "transparent";
+              }
+            },
+            tag
+          ))
+        ),
+        document.body
+      )), selectedTags.size > 0 && /* @__PURE__ */ React$2.createElement(
+        "button",
+        {
+          onClick: clearTagFilter,
+          style: {
+            padding: "2px 6px",
+            fontSize: "12px",
+            color: "var(--color-error)",
+            border: "none",
+            borderRadius: "4px",
+            background: "var(--color-error)14",
+            cursor: "pointer",
+            transition: "background-color 0.15s",
+            whiteSpace: "nowrap",
+            flexShrink: 0
+          }
+        },
+        "清除"
+      ));
+    })()), /* @__PURE__ */ React$2.createElement("div", { style: { marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px" } }, /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: toggleSort,
@@ -15794,51 +16149,9 @@ input, select, textarea, button {
         onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
       settings.viewMode === "card" ? /* @__PURE__ */ React$2.createElement(List, { size: 16 }) : /* @__PURE__ */ React$2.createElement(LayoutGrid, { size: 16 })
-    ))), allTags.length > 0 && /* @__PURE__ */ React$2.createElement("div", { style: {
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      flexWrap: "wrap",
-      padding: "8px 16px",
-      background: "var(--color-bg-card)",
-      borderBottom: "1px solid var(--color-neutral-200)"
-    } }, /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 } }, /* @__PURE__ */ React$2.createElement(Tag, { size: 12 }), " 标签筛选:"), selectedTags.size > 0 && /* @__PURE__ */ React$2.createElement(
-      "button",
-      {
-        onClick: clearTagFilter,
-        style: {
-          padding: "2px 8px",
-          fontSize: "12px",
-          color: "var(--color-error)",
-          border: "1px solid var(--color-error)4d",
-          borderRadius: "4px",
-          background: "none",
-          cursor: "pointer",
-          transition: "background-color 0.15s"
-        }
-      },
-      "清除"
-    ), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap" } }, allTags.map((tag) => /* @__PURE__ */ React$2.createElement(
-      "button",
-      {
-        key: tag,
-        onClick: () => toggleTag(tag),
-        style: {
-          padding: "2px 8px",
-          fontSize: "12px",
-          borderRadius: "4px",
-          cursor: "pointer",
-          border: "none",
-          transition: "background-color 0.15s",
-          background: selectedTags.has(tag) ? "var(--color-primary)" : "var(--color-neutral-100)",
-          color: selectedTags.has(tag) ? "#fff" : "var(--color-text-secondary)"
-        }
-      },
-      tag
-    )))), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", flex: 1, overflow: "hidden" } }, /* @__PURE__ */ React$2.createElement("aside", { style: {
+    ))), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", flex: 1, overflow: "hidden" } }, /* @__PURE__ */ React$2.createElement("aside", { style: {
       width: "224px",
       flexShrink: 0,
-      borderRight: "1px solid var(--color-neutral-200)",
       background: "var(--color-bg-card)",
       padding: "8px",
       overflow: "auto"
@@ -15852,50 +16165,59 @@ input, select, textarea, button {
         onUpdateCategory: (id, name) => updateCategory(id, name),
         onDeleteCategory: (id) => deleteCategory(id),
         onReorderCategory: reorderCategory,
+        onUpdateCategoryColor: updateCategoryColor,
         bookmarkCounts,
         renamingCategoryId,
         onStartRename: (id) => setRenamingCategoryId(id),
         onFinishRename: () => setRenamingCategoryId(null)
       }
-    )), /* @__PURE__ */ React$2.createElement(
-      "main",
+    )), /* @__PURE__ */ React$2.createElement("main", { style: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React$2.createElement("div", { style: {
+      flexShrink: 0,
+      padding: "8px 16px",
+      background: "transparent"
+    } }, settings.viewMode === "list" && /* @__PURE__ */ React$2.createElement("div", { style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "12px",
+      padding: "8px 12px"
+    } }, /* @__PURE__ */ React$2.createElement(
+      "button",
       {
-        style: { flex: 1, overflow: "auto", padding: "16px" },
-        className: "fp-scrollbar",
-        onContextMenu: (e) => handleContentContextMenu(e, null)
+        onClick: handleSelectAll,
+        title: allSelected ? "取消全选" : "全选",
+        style: { padding: "4px", borderRadius: "4px", background: "none", border: "none", cursor: "pointer", display: "flex" }
       },
-      selectedBookmarks.size > 0 && /* @__PURE__ */ React$2.createElement("div", { style: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: "12px",
-        padding: "8px 12px",
-        borderRadius: "6px",
-        background: "var(--color-primary)0d"
-      } }, /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: handleSelectAll,
-          style: { padding: "4px", borderRadius: "4px", background: "none", border: "none", cursor: "pointer" }
-        },
-        allSelected ? /* @__PURE__ */ React$2.createElement(X, { size: 16, style: { color: "var(--color-primary)" } }) : /* @__PURE__ */ React$2.createElement(SquareCheckBig, { size: 16, style: { color: "var(--color-primary)" } })
-      ), /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "13px", color: "var(--color-text)" } }, "已选 ", selectedBookmarks.size, " 个")), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "4px" } }, /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: clearSelection,
-          style: { padding: "4px 8px", fontSize: "12px", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-secondary)" }
-        },
-        "取消"
-      ), /* @__PURE__ */ React$2.createElement(
-        "button",
-        {
-          onClick: handleBulkDelete,
-          className: "fp-btn-danger",
-          style: { padding: "4px 8px", fontSize: "12px" }
-        },
-        /* @__PURE__ */ React$2.createElement(Trash2, { size: 12, style: { marginRight: "4px" } }),
-        "删除"
-      ))),
+      allSelected ? /* @__PURE__ */ React$2.createElement(X, { size: 16, style: { color: "var(--color-primary)" } }) : /* @__PURE__ */ React$2.createElement(SquareCheckBig, { size: 16, style: { color: selectedBookmarks.size > 0 ? "var(--color-primary)" : "var(--color-text-tertiary)" } })
+    ), /* @__PURE__ */ React$2.createElement(
+      "button",
+      {
+        onClick: handleBulkDelete,
+        title: "删除选中",
+        disabled: selectedBookmarks.size === 0,
+        style: {
+          padding: "4px",
+          borderRadius: "4px",
+          background: "none",
+          border: "none",
+          cursor: selectedBookmarks.size > 0 ? "pointer" : "not-allowed",
+          color: selectedBookmarks.size > 0 ? "var(--color-error)" : "var(--color-text-tertiary)",
+          display: "flex",
+          opacity: selectedBookmarks.size > 0 ? 1 : 0.4
+        }
+      },
+      /* @__PURE__ */ React$2.createElement(Trash2, { size: 14 })
+    ), /* @__PURE__ */ React$2.createElement("span", { style: { flex: 1, fontSize: "12px", fontWeight: 500, color: "var(--color-text-tertiary)", textTransform: "uppercase" } }, "书签"), /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", fontWeight: 500, color: "var(--color-text-tertiary)", textTransform: "uppercase", width: "96px" } }, "分类"), /* @__PURE__ */ React$2.createElement("div", { style: { width: "64px" } }))), /* @__PURE__ */ React$2.createElement(
+      "div",
+      {
+        style: { flex: 1, overflow: "auto", padding: "0 16px 16px" },
+        className: "fp-scrollbar",
+        onContextMenu: (e) => {
+          const target = e.target;
+          if (!target.closest(".fp-bookmark-card") && !target.closest(".fp-bookmark-item")) {
+            handleContentContextMenu(e, null);
+          }
+        }
+      },
       filteredBookmarks.length === 0 ? /* @__PURE__ */ React$2.createElement(
         EmptyState,
         {
@@ -15904,7 +16226,7 @@ input, select, textarea, button {
           onImport: () => setIsImportOpen(true),
           hasCategories: categories.length > 0
         }
-      ) : settings.viewMode === "card" ? /* @__PURE__ */ React$2.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "12px" } }, filteredBookmarks.map((bookmark) => /* @__PURE__ */ React$2.createElement(
+      ) : settings.viewMode === "card" ? /* @__PURE__ */ React$2.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "12px", paddingTop: "4px" } }, filteredBookmarks.map((bookmark) => /* @__PURE__ */ React$2.createElement(
         BookmarkCard,
         {
           key: bookmark.id,
@@ -15912,20 +16234,11 @@ input, select, textarea, button {
           category: categoryMap.get(bookmark.categoryId || ""),
           isSelected: selectedBookmarks.has(bookmark.id),
           onSelect: () => toggleBookmarkSelect(bookmark.id),
-          onEdit: () => handleEditClick(bookmark),
-          onDelete: () => handleDeleteClick(bookmark.id),
           onOpen: () => handleOpenBookmark(bookmark.url),
           onContextMenu: (e) => handleContentContextMenu(e, bookmark.id),
           showFavicon: settings.showFavicon
         }
-      ))) : /* @__PURE__ */ React$2.createElement("div", { style: { border: "1px solid var(--color-neutral-200)", borderRadius: "8px", overflow: "hidden" } }, /* @__PURE__ */ React$2.createElement("div", { style: {
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        padding: "8px 12px",
-        background: "var(--color-neutral-100)",
-        borderBottom: "1px solid var(--color-neutral-200)"
-      } }, /* @__PURE__ */ React$2.createElement("div", { style: { width: "16px" } }), /* @__PURE__ */ React$2.createElement("div", { style: { width: "20px" } }), /* @__PURE__ */ React$2.createElement("span", { style: { flex: 1, fontSize: "12px", fontWeight: 500, color: "var(--color-text-tertiary)", textTransform: "uppercase" } }, "书签"), /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", fontWeight: 500, color: "var(--color-text-tertiary)", textTransform: "uppercase", width: "96px" } }, "分类"), /* @__PURE__ */ React$2.createElement("div", { style: { width: "64px" } })), filteredBookmarks.map((bookmark) => /* @__PURE__ */ React$2.createElement(
+      ))) : /* @__PURE__ */ React$2.createElement("div", { style: { paddingTop: "4px" } }, filteredBookmarks.map((bookmark) => /* @__PURE__ */ React$2.createElement(
         BookmarkListItem,
         {
           key: bookmark.id,
@@ -15933,28 +16246,24 @@ input, select, textarea, button {
           category: categoryMap.get(bookmark.categoryId || ""),
           isSelected: selectedBookmarks.has(bookmark.id),
           onSelect: () => toggleBookmarkSelect(bookmark.id),
-          onEdit: () => handleEditClick(bookmark),
-          onDelete: () => handleDeleteClick(bookmark.id),
           onOpen: () => handleOpenBookmark(bookmark.url),
           onContextMenu: (e) => handleContentContextMenu(e, bookmark.id),
           showFavicon: settings.showFavicon
         }
       )))
-    )), /* @__PURE__ */ React$2.createElement("footer", { style: {
+    ))), /* @__PURE__ */ React$2.createElement("footer", { style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
       padding: "8px 16px",
-      background: "var(--color-bg-card)",
-      borderTop: "1px solid var(--color-neutral-200)",
+      background: selectedBookmarks.size > 0 ? "var(--color-primary)0d" : "var(--color-bg-card)",
       fontSize: "12px",
       color: "var(--color-text-tertiary)"
-    } }, /* @__PURE__ */ React$2.createElement("span", null, "共 ", bookmarks.length, " 个书签 · ", categories.length, " 个分类"), /* @__PURE__ */ React$2.createElement("span", null, settings.viewMode === "card" ? "卡片视图" : "列表视图")), isFormOpen && /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal-overlay" }, /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal" }, /* @__PURE__ */ React$2.createElement("div", { style: {
+    } }, /* @__PURE__ */ React$2.createElement("span", null, "共 ", bookmarks.length, " 个书签 · ", categories.length, " 个分类", selectedBookmarks.size > 0 && /* @__PURE__ */ React$2.createElement("span", { style: { marginLeft: 12, color: "var(--color-primary)", fontWeight: 500 } }, "已选 ", selectedBookmarks.size, " 个")), /* @__PURE__ */ React$2.createElement("span", null, settings.viewMode === "card" ? "卡片视图" : "列表视图")), isFormOpen && /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal-overlay" }, /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal" }, /* @__PURE__ */ React$2.createElement("div", { style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      padding: "12px 16px",
-      borderBottom: "1px solid var(--color-neutral-200)"
+      padding: "12px 16px"
     } }, /* @__PURE__ */ React$2.createElement("h3", { style: { fontSize: "14px", fontWeight: 600, color: "var(--color-text)", margin: 0 } }, editingBookmark ? "编辑书签" : "添加书签"), /* @__PURE__ */ React$2.createElement(
       "button",
       {
@@ -15977,7 +16286,7 @@ input, select, textarea, button {
       BookmarkForm,
       {
         bookmark: editingBookmark,
-        categories,
+        categories: categoryTree,
         defaultCategoryId: settings.defaultCategory,
         onSubmit: handleFormSubmit,
         onCancel: () => {
@@ -16046,6 +16355,14 @@ input, select, textarea, button {
         },
         /* @__PURE__ */ React$2.createElement(Bookmark, { size: 14 }),
         " 添加书签"
+      ), selectedBookmarks.size === 1 && singleSelectedBookmark && /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          className: "fp-context-menu-item",
+          onClick: () => handleEditClick(singleSelectedBookmark)
+        },
+        /* @__PURE__ */ React$2.createElement(Pencil, { size: 14 }),
+        " 编辑"
       ), selectedBookmarks.size > 0 && /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { className: "fp-context-menu-separator" }), /* @__PURE__ */ React$2.createElement(
         "div",
         {
@@ -16107,12 +16424,11 @@ input, select, textarea, button {
         style: { padding: "6px 16px", fontSize: "13px" }
       },
       "删除"
-    ))))), isSettingsOpen && /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal-overlay" }, /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal", style: { maxWidth: "384px" } }, /* @__PURE__ */ React$2.createElement("div", { style: {
+    ))))), isSettingsOpen && /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal-overlay" }, /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal", style: { maxWidth: "420px", maxHeight: "90vh", overflow: "auto" } }, /* @__PURE__ */ React$2.createElement("div", { style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      padding: "12px 16px",
-      borderBottom: "1px solid var(--color-neutral-200)"
+      padding: "12px 16px"
     } }, /* @__PURE__ */ React$2.createElement("h3", { style: { fontSize: "14px", fontWeight: 600, color: "var(--color-text)", margin: 0 } }, "插件设置"), /* @__PURE__ */ React$2.createElement(
       "button",
       {
@@ -16156,13 +16472,93 @@ input, select, textarea, button {
       /* @__PURE__ */ React$2.createElement("option", { value: "createdAt" }, "创建时间"),
       /* @__PURE__ */ React$2.createElement("option", { value: "title" }, "标题"),
       /* @__PURE__ */ React$2.createElement("option", { value: "order" }, "自定义排序")
-    )), /* @__PURE__ */ React$2.createElement("div", { style: { borderTop: "1px solid var(--color-neutral-200)", paddingTop: "16px" } }, /* @__PURE__ */ React$2.createElement(
+    )), /* @__PURE__ */ React$2.createElement("div", { style: { borderTop: "1px solid var(--color-neutral-200)", paddingTop: "12px" } }, /* @__PURE__ */ React$2.createElement("h4", { style: { fontSize: "13px", fontWeight: 600, color: "var(--color-text)", margin: "0 0 8px" } }, "标签显示"), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" } }, /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "13px", color: "var(--color-text)" } }, "显示标签数量"), /* @__PURE__ */ React$2.createElement(
+      "input",
+      {
+        type: "number",
+        min: 1,
+        max: 20,
+        value: settings.tagDisplayLimit,
+        onChange: (e) => {
+          const v = Math.max(1, Math.min(20, parseInt(e.target.value) || 5));
+          updateSettings({ tagDisplayLimit: v });
+        },
+        style: {
+          width: "64px",
+          padding: "4px 8px",
+          fontSize: "13px",
+          border: "1px solid var(--color-neutral-300)",
+          borderRadius: "6px",
+          background: "var(--color-bg-card)",
+          color: "var(--color-text)",
+          textAlign: "right"
+        }
+      }
+    )), allTags.length > 0 && /* @__PURE__ */ React$2.createElement("div", { style: { marginBottom: "8px" } }, /* @__PURE__ */ React$2.createElement("div", { style: { fontSize: "12px", color: "var(--color-text-secondary)", marginBottom: "4px" } }, "显示的标签（勾选显示，支持拖拽排序）"), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", flexDirection: "column", gap: "4px" } }, allTags.map((tag) => {
+      const hidden = settings.hiddenTags.includes(tag);
+      return /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          key: tag,
+          draggable: true,
+          onDragStart: (e) => {
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", tag);
+          },
+          onDragOver: (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+          },
+          onDrop: (e) => {
+            e.preventDefault();
+            const draggedTag = e.dataTransfer.getData("text/plain");
+            if (draggedTag && draggedTag !== tag) {
+              const newOrder = [...settings.tagOrder.length ? settings.tagOrder : allTags];
+              const fromIdx = newOrder.indexOf(draggedTag);
+              const toIdx = newOrder.indexOf(tag);
+              if (fromIdx !== -1 && toIdx !== -1) {
+                newOrder.splice(fromIdx, 1);
+                newOrder.splice(toIdx, 0, draggedTag);
+                updateSettings({ tagOrder: newOrder });
+              }
+            }
+          },
+          style: {
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "6px 8px",
+            borderRadius: "4px",
+            background: "var(--color-neutral-50)",
+            cursor: "grab",
+            transition: "background-color 0.15s"
+          },
+          onMouseEnter: (e) => {
+            e.currentTarget.style.background = "var(--color-neutral-100)";
+          },
+          onMouseLeave: (e) => {
+            e.currentTarget.style.background = "var(--color-neutral-50)";
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(
+          "input",
+          {
+            type: "checkbox",
+            checked: !hidden,
+            onChange: () => {
+              const newHidden = hidden ? settings.hiddenTags.filter((t) => t !== tag) : [...settings.hiddenTags, tag];
+              updateSettings({ hiddenTags: newHidden });
+            },
+            style: { margin: 0 }
+          }
+        ),
+        /* @__PURE__ */ React$2.createElement("span", { style: { flex: 1, fontSize: "13px", color: hidden ? "var(--color-text-tertiary)" : "var(--color-text)", textDecoration: hidden ? "line-through" : "none" } }, tag),
+        /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-tertiary)" } }, "⋮⋮")
+      );
+    })))), /* @__PURE__ */ React$2.createElement("div", { style: { paddingTop: "8px", borderTop: "1px solid var(--color-neutral-200)" } }, /* @__PURE__ */ React$2.createElement(
       "button",
       {
-        onClick: () => {
-          resetAllData();
-          setIsSettingsOpen(false);
-        },
+        onClick: () => setIsResetConfirmOpen(true),
         style: {
           width: "100%",
           padding: "8px 12px",
@@ -16178,22 +16574,108 @@ input, select, textarea, button {
         onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
       "重置所有数据"
-    ), /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "12px", color: "var(--color-text-tertiary)", margin: "4px 0 0" } }, "将清除所有书签和分类数据"))))));
+    ), /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "12px", color: "var(--color-text-tertiary)", margin: "4px 0 0" } }, "将清除所有书签和分类数据"))))), isResetConfirmOpen && /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal-overlay" }, /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal", style: { maxWidth: "384px" } }, /* @__PURE__ */ React$2.createElement("div", { style: { padding: "16px" } }, /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "13px", color: "var(--color-text-secondary)", margin: 0 } }, "确定要重置所有数据吗？此操作将清除所有书签和分类，且无法撤销。"), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "16px" } }, /* @__PURE__ */ React$2.createElement(
+      "button",
+      {
+        onClick: () => setIsResetConfirmOpen(false),
+        className: "fp-btn-secondary",
+        style: { padding: "6px 16px", fontSize: "13px" }
+      },
+      "取消"
+    ), /* @__PURE__ */ React$2.createElement(
+      "button",
+      {
+        onClick: () => {
+          resetAllData();
+          setIsResetConfirmOpen(false);
+          setIsSettingsOpen(false);
+        },
+        className: "fp-btn-danger",
+        style: { padding: "6px 16px", fontSize: "13px" }
+      },
+      "确认重置"
+    ))))));
   };
+  class ErrorBoundary extends React$2.Component {
+    constructor(props) {
+      super(props);
+      this.state = { hasError: false, error: null };
+    }
+    static getDerivedStateFromError(error) {
+      return { hasError: true, error };
+    }
+    componentDidCatch(error, errorInfo) {
+      console.error("Plugin Error:", error, errorInfo);
+    }
+    render() {
+      var _a, _b;
+      if (this.state.hasError) {
+        return React$2.createElement("div", {
+          style: {
+            padding: "24px",
+            color: "#dc2626",
+            fontFamily: "monospace",
+            fontSize: "13px",
+            background: "#fef2f2",
+            height: "100%",
+            overflow: "auto",
+            whiteSpace: "pre-wrap"
+          }
+        }, [
+          React$2.createElement("h2", { style: { margin: "0 0 12px", fontSize: "16px" } }, "插件运行时错误"),
+          React$2.createElement("p", { style: { margin: "0 0 12px" } }, String((_a = this.state.error) == null ? void 0 : _a.message)),
+          React$2.createElement("pre", { style: { margin: 0, fontSize: "12px", color: "#6b7280" } }, ((_b = this.state.error) == null ? void 0 : _b.stack) || "")
+        ]);
+      }
+      return this.props.children;
+    }
+  }
   const PluginApp = () => {
-    return React$2.createElement(ToolPanel);
+    return React$2.createElement(
+      ErrorBoundary,
+      null,
+      React$2.createElement(ToolPanel)
+    );
   };
   function renderStandalone() {
     const root2 = document.getElementById("root");
-    if (!root2) return;
-    if (ReactDOM.createRoot) {
-      ReactDOM.createRoot(root2).render(React$2.createElement(PluginApp));
-    } else {
-      ReactDOM.render(React$2.createElement(PluginApp), root2);
+    if (!root2) {
+      console.error("Root element not found");
+      return;
+    }
+    try {
+      if (ReactDOM.createRoot) {
+        ReactDOM.createRoot(root2).render(React$2.createElement(PluginApp));
+      } else {
+        ReactDOM.render(React$2.createElement(PluginApp), root2);
+      }
+    } catch (e) {
+      console.error("Render failed:", e);
+      root2.innerHTML = `<div style="padding:24px;color:#dc2626;font-family:monospace;">渲染失败: ${String(e)}</div>`;
     }
   }
-  const pluginData = window.__PLUGIN_DATA__;
-  if (pluginData) {
-    renderStandalone();
+  function registerPlugin(api) {
+    const { registerTool, registerSidebarButton, openPluginWindow } = api;
+    registerTool({
+      id: "plugin-favorite",
+      name: "网址收藏夹",
+      iconName: "Link",
+      color: "#2563eb",
+      textColor: "#FFFFFF",
+      path: "/tools/plugin-favorite",
+      component: ToolPanel
+    });
+    registerSidebarButton({
+      id: "plugin-favorite-btn",
+      icon: "Link",
+      label: "网址收藏夹",
+      onClick: () => {
+        openPluginWindow == null ? void 0 : openPluginWindow("plugin-favorite");
+      }
+    });
+  }
+  renderStandalone();
+  if (window.__PLUGIN_DATA__) {
+    registerPlugin(window.__PLUGIN_DATA__);
   }
 })();

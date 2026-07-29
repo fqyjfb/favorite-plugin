@@ -1,7 +1,22 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Plus, Pencil, Trash2, FolderOpen, ChevronRight, ChevronDown, GripVertical, Copy } from 'lucide-react';
-import type { CategoryNode } from '../types';
+import { Plus, Pencil, Trash2, FolderOpen, Folder, ChevronRight, ChevronDown, Tag } from 'lucide-react';
+import type { CategoryNode, CategoryColor } from '../types';
 import '../styles.css';
+
+const CATEGORY_COLORS: { key: CategoryColor; label: string; value: string }[] = [
+  { key: 'red', label: '红色', value: '#ef4444' },
+  { key: 'orange', label: '橙色', value: '#f97316' },
+  { key: 'yellow', label: '黄色', value: '#eab308' },
+  { key: 'green', label: '绿色', value: '#22c55e' },
+  { key: 'blue', label: '蓝色', value: '#3b82f6' },
+  { key: 'purple', label: '紫色', value: '#a855f7' },
+  { key: 'pink', label: '粉色', value: '#ec4899' },
+];
+
+const getColorValue = (color?: CategoryColor): string => {
+  if (!color) return '#9ca3af';
+  return CATEGORY_COLORS.find((c) => c.key === color)?.value || '#9ca3af';
+};
 
 interface CategoryTreeProps {
   categories: CategoryNode[];
@@ -11,7 +26,11 @@ interface CategoryTreeProps {
   onUpdateCategory: (id: string, name: string) => void;
   onDeleteCategory: (id: string) => void;
   onReorderCategory: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => void;
+  onUpdateCategoryColor: (id: string, color: CategoryColor) => void;
   bookmarkCounts: Map<string | null, number>;
+  renamingCategoryId?: string | null;
+  onStartRename?: (id: string) => void;
+  onFinishRename?: () => void;
 }
 
 interface ContextMenuState {
@@ -20,11 +39,13 @@ interface ContextMenuState {
   y: number;
   categoryId: string | null;
   isRoot: boolean;
+  showColorMenu: boolean;
 }
 
 interface TreeNodeProps {
   category: CategoryNode;
   level: number;
+  defaultExpanded?: boolean;
   selectedCategoryId: string | null;
   onSelectCategory: (id: string | null) => void;
   onAddCategory: (name: string, parentId: string | null) => void;
@@ -40,11 +61,14 @@ interface TreeNodeProps {
   onDragOver: (e: React.DragEvent, id: string) => void;
   onDrop: (e: React.DragEvent, id: string) => void;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
+  renamingCategoryId?: string | null;
+  onFinishRename?: () => void;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({
   category,
   level,
+  defaultExpanded = false,
   selectedCategoryId,
   onSelectCategory,
   onAddCategory,
@@ -59,24 +83,34 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   dropPosition,
   onDragOver,
   onDrop,
-  onContextMenu
+  onContextMenu,
+  renamingCategoryId,
+  onFinishRename
 }) => {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(category.name);
+
+  useEffect(() => {
+    if (renamingCategoryId === category.id && !isEditing) {
+      setIsEditing(true);
+    }
+  }, [renamingCategoryId, category.id, isEditing]);
 
   const hasChildren = category.children && category.children.length > 0;
   const isSelected = selectedCategoryId === category.id;
   const count = bookmarkCounts.get(category.id) || 0;
   const isDragging = draggingId === category.id;
   const isDropTarget = dropTargetId === category.id;
+  const colorValue = getColorValue(category.color);
 
   const handleSaveRename = useCallback(() => {
     if (editName.trim()) {
       onUpdateCategory(category.id, editName.trim());
     }
     setIsEditing(false);
-  }, [editName, category.id, onUpdateCategory]);
+    onFinishRename?.();
+  }, [editName, category.id, onUpdateCategory, onFinishRename]);
 
   return (
     <div
@@ -85,13 +119,14 @@ const TreeNode: React.FC<TreeNodeProps> = ({
       onDrop={(e) => onDrop(e, category.id)}
     >
       <div
+        draggable
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: '4px',
           padding: '6px 8px',
           borderRadius: '6px',
-          cursor: 'pointer',
+          cursor: isEditing ? 'text' : 'pointer',
           transition: 'background-color 0.15s',
           backgroundColor: isDropTarget && dropPosition === 'child'
             ? 'var(--color-primary)' + '33'
@@ -108,32 +143,21 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         onMouseLeave={(e) => {
           if (!isSelected) (e.currentTarget.style.backgroundColor = 'transparent');
         }}
-        onClick={() => onSelectCategory(category.id)}
+        onClick={() => {
+          onSelectCategory(category.id);
+          if (hasChildren) setExpanded(!expanded);
+        }}
         onContextMenu={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           onContextMenu(e, category.id);
         }}
+        onDragStart={(e) => {
+          e.stopPropagation();
+          onDragStart(category.id);
+        }}
+        onDragEnd={onDragEnd}
       >
-        <span
-          style={{
-            padding: '2px',
-            borderRadius: '4px',
-            cursor: 'grab',
-            opacity: 0,
-            display: 'flex'
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; }}
-          draggable
-          onDragStart={(e) => {
-            e.stopPropagation();
-            onDragStart(category.id);
-          }}
-          onDragEnd={onDragEnd}
-        >
-          <GripVertical size={12} style={{ color: 'var(--color-neutral-400)' }} />
-        </span>
-
         <button
           style={{
             padding: '2px',
@@ -156,8 +180,11 @@ const TreeNode: React.FC<TreeNodeProps> = ({
             <span style={{ width: '12px', height: '12px' }} />
           )}
         </button>
-
-        <FolderOpen size={16} style={{ flexShrink: 0 }} />
+        {expanded ? (
+          <FolderOpen size={16} style={{ flexShrink: 0, color: colorValue }} />
+        ) : (
+          <Folder size={16} style={{ flexShrink: 0, color: colorValue }} />
+        )}
 
         {isEditing ? (
           <input
@@ -190,6 +217,18 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           </span>
         )}
 
+        {category.color && (
+          <span
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: colorValue,
+              flexShrink: 0
+            }}
+          />
+        )}
+
         <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', flexShrink: 0 }}>
           {count}
         </span>
@@ -202,6 +241,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               key={child.id}
               category={child}
               level={level + 1}
+              defaultExpanded={false}
               selectedCategoryId={selectedCategoryId}
               onSelectCategory={onSelectCategory}
               onAddCategory={onAddCategory}
@@ -217,6 +257,8 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               onDragOver={onDragOver}
               onDrop={onDrop}
               onContextMenu={onContextMenu}
+              renamingCategoryId={renamingCategoryId}
+              onFinishRename={onFinishRename}
             />
           ))}
         </div>
@@ -233,25 +275,29 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
   onUpdateCategory,
   onDeleteCategory,
   onReorderCategory,
-  bookmarkCounts
+  onUpdateCategoryColor,
+  bookmarkCounts,
+  renamingCategoryId,
+  onStartRename,
+  onFinishRename
 }) => {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [dropPosition, setDropPosition] = useState<string | null>(null);
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
-    visible: false, x: 0, y: 0, categoryId: null, isRoot: false
+    visible: false, x: 0, y: 0, categoryId: null, isRoot: false, showColorMenu: false
   });
 
   const [rootContextMenu, setRootContextMenu] = useState<ContextMenuState>({
-    visible: false, x: 0, y: 0, categoryId: null, isRoot: true
+    visible: false, x: 0, y: 0, categoryId: null, isRoot: true, showColorMenu: false
   });
 
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const closeAllMenus = useCallback(() => {
-    setContextMenu((prev) => ({ ...prev, visible: false }));
-    setRootContextMenu((prev) => ({ ...prev, visible: false }));
+    setContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
+    setRootContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
   }, []);
 
   useEffect(() => {
@@ -305,75 +351,170 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
   }, [draggingId, dropPosition, onReorderCategory, handleDragEnd]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent, categoryId: string) => {
-    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId, isRoot: false });
-    setRootContextMenu((prev) => ({ ...prev, visible: false }));
+    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId, isRoot: false, showColorMenu: false });
+    setRootContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
   }, []);
 
   const handleRootContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    setRootContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId: null, isRoot: true });
-    setContextMenu((prev) => ({ ...prev, visible: false }));
+    setRootContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId: null, isRoot: true, showColorMenu: false });
+    setContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
   }, []);
 
   const uncategorizedCount = bookmarkCounts.get(null) || 0;
 
+  const findCategoryById = useCallback((id: string): CategoryNode | undefined => {
+    const find = (nodes: CategoryNode[]): CategoryNode | undefined => {
+      for (const node of nodes) {
+        if (node.id === id) return node;
+        if (node.children) {
+          const found = find(node.children);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    };
+    return find(categories);
+  }, [categories]);
+
+  const renderColorMenu = (categoryId: string, currentColor?: CategoryColor) => (
+    <div
+      className="fp-context-menu"
+      style={{
+        position: 'absolute',
+        left: '100%',
+        top: 0,
+        minWidth: '120px',
+        marginLeft: '4px'
+      }}
+    >
+      {CATEGORY_COLORS.map((c) => (
+        <div
+          key={c.key}
+          className="fp-context-menu-item"
+          onMouseDown={(e) => {
+            e.stopPropagation();
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onUpdateCategoryColor(categoryId, c.key);
+            closeAllMenus();
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '6px 12px'
+          }}
+        >
+          <span
+            style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              background: c.value,
+              flexShrink: 0,
+              border: currentColor === c.key ? '2px solid var(--color-text)' : 'none'
+            }}
+          />
+          <span style={{ fontSize: '13px' }}>{c.label}</span>
+        </div>
+      ))}
+      {currentColor && (
+        <>
+          <div className="fp-context-menu-separator" />
+          <div
+            className="fp-context-menu-item"
+            onMouseDown={(e) => {
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdateCategoryColor(categoryId, null);
+              closeAllMenus();
+            }}
+            style={{ padding: '6px 12px' }}
+          >
+            清除标记
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   const renderContextMenu = () => {
     if (!contextMenu.visible) return null;
+    const category = contextMenu.categoryId ? findCategoryById(contextMenu.categoryId) : undefined;
+    const currentColor = category?.color;
+
     return (
       <div
         ref={contextMenuRef}
-        className="fp-context-menu"
-        style={{ left: contextMenu.x, top: contextMenu.y }}
+        style={{
+          position: 'fixed',
+          left: contextMenu.x,
+          top: contextMenu.y,
+          zIndex: 9999
+        }}
       >
         <div
-          className="fp-context-menu-item"
-          onClick={() => {
-            if (contextMenu.categoryId) {
-              onSelectCategory(contextMenu.categoryId);
-            }
-            closeAllMenus();
-          }}
+          className="fp-context-menu"
+          style={{ position: 'relative' }}
         >
-          <FolderOpen size={14} /> 打开
-        </div>
-        <div className="fp-context-menu-separator" />
-        <div
-          className="fp-context-menu-item"
-          onClick={() => {
-            if (contextMenu.categoryId) {
-              onSelectCategory(contextMenu.categoryId);
-            }
-            closeAllMenus();
-            setTimeout(() => {
-              const event = new CustomEvent('category:edit', { detail: contextMenu.categoryId });
-              window.dispatchEvent(event);
-            }, 50);
-          }}
-        >
-          <Pencil size={14} /> 重命名
-        </div>
-        <div
-          className="fp-context-menu-item"
-          onClick={() => {
-            if (contextMenu.categoryId) {
-              onAddCategory('新分类', contextMenu.categoryId);
-            }
-            closeAllMenus();
-          }}
-        >
-          <Plus size={14} /> 添加子分类
-        </div>
-        <div className="fp-context-menu-separator" />
-        <div
-          className="fp-context-menu-item danger"
-          onClick={() => {
-            if (contextMenu.categoryId) {
-              onDeleteCategory(contextMenu.categoryId);
-            }
-            closeAllMenus();
-          }}
-        >
-          <Trash2 size={14} /> 删除
+          <div
+            className="fp-context-menu-item"
+            onClick={() => {
+              if (contextMenu.categoryId) {
+                onSelectCategory(contextMenu.categoryId);
+                onStartRename?.(contextMenu.categoryId);
+              }
+              closeAllMenus();
+            }}
+          >
+            <Pencil size={14} /> 重命名
+          </div>
+          <div
+            className="fp-context-menu-item"
+            onClick={() => {
+              if (contextMenu.categoryId) {
+                onAddCategory('新分类', contextMenu.categoryId);
+              }
+              closeAllMenus();
+            }}
+          >
+            <Plus size={14} /> 添加子分类
+          </div>
+          <div
+            className="fp-context-menu-item"
+            onMouseDown={(e) => {
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setContextMenu((prev) => ({ ...prev, showColorMenu: !prev.showColorMenu }));
+            }}
+            style={{ justifyContent: 'space-between' }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Tag size={14} /> 标记
+            </span>
+            <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
+              ▶
+            </span>
+          </div>
+          <div className="fp-context-menu-separator" />
+          <div
+            className="fp-context-menu-item danger"
+            onClick={() => {
+              if (contextMenu.categoryId) {
+                onDeleteCategory(contextMenu.categoryId);
+              }
+              closeAllMenus();
+            }}
+          >
+            <Trash2 size={14} /> 删除
+          </div>
+          {contextMenu.showColorMenu && contextMenu.categoryId && renderColorMenu(contextMenu.categoryId, currentColor)}
         </div>
       </div>
     );
@@ -385,7 +526,12 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
       <div
         ref={contextMenuRef}
         className="fp-context-menu"
-        style={{ left: rootContextMenu.x, top: rootContextMenu.y }}
+        style={{
+          position: 'fixed',
+          left: rootContextMenu.x,
+          top: rootContextMenu.y,
+          zIndex: 9999
+        }}
       >
         <div
           className="fp-context-menu-item"
@@ -408,6 +554,7 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
           alignItems: 'center',
           gap: '4px',
           padding: '6px 8px',
+          paddingLeft: '28px',
           borderRadius: '6px',
           cursor: 'pointer',
           transition: 'background-color 0.15s',
@@ -431,6 +578,7 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
           alignItems: 'center',
           gap: '4px',
           padding: '6px 8px',
+          paddingLeft: '28px',
           borderRadius: '6px',
           cursor: 'pointer',
           transition: 'background-color 0.15s',
@@ -476,6 +624,7 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
             key={cat.id}
             category={cat}
             level={0}
+            defaultExpanded={true}
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={onSelectCategory}
             onAddCategory={onAddCategory}
@@ -491,6 +640,8 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             onContextMenu={handleContextMenu}
+            renamingCategoryId={renamingCategoryId}
+            onFinishRename={onFinishRename}
           />
         ))}
       </div>

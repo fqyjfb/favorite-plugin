@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import type {
   Bookmark,
   Category,
+  CategoryColor,
   PluginData,
   PluginSettings,
   ImportFormat,
@@ -63,8 +64,17 @@ export function useBookmarkStore() {
     bookmarks.forEach((b) => {
       if (b.tags) b.tags.forEach((t) => tagSet.add(t));
     });
-    return Array.from(tagSet).sort();
-  }, [bookmarks]);
+    const all = Array.from(tagSet);
+    const orderMap = new Map(settings.tagOrder.map((t, i) => [t, i]));
+    return all.sort((a, b) => {
+      const aIdx = orderMap.get(a);
+      const bIdx = orderMap.get(b);
+      if (aIdx !== undefined && bIdx !== undefined) return aIdx - bIdx;
+      if (aIdx !== undefined) return -1;
+      if (bIdx !== undefined) return 1;
+      return a.localeCompare(b);
+    });
+  }, [bookmarks, settings.tagOrder]);
 
   const filteredBookmarks = (() => {
     let result = bookmarks;
@@ -104,8 +114,8 @@ export function useBookmarkStore() {
   })();
 
   const addBookmark = useCallback(
-    (data: Omit<Bookmark, 'id' | 'createdAt' | 'updatedAt'>) => {
-      const bookmark = createBookmark(data);
+    (bookmarkData: Omit<Bookmark, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const bookmark = createBookmark(bookmarkData);
       const nextData = {
         ...data,
         bookmarks: [...data.bookmarks, bookmark]
@@ -203,6 +213,20 @@ export function useBookmarkStore() {
       };
       persist(nextData);
       addToast('分类更新成功', 'success');
+    },
+    [data, persist, addToast]
+  );
+
+  const updateCategoryColor = useCallback(
+    (id: string, color: CategoryColor) => {
+      const nextData = {
+        ...data,
+        categories: data.categories.map((c) =>
+          c.id === id ? { ...c, color } : c
+        )
+      };
+      persist(nextData);
+      addToast(color ? '已标记颜色' : '已取消标记', 'success');
     },
     [data, persist, addToast]
   );
@@ -448,6 +472,7 @@ export function useBookmarkStore() {
     clearSelection,
     addCategory,
     updateCategory,
+    updateCategoryColor,
     deleteCategory,
     reorderCategory,
     updateSettings,

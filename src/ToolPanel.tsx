@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Bookmark,
   Download,
@@ -11,9 +12,9 @@ import {
   SortAsc,
   SortDesc,
   Settings,
-  Tag,
   Pencil,
-  FolderOpen
+  FolderOpen,
+  ChevronDown
 } from 'lucide-react';
 import { useBookmarkStore } from './store/useBookmarkStore';
 import CategoryTree from './components/CategoryTree';
@@ -55,6 +56,7 @@ const ToolPanel: React.FC = () => {
     clearSelection,
     addCategory,
     updateCategory,
+    updateCategoryColor,
     deleteCategory,
     reorderCategory,
     updateSettings,
@@ -71,6 +73,8 @@ const ToolPanel: React.FC = () => {
   const [pendingBulkDelete, setPendingBulkDelete] = useState<string[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [renamingCategoryId, setRenamingCategoryId] = useState<string | null>(null);
+  const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const [contentMenu, setContentMenu] = useState<{
     visible: boolean; x: number; y: number;
@@ -79,6 +83,9 @@ const ToolPanel: React.FC = () => {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const contentMenuRef = useRef<HTMLDivElement>(null);
+  const tagDropdownRef = useRef<HTMLDivElement>(null);
+  const moreBtnRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
 
   const closeContentMenu = useCallback(() => {
     setContentMenu((prev) => ({ ...prev, visible: false }));
@@ -101,6 +108,17 @@ const ToolPanel: React.FC = () => {
     };
   }, [closeContentMenu]);
 
+  useEffect(() => {
+    if (!tagDropdownOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (tagDropdownRef.current && !tagDropdownRef.current.contains(e.target as Node)) {
+        setTagDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [tagDropdownOpen]);
+
   const categoryMap = useMemo(() => {
     const map = new Map<string, typeof categories[0]>();
     categories.forEach((c) => map.set(c.id, c));
@@ -112,23 +130,29 @@ const ToolPanel: React.FC = () => {
     counts.set('__all__', bookmarks.length);
     counts.set(null, bookmarks.filter((b) => !b.categoryId).length);
 
-    const countForCategory = (catId: string): number => {
-      const childIds = new Set<string>([catId]);
-      const stack = [catId];
-      while (stack.length > 0) {
-        const current = stack.pop()!;
+    const allIds: string[] = [];
+    const stack = [...categoryTree];
+    while (stack.length > 0) {
+      const node = stack.pop()!;
+      allIds.push(node.id);
+      if (node.children && node.children.length > 0) {
+        stack.push(...node.children);
+      }
+    }
+
+    allIds.forEach((id) => {
+      const childIds = new Set<string>([id]);
+      const idStack = [id];
+      while (idStack.length > 0) {
+        const current = idStack.pop()!;
         categories.forEach((cat) => {
           if (cat.parentId === current && !childIds.has(cat.id)) {
             childIds.add(cat.id);
-            stack.push(cat.id);
+            idStack.push(cat.id);
           }
         });
       }
-      return bookmarks.filter((b) => b.categoryId && childIds.has(b.categoryId)).length;
-    };
-
-    categoryTree.forEach((rootCat) => {
-      counts.set(rootCat.id, countForCategory(rootCat.id));
+      counts.set(id, bookmarks.filter((b) => b.categoryId && childIds.has(b.categoryId)).length);
     });
 
     return counts;
@@ -220,14 +244,21 @@ const ToolPanel: React.FC = () => {
     color: 'var(--color-text)'
   };
 
+  const singleSelectedBookmark = useMemo(() => {
+    if (selectedBookmarks.size === 1) {
+      const id = Array.from(selectedBookmarks)[0];
+      return bookmarks.find((b) => b.id === id);
+    }
+    return null;
+  }, [selectedBookmarks, bookmarks]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-bg)' }}>
       <ToastContainer toasts={toasts} />
 
       <header style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 16px', background: 'var(--color-bg-card)',
-        borderBottom: '1px solid var(--color-neutral-200)'
+        padding: '12px 16px', background: 'var(--color-bg-card)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Bookmark size={20} style={{ color: 'var(--color-primary)' }} />
@@ -282,11 +313,148 @@ const ToolPanel: React.FC = () => {
       <div style={{
         display: 'flex', alignItems: 'center', gap: '8px',
         padding: '8px 16px', background: 'var(--color-bg-card)',
-        borderBottom: '1px solid var(--color-neutral-200)'
+        position: 'relative', zIndex: 10
       }}>
         <div style={{ flex: '0 1 200px', minWidth: '160px' }}>
           <SearchBar value={searchQuery} onChange={setSearchQuery} inputRef={searchInputRef} />
         </div>
+
+        {allTags.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1, overflow: 'hidden' }}>
+            {(() => {
+              const visiblePool = allTags.filter((t) => !settings.hiddenTags.includes(t));
+              const limit = Math.max(1, settings.tagDisplayLimit || 5);
+              const visibleTags = visiblePool.slice(0, limit);
+              const hiddenOverflow = visiblePool.slice(limit);
+              return (
+                <>
+                  {visibleTags.map((tag) => (
+                    <button
+                      key={tag}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', tag);
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const draggedTag = e.dataTransfer.getData('text/plain');
+                        if (draggedTag && draggedTag !== tag) {
+                          const baseOrder = settings.tagOrder.length ? settings.tagOrder : allTags;
+                          const newOrder = [...baseOrder];
+                          const fromIdx = newOrder.indexOf(draggedTag);
+                          const toIdx = newOrder.indexOf(tag);
+                          if (fromIdx !== -1 && toIdx !== -1) {
+                            newOrder.splice(fromIdx, 1);
+                            newOrder.splice(toIdx, 0, draggedTag);
+                            updateSettings({ tagOrder: newOrder });
+                          }
+                        }
+                      }}
+                      onClick={() => toggleTag(tag)}
+                      title={tag}
+                      style={{
+                        padding: '2px 8px', fontSize: '12px', borderRadius: '4px',
+                        cursor: 'pointer', border: 'none', transition: 'background-color 0.15s',
+                        background: selectedTags.has(tag) ? 'var(--color-primary)' : 'var(--color-neutral-100)',
+                        color: selectedTags.has(tag) ? '#fff' : 'var(--color-text-secondary)',
+                        whiteSpace: 'nowrap', flexShrink: 0
+                      }}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                  {hiddenOverflow.length > 0 && (
+                    <>
+                      <button
+                        ref={moreBtnRef}
+                        onClick={() => {
+                          if (moreBtnRef.current) {
+                            const rect = moreBtnRef.current.getBoundingClientRect();
+                            setDropdownPos({ top: rect.bottom + 4, left: rect.left });
+                          }
+                          setTagDropdownOpen(!tagDropdownOpen);
+                        }}
+                        title={`更多 (${hiddenOverflow.length})`}
+                        style={{
+                          padding: '2px 6px', fontSize: '12px', borderRadius: '4px',
+                          cursor: 'pointer', border: 'none',
+                          background: 'var(--color-neutral-100)',
+                          color: 'var(--color-text-secondary)',
+                          display: 'flex', alignItems: 'center', gap: '2px',
+                          whiteSpace: 'nowrap', flexShrink: 0
+                        }}
+                      >
+                        更多
+                        <ChevronDown size={12} style={{
+                          transition: 'transform 0.15s',
+                          transform: tagDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+                        }} />
+                      </button>
+                      {tagDropdownOpen && createPortal(
+                        <div
+                          ref={tagDropdownRef}
+                          style={{
+                            position: 'fixed', top: dropdownPos.top, left: dropdownPos.left,
+                            background: 'var(--color-bg-card)',
+                            border: '1px solid var(--color-neutral-200)',
+                            borderRadius: '6px', boxShadow: 'var(--shadow-md)',
+                            minWidth: '140px', padding: '4px 0', zIndex: 9999,
+                            maxHeight: '200px', overflowY: 'auto'
+                          }}
+                          className="fp-scrollbar"
+                        >
+                          {hiddenOverflow.map((tag) => (
+                            <button
+                              key={tag}
+                              onClick={() => { toggleTag(tag); setTagDropdownOpen(false); }}
+                              title={tag}
+                              style={{
+                                display: 'block', width: '100%', textAlign: 'left',
+                                padding: '6px 12px', fontSize: '12px', border: 'none',
+                                cursor: 'pointer',
+                                background: selectedTags.has(tag) ? 'var(--color-primary)' : 'transparent',
+                                color: selectedTags.has(tag) ? '#fff' : 'var(--color-text-secondary)',
+                                transition: 'background-color 0.1s'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!selectedTags.has(tag)) e.currentTarget.style.background = 'var(--color-neutral-100)';
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!selectedTags.has(tag)) e.currentTarget.style.background = 'transparent';
+                              }}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>,
+                        document.body
+                      )}
+                    </>
+                  )}
+                  {selectedTags.size > 0 && (
+                    <button
+                      onClick={clearTagFilter}
+                      style={{
+                        padding: '2px 6px', fontSize: '12px', color: 'var(--color-error)',
+                        border: 'none', borderRadius: '4px',
+                        background: 'var(--color-error)14', cursor: 'pointer',
+                        transition: 'background-color 0.15s',
+                        whiteSpace: 'nowrap', flexShrink: 0
+                      }}
+                    >
+                      清除
+                    </button>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}>
           <button
@@ -319,49 +487,9 @@ const ToolPanel: React.FC = () => {
         </div>
       </div>
 
-      {allTags.length > 0 && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap',
-          padding: '8px 16px', background: 'var(--color-bg-card)',
-          borderBottom: '1px solid var(--color-neutral-200)'
-        }}>
-          <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            <Tag size={12} /> 标签筛选:
-          </span>
-          {selectedTags.size > 0 && (
-            <button
-              onClick={clearTagFilter}
-              style={{
-                padding: '2px 8px', fontSize: '12px', color: 'var(--color-error)',
-                border: '1px solid var(--color-error)' + '4d', borderRadius: '4px',
-                background: 'none', cursor: 'pointer', transition: 'background-color 0.15s'
-              }}
-            >
-              清除
-            </button>
-          )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-            {allTags.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => toggleTag(tag)}
-                style={{
-                  padding: '2px 8px', fontSize: '12px', borderRadius: '4px',
-                  cursor: 'pointer', border: 'none', transition: 'background-color 0.15s',
-                  background: selectedTags.has(tag) ? 'var(--color-primary)' : 'var(--color-neutral-100)',
-                  color: selectedTags.has(tag) ? '#fff' : 'var(--color-text-secondary)'
-                }}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <aside style={{
-          width: '224px', flexShrink: 0, borderRight: '1px solid var(--color-neutral-200)',
+          width: '224px', flexShrink: 0,
           background: 'var(--color-bg-card)', padding: '8px', overflow: 'auto'
         }} className="fp-scrollbar">
           <CategoryTree
@@ -372,6 +500,7 @@ const ToolPanel: React.FC = () => {
             onUpdateCategory={(id, name) => updateCategory(id, name)}
             onDeleteCategory={(id) => deleteCategory(id)}
             onReorderCategory={reorderCategory}
+            onUpdateCategoryColor={updateCategoryColor}
             bookmarkCounts={bookmarkCounts}
             renamingCategoryId={renamingCategoryId}
             onStartRename={(id) => setRenamingCategoryId(id)}
@@ -379,113 +508,112 @@ const ToolPanel: React.FC = () => {
           />
         </aside>
 
-        <main
-          style={{ flex: 1, overflow: 'auto', padding: '16px' }}
-          className="fp-scrollbar"
-          onContextMenu={(e) => handleContentContextMenu(e, null)}
-        >
-          {selectedBookmarks.size > 0 && (
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              marginBottom: '12px', padding: '8px 12px', borderRadius: '6px',
-              background: 'var(--color-primary)' + '0d'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{
+            flexShrink: 0, padding: '8px 16px',
+            background: 'transparent'
+          }}>
+            {settings.viewMode === 'list' && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '12px',
+                padding: '8px 12px'
+              }}>
                 <button
                   onClick={handleSelectAll}
-                  style={{ padding: '4px', borderRadius: '4px', background: 'none', border: 'none', cursor: 'pointer' }}
+                  title={allSelected ? '取消全选' : '全选'}
+                  style={{ padding: '4px', borderRadius: '4px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
                 >
                   {allSelected ? (
                     <X size={16} style={{ color: 'var(--color-primary)' }} />
                   ) : (
-                    <CheckSquare size={16} style={{ color: 'var(--color-primary)' }} />
+                    <CheckSquare size={16} style={{ color: selectedBookmarks.size > 0 ? 'var(--color-primary)' : 'var(--color-text-tertiary)' }} />
                   )}
-                </button>
-                <span style={{ fontSize: '13px', color: 'var(--color-text)' }}>
-                  已选 {selectedBookmarks.size} 个
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <button
-                  onClick={clearSelection}
-                  style={{ padding: '4px 8px', fontSize: '12px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)' }}
-                >
-                  取消
                 </button>
                 <button
                   onClick={handleBulkDelete}
-                  className="fp-btn-danger"
-                  style={{ padding: '4px 8px', fontSize: '12px' }}
+                  title="删除选中"
+                  disabled={selectedBookmarks.size === 0}
+                  style={{
+                    padding: '4px', borderRadius: '4px', background: 'none', border: 'none',
+                    cursor: selectedBookmarks.size > 0 ? 'pointer' : 'not-allowed',
+                    color: selectedBookmarks.size > 0 ? 'var(--color-error)' : 'var(--color-text-tertiary)',
+                    display: 'flex', opacity: selectedBookmarks.size > 0 ? 1 : 0.4
+                  }}
                 >
-                  <Trash2 size={12} style={{ marginRight: '4px' }} />删除
+                  <Trash2 size={14} />
                 </button>
-              </div>
-            </div>
-          )}
-
-          {filteredBookmarks.length === 0 ? (
-            <EmptyState
-              hasBookmarks={bookmarks.length > 0}
-              onAddBookmark={handleAddClick}
-              onImport={() => setIsImportOpen(true)}
-              hasCategories={categories.length > 0}
-            />
-          ) : settings.viewMode === 'card' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
-              {filteredBookmarks.map((bookmark) => (
-                <BookmarkCard
-                  key={bookmark.id}
-                  bookmark={bookmark}
-                  category={categoryMap.get(bookmark.categoryId || '')}
-                  isSelected={selectedBookmarks.has(bookmark.id)}
-                  onSelect={() => toggleBookmarkSelect(bookmark.id)}
-                  onEdit={() => handleEditClick(bookmark)}
-                  onDelete={() => handleDeleteClick(bookmark.id)}
-                  onOpen={() => handleOpenBookmark(bookmark.url)}
-                  onContextMenu={(e) => handleContentContextMenu(e, bookmark.id)}
-                  showFavicon={settings.showFavicon}
-                />
-              ))}
-            </div>
-          ) : (
-            <div style={{ border: '1px solid var(--color-neutral-200)', borderRadius: '8px', overflow: 'hidden' }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '8px 12px', background: 'var(--color-neutral-100)',
-                borderBottom: '1px solid var(--color-neutral-200)'
-              }}>
-                <div style={{ width: '16px' }} />
-                <div style={{ width: '20px' }} />
                 <span style={{ flex: 1, fontSize: '12px', fontWeight: 500, color: 'var(--color-text-tertiary)', textTransform: 'uppercase' }}>书签</span>
                 <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', width: '96px' }}>分类</span>
                 <div style={{ width: '64px' }} />
               </div>
-              {filteredBookmarks.map((bookmark) => (
-                <BookmarkListItem
-                  key={bookmark.id}
-                  bookmark={bookmark}
-                  category={categoryMap.get(bookmark.categoryId || '')}
-                  isSelected={selectedBookmarks.has(bookmark.id)}
-                  onSelect={() => toggleBookmarkSelect(bookmark.id)}
-                  onEdit={() => handleEditClick(bookmark)}
-                  onDelete={() => handleDeleteClick(bookmark.id)}
-                  onOpen={() => handleOpenBookmark(bookmark.url)}
-                  onContextMenu={(e) => handleContentContextMenu(e, bookmark.id)}
-                  showFavicon={settings.showFavicon}
-                />
-              ))}
-            </div>
-          )}
+            )}
+          </div>
+
+          <div
+            style={{ flex: 1, overflow: 'auto', padding: '0 16px 16px' }}
+            className="fp-scrollbar"
+            onContextMenu={(e) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest('.fp-bookmark-card') && !target.closest('.fp-bookmark-item')) {
+              handleContentContextMenu(e, null);
+            }
+          }}
+          >
+            {filteredBookmarks.length === 0 ? (
+              <EmptyState
+                hasBookmarks={bookmarks.length > 0}
+                onAddBookmark={handleAddClick}
+                onImport={() => setIsImportOpen(true)}
+                hasCategories={categories.length > 0}
+              />
+            ) : settings.viewMode === 'card' ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px', paddingTop: '4px' }}>
+                {filteredBookmarks.map((bookmark) => (
+                  <BookmarkCard
+                    key={bookmark.id}
+                    bookmark={bookmark}
+                    category={categoryMap.get(bookmark.categoryId || '')}
+                    isSelected={selectedBookmarks.has(bookmark.id)}
+                    onSelect={() => toggleBookmarkSelect(bookmark.id)}
+                    onOpen={() => handleOpenBookmark(bookmark.url)}
+                    onContextMenu={(e) => handleContentContextMenu(e, bookmark.id)}
+                    showFavicon={settings.showFavicon}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div style={{ paddingTop: '4px' }}>
+                {filteredBookmarks.map((bookmark) => (
+                  <BookmarkListItem
+                    key={bookmark.id}
+                    bookmark={bookmark}
+                    category={categoryMap.get(bookmark.categoryId || '')}
+                    isSelected={selectedBookmarks.has(bookmark.id)}
+                    onSelect={() => toggleBookmarkSelect(bookmark.id)}
+                    onOpen={() => handleOpenBookmark(bookmark.url)}
+                    onContextMenu={(e) => handleContentContextMenu(e, bookmark.id)}
+                    showFavicon={settings.showFavicon}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </main>
       </div>
 
       <footer style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '8px 16px', background: 'var(--color-bg-card)',
-        borderTop: '1px solid var(--color-neutral-200)',
+        padding: '8px 16px', background: selectedBookmarks.size > 0 ? 'var(--color-primary)' + '0d' : 'var(--color-bg-card)',
         fontSize: '12px', color: 'var(--color-text-tertiary)'
       }}>
-        <span>共 {bookmarks.length} 个书签 · {categories.length} 个分类</span>
+        <span>
+          共 {bookmarks.length} 个书签 · {categories.length} 个分类
+          {selectedBookmarks.size > 0 && (
+            <span style={{ marginLeft: 12, color: 'var(--color-primary)', fontWeight: 500 }}>
+              已选 {selectedBookmarks.size} 个
+            </span>
+          )}
+        </span>
         <span>{settings.viewMode === 'card' ? '卡片视图' : '列表视图'}</span>
       </footer>
 
@@ -494,7 +622,7 @@ const ToolPanel: React.FC = () => {
           <div className="fp-modal">
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '12px 16px', borderBottom: '1px solid var(--color-neutral-200)'
+              padding: '12px 16px'
             }}>
               <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>
                 {editingBookmark ? '编辑书签' : '添加书签'}
@@ -512,7 +640,7 @@ const ToolPanel: React.FC = () => {
             <div style={{ padding: '16px', overflowY: 'auto' }} className="fp-scrollbar">
               <BookmarkForm
                 bookmark={editingBookmark}
-                categories={categories}
+                categories={categoryTree}
                 defaultCategoryId={settings.defaultCategory}
                 onSubmit={handleFormSubmit}
                 onCancel={() => { setIsFormOpen(false); setEditingBookmark(null); }}
@@ -581,6 +709,14 @@ const ToolPanel: React.FC = () => {
               >
                 <Bookmark size={14} /> 添加书签
               </div>
+              {selectedBookmarks.size === 1 && singleSelectedBookmark && (
+                <div
+                  className="fp-context-menu-item"
+                  onClick={() => handleEditClick(singleSelectedBookmark)}
+                >
+                  <Pencil size={14} /> 编辑
+                </div>
+              )}
               {selectedBookmarks.size > 0 && (
                 <>
                   <div className="fp-context-menu-separator" />
@@ -657,10 +793,10 @@ const ToolPanel: React.FC = () => {
 
       {isSettingsOpen && (
         <div className="fp-modal-overlay">
-          <div className="fp-modal" style={{ maxWidth: '384px' }}>
+          <div className="fp-modal" style={{ maxWidth: '420px', maxHeight: '90vh', overflow: 'auto' }}>
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '12px 16px', borderBottom: '1px solid var(--color-neutral-200)'
+              padding: '12px 16px'
             }}>
               <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>插件设置</h3>
               <button
@@ -704,9 +840,99 @@ const ToolPanel: React.FC = () => {
                 </select>
               </div>
 
-              <div style={{ borderTop: '1px solid var(--color-neutral-200)', paddingTop: '16px' }}>
+              <div style={{ borderTop: '1px solid var(--color-neutral-200)', paddingTop: '12px' }}>
+                <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text)', margin: '0 0 8px' }}>标签显示</h4>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--color-text)' }}>显示标签数量</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={settings.tagDisplayLimit}
+                    onChange={(e) => {
+                      const v = Math.max(1, Math.min(20, parseInt(e.target.value) || 5));
+                      updateSettings({ tagDisplayLimit: v });
+                    }}
+                    style={{
+                      width: '64px', padding: '4px 8px', fontSize: '13px',
+                      border: '1px solid var(--color-neutral-300)', borderRadius: '6px',
+                      background: 'var(--color-bg-card)', color: 'var(--color-text)',
+                      textAlign: 'right'
+                    }}
+                  />
+                </div>
+
+                {allTags.length > 0 && (
+                  <div style={{ marginBottom: '8px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>
+                      显示的标签（勾选显示，支持拖拽排序）
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {allTags.map((tag) => {
+                        const hidden = settings.hiddenTags.includes(tag);
+                        return (
+                          <div
+                            key={tag}
+                            draggable
+                            onDragStart={(e) => {
+                              e.dataTransfer.effectAllowed = 'move';
+                              e.dataTransfer.setData('text/plain', tag);
+                            }}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.dataTransfer.dropEffect = 'move';
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              const draggedTag = e.dataTransfer.getData('text/plain');
+                              if (draggedTag && draggedTag !== tag) {
+                                const newOrder = [...(settings.tagOrder.length ? settings.tagOrder : allTags)];
+                                const fromIdx = newOrder.indexOf(draggedTag);
+                                const toIdx = newOrder.indexOf(tag);
+                                if (fromIdx !== -1 && toIdx !== -1) {
+                                  newOrder.splice(fromIdx, 1);
+                                  newOrder.splice(toIdx, 0, draggedTag);
+                                  updateSettings({ tagOrder: newOrder });
+                                }
+                              }
+                            }}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '8px',
+                              padding: '6px 8px', borderRadius: '4px',
+                              background: 'var(--color-neutral-50)',
+                              cursor: 'grab',
+                              transition: 'background-color 0.15s'
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-neutral-100)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-neutral-50)'; }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={!hidden}
+                              onChange={() => {
+                                const newHidden = hidden
+                                  ? settings.hiddenTags.filter((t) => t !== tag)
+                                  : [...settings.hiddenTags, tag];
+                                updateSettings({ hiddenTags: newHidden });
+                              }}
+                              style={{ margin: 0 }}
+                            />
+                            <span style={{ flex: 1, fontSize: '13px', color: hidden ? 'var(--color-text-tertiary)' : 'var(--color-text)', textDecoration: hidden ? 'line-through' : 'none' }}>
+                              {tag}
+                            </span>
+                            <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>⋮⋮</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ paddingTop: '8px', borderTop: '1px solid var(--color-neutral-200)' }}>
                 <button
-                  onClick={() => { resetAllData(); setIsSettingsOpen(false); }}
+                  onClick={() => setIsResetConfirmOpen(true)}
                   style={{
                     width: '100%', padding: '8px 12px', fontSize: '13px',
                     border: '1px solid var(--color-error)', borderRadius: '6px',
@@ -721,6 +947,38 @@ const ToolPanel: React.FC = () => {
                 <p style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', margin: '4px 0 0' }}>
                   将清除所有书签和分类数据
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isResetConfirmOpen && (
+        <div className="fp-modal-overlay">
+          <div className="fp-modal" style={{ maxWidth: '384px' }}>
+            <div style={{ padding: '16px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: 0 }}>
+                确定要重置所有数据吗？此操作将清除所有书签和分类，且无法撤销。
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
+                <button
+                  onClick={() => setIsResetConfirmOpen(false)}
+                  className="fp-btn-secondary"
+                  style={{ padding: '6px 16px', fontSize: '13px' }}
+                >
+                  取消
+                </button>
+                <button
+                  onClick={() => {
+                    resetAllData();
+                    setIsResetConfirmOpen(false);
+                    setIsSettingsOpen(false);
+                  }}
+                  className="fp-btn-danger"
+                  style={{ padding: '6px 16px', fontSize: '13px' }}
+                >
+                  确认重置
+                </button>
               </div>
             </div>
           </div>
