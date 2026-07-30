@@ -1,8 +1,7 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import type {
   Bookmark,
   Category,
-  CategoryColor,
   PluginData,
   PluginSettings,
   ImportFormat,
@@ -18,12 +17,13 @@ import {
   buildCategoryTree,
   searchBookmarks as filterBookmarks,
   sortBookmarks,
-  getNextOrder
-} from '../services/storageService';
+  getNextOrder,
+  resetData as resetStorage
+} from '../services/sqliteStorageService';
 import { parseBrowserBookmarks, parseJsonImport, parseTextImport } from '../services/importService';
 
 export function useBookmarkStore() {
-  const [data, setData] = useState<PluginData>(() => loadData());
+  const [data, setData] = useState<PluginData | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>('all');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
@@ -34,12 +34,15 @@ export function useBookmarkStore() {
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
+      loadData().then((loadedData) => {
+        setData(loadedData);
+      });
     }
   }, []);
 
-  const persist = useCallback((nextData: PluginData) => {
+  const persist = useCallback(async (nextData: PluginData) => {
     setData(nextData);
-    saveData(nextData);
+    await saveData(nextData);
   }, []);
 
   const addToast = useCallback(
@@ -53,11 +56,14 @@ export function useBookmarkStore() {
     []
   );
 
-  const bookmarks = data.bookmarks;
-  const categories = data.categories;
-  const settings = data.settings;
+  const bookmarks = data?.bookmarks || [];
+  const categories = data?.categories || [];
+  const settings = data?.settings || {} as PluginSettings;
 
-  const categoryTree = buildCategoryTree(categories);
+  const categoryTree = useMemo(() => {
+    if (categories.length === 0) return [];
+    return buildCategoryTree(categories);
+  }, [categories]);
 
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
@@ -65,7 +71,7 @@ export function useBookmarkStore() {
       if (b.tags) b.tags.forEach((t) => tagSet.add(t));
     });
     const all = Array.from(tagSet);
-    const orderMap = new Map(settings.tagOrder.map((t, i) => [t, i]));
+    const orderMap = new Map((settings.tagOrder || []).map((t, i) => [t, i]));
     return all.sort((a, b) => {
       const aIdx = orderMap.get(a);
       const bIdx = orderMap.get(b);
@@ -76,7 +82,8 @@ export function useBookmarkStore() {
     });
   }, [bookmarks, settings.tagOrder]);
 
-  const filteredBookmarks = (() => {
+  const filteredBookmarks = useMemo(() => {
+    if (!data) return [];
     let result = bookmarks;
 
     if (selectedCategoryId !== 'all') {
@@ -110,17 +117,18 @@ export function useBookmarkStore() {
       result = filterBookmarks(result, searchQuery);
     }
 
-    return sortBookmarks(result, settings.sortBy, settings.sortOrder);
-  })();
+    return sortBookmarks(result, settings.sortBy || 'createdAt', settings.sortOrder || 'desc');
+  }, [data, bookmarks, categories, selectedCategoryId, selectedTags, searchQuery, settings]);
 
   const addBookmark = useCallback(
-    (bookmarkData: Omit<Bookmark, 'id' | 'createdAt' | 'updatedAt'>) => {
+    async (bookmarkData: Omit<Bookmark, 'id' | 'createdAt' | 'updatedAt'>) => {
+      if (!data) return;
       const bookmark = createBookmark(bookmarkData);
       const nextData = {
         ...data,
         bookmarks: [...data.bookmarks, bookmark]
       };
-      persist(nextData);
+      await persist(nextData);
       addToast('书签添加成功', 'success');
       return bookmark;
     },
@@ -128,38 +136,41 @@ export function useBookmarkStore() {
   );
 
   const updateBookmark = useCallback(
-    (id: string, changes: Partial<Bookmark>) => {
+    async (id: string, changes: Partial<Bookmark>) => {
+      if (!data) return;
       const nextData = {
         ...data,
         bookmarks: data.bookmarks.map((b) =>
           b.id === id ? modifyBookmark(b, changes) : b
         )
       };
-      persist(nextData);
+      await persist(nextData);
       addToast('书签更新成功', 'success');
     },
     [data, persist, addToast]
   );
 
   const deleteBookmark = useCallback(
-    (id: string) => {
+    async (id: string) => {
+      if (!data) return;
       const nextData = {
         ...data,
         bookmarks: data.bookmarks.filter((b) => b.id !== id)
       };
-      persist(nextData);
+      await persist(nextData);
       addToast('书签已删除', 'success');
     },
     [data, persist, addToast]
   );
 
   const bulkDeleteBookmarks = useCallback(
-    (ids: string[]) => {
+    async (ids: string[]) => {
+      if (!data) return;
       const nextData = {
         ...data,
         bookmarks: data.bookmarks.filter((b) => !ids.includes(b.id))
       };
-      persist(nextData);
+      await persist(nextData);
       setSelectedBookmarks(new Set());
       addToast(`已删除 ${ids.length} 个书签`, 'success');
     },
@@ -187,52 +198,56 @@ export function useBookmarkStore() {
   }, []);
 
   const addCategory = useCallback(
-    (name: string, parentId: string | null = null) => {
+    async (name: string, parentId: string | null = null) => {
+      if (!data) return;
       const order = getNextOrder(
-        categories.filter((c) => c.parentId === parentId)
+        data.categories.filter((c) => c.parentId === parentId)
       );
       const category = createCategory(name, parentId, order);
       const nextData = {
         ...data,
         categories: [...data.categories, category]
       };
-      persist(nextData);
+      await persist(nextData);
       addToast('分类添加成功', 'success');
       return category;
     },
-    [data, categories, persist, addToast]
+    [data, persist, addToast]
   );
 
   const updateCategory = useCallback(
-    (id: string, name: string) => {
+    async (id: string, name: string) => {
+      if (!data) return;
       const nextData = {
         ...data,
         categories: data.categories.map((c) =>
           c.id === id ? { ...c, name } : c
         )
       };
-      persist(nextData);
+      await persist(nextData);
       addToast('分类更新成功', 'success');
     },
     [data, persist, addToast]
   );
 
   const updateCategoryColor = useCallback(
-    (id: string, color: CategoryColor) => {
+    async (id: string, color: string | null) => {
+      if (!data) return;
       const nextData = {
         ...data,
         categories: data.categories.map((c) =>
-          c.id === id ? { ...c, color } : c
+          c.id === id ? { ...c, color: color as any } : c
         )
       };
-      persist(nextData);
+      await persist(nextData);
       addToast(color ? '已标记颜色' : '已取消标记', 'success');
     },
     [data, persist, addToast]
   );
 
   const deleteCategory = useCallback(
-    (id: string) => {
+    async (id: string) => {
+      if (!data) return;
       if (categories.filter((c) => c.parentId === id).length > 0) {
         addToast('请先删除子分类', 'warning');
         return;
@@ -248,7 +263,7 @@ export function useBookmarkStore() {
           ? { ...data.settings, defaultCategory: null }
           : data.settings
       };
-      persist(nextData);
+      await persist(nextData);
       if (isDefault) {
         setSelectedCategoryId('all');
       }
@@ -258,7 +273,8 @@ export function useBookmarkStore() {
   );
 
   const reorderCategory = useCallback(
-    (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => {
+    async (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => {
+      if (!data) return;
       const dragged = categories.find((c) => c.id === draggedId);
       if (!dragged) return;
 
@@ -328,10 +344,10 @@ export function useBookmarkStore() {
             : c
         )
       };
-      persist(nextData);
+      await persist(nextData);
       addToast('分类已移动', 'success');
     },
-    [categories, data, persist, addToast]
+    [data, categories, persist, addToast]
   );
 
   const toggleTag = useCallback((tag: string) => {
@@ -351,18 +367,21 @@ export function useBookmarkStore() {
   }, []);
 
   const updateSettings = useCallback(
-    (changes: Partial<PluginSettings>) => {
+    async (changes: Partial<PluginSettings>) => {
+      if (!data) return;
       const nextData = {
         ...data,
         settings: { ...data.settings, ...changes }
       };
-      persist(nextData);
+      await persist(nextData);
     },
     [data, persist]
   );
 
   const importData = useCallback(
-    (content: string, format: ImportFormat, mode: 'merge' | 'replace' = 'merge'): ImportResult => {
+    async (content: string, format: ImportFormat, mode: 'merge' | 'replace' = 'merge'): Promise<ImportResult> => {
+      if (!data) return { categories: [], bookmarks: [], conflicts: 0, total: 0 };
+
       let result: ImportResult;
 
       switch (format) {
@@ -402,7 +421,7 @@ export function useBookmarkStore() {
               data.settings.defaultCategory || uncategorizedId
           }
         };
-        persist(nextData);
+        await persist(nextData);
       } else {
         const existingIds = new Set(data.bookmarks.map((b) => b.url));
         const newBookmarks = result.bookmarks.filter(
@@ -419,7 +438,7 @@ export function useBookmarkStore() {
           bookmarks: [...data.bookmarks, ...newBookmarks],
           categories: [...data.categories, ...newCategories]
         };
-        persist(nextData);
+        await persist(nextData);
         result = {
           ...result,
           bookmarks: newBookmarks,
@@ -434,11 +453,9 @@ export function useBookmarkStore() {
     [data, persist, addToast]
   );
 
-  const resetAllData = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('toolbox.favorite-plugin.data');
-    }
-    setData(loadData());
+  const resetAllData = useCallback(async () => {
+    const newData = await resetStorage();
+    setData(newData);
     setSearchQuery('');
     setSelectedCategoryId('all');
     setSelectedTags(new Set());

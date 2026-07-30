@@ -20,7 +20,7 @@ interface ImportExportModalProps {
   onClose: () => void;
   data: PluginData;
   bookmarks: Bookmark[];
-  onImport: (content: string, format: 'html' | 'json' | 'txt', mode: 'merge' | 'replace') => ImportResult;
+  onImport: (content: string, format: 'html' | 'json' | 'txt', mode: 'merge' | 'replace') => ImportResult | Promise<ImportResult>;
 }
 
 const ImportExportModal: React.FC<ImportExportModalProps> = ({

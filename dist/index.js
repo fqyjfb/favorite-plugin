@@ -13056,7 +13056,8 @@ input, select, textarea, button {
   function generateCategoryId() {
     return generateId("cat");
   }
-  const STORAGE_KEY = "toolbox.favorite-plugin.data";
+  const STORAGE_KEY = "plugin-favorite";
+  const DATA_KEY = "data";
   const DATA_VERSION = "1.0.0";
   const DEFAULT_SETTINGS = {
     viewMode: "card",
@@ -13068,6 +13069,14 @@ input, select, textarea, button {
     tagOrder: [],
     hiddenTags: []
   };
+  function getPluginContext() {
+    var _a, _b;
+    const pluginData = window.__PLUGIN_DATA__;
+    const pluginId = (pluginData == null ? void 0 : pluginData.pluginId) || STORAGE_KEY;
+    const userId = (pluginData == null ? void 0 : pluginData.userId) || "default";
+    const isElectron = !!((_b = (_a = window.electron) == null ? void 0 : _a.plugin) == null ? void 0 : _b.storage);
+    return { pluginId, userId, isElectron };
+  }
   function createDefaultData() {
     const now2 = (/* @__PURE__ */ new Date()).toISOString();
     const uncategorizedId = generateCategoryId();
@@ -13086,38 +13095,73 @@ input, select, textarea, button {
       settings: { ...DEFAULT_SETTINGS, defaultCategory: uncategorizedId }
     };
   }
-  function loadData() {
+  async function loadFromLocalStorage() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        const data = createDefaultData();
-        saveData(data);
-        return data;
-      }
+      const raw = localStorage.getItem("toolbox.favorite-plugin.data");
+      if (!raw) return null;
       const parsed = JSON.parse(raw);
-      if (!parsed.version) {
-        return createDefaultData();
-      }
-      if (!parsed.settings) {
-        parsed.settings = { ...DEFAULT_SETTINGS };
-      } else {
-        if (parsed.settings.tagDisplayLimit === void 0) parsed.settings.tagDisplayLimit = 5;
-        if (!parsed.settings.tagOrder) parsed.settings.tagOrder = [];
-        if (!parsed.settings.hiddenTags) parsed.settings.hiddenTags = [];
-      }
-      if (!parsed.bookmarks) parsed.bookmarks = [];
-      if (!parsed.categories) parsed.categories = [];
-      return parsed;
+      if (!parsed.version) return null;
+      return migrateData(parsed);
     } catch {
-      return createDefaultData();
+      return null;
     }
   }
-  function saveData(data) {
+  async function loadFromSQLite() {
+    const { pluginId, userId, isElectron } = getPluginContext();
+    if (!isElectron) return null;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      const result = await window.electron.plugin.storage.get(pluginId, userId, DATA_KEY);
+      if (result) {
+        const parsed = typeof result === "string" ? JSON.parse(result) : result;
+        return migrateData(parsed);
+      }
+      return null;
     } catch {
-      console.error("Failed to save data to localStorage");
+      return null;
     }
+  }
+  function migrateData(data) {
+    if (!data.settings) {
+      data.settings = { ...DEFAULT_SETTINGS };
+    } else {
+      if (data.settings.tagDisplayLimit === void 0) data.settings.tagDisplayLimit = 5;
+      if (!data.settings.tagOrder) data.settings.tagOrder = [];
+      if (!data.settings.hiddenTags) data.settings.hiddenTags = [];
+    }
+    if (!data.bookmarks) data.bookmarks = [];
+    if (!data.categories) data.categories = [];
+    if (data.version !== DATA_VERSION) {
+      data.version = DATA_VERSION;
+    }
+    return data;
+  }
+  async function loadData() {
+    const sqliteData = await loadFromSQLite();
+    if (sqliteData) {
+      return sqliteData;
+    }
+    const localData = await loadFromLocalStorage();
+    if (localData) {
+      await saveData(localData);
+      return localData;
+    }
+    return createDefaultData();
+  }
+  async function saveData(data) {
+    const { pluginId, userId, isElectron } = getPluginContext();
+    try {
+      if (isElectron) {
+        await window.electron.plugin.storage.set(pluginId, userId, DATA_KEY, data);
+      }
+      localStorage.setItem("toolbox.favorite-plugin.data", JSON.stringify(data));
+    } catch (error) {
+      console.error("Failed to save data:", error);
+    }
+  }
+  async function resetData() {
+    const data = createDefaultData();
+    await saveData(data);
+    return data;
   }
   function addBookmark(data) {
     const now2 = (/* @__PURE__ */ new Date()).toISOString();
@@ -13389,7 +13433,7 @@ input, select, textarea, button {
     };
   }
   function useBookmarkStore() {
-    const [data, setData] = reactExports.useState(() => loadData());
+    const [data, setData] = reactExports.useState(null);
     const [searchQuery, setSearchQuery] = reactExports.useState("");
     const [selectedCategoryId, setSelectedCategoryId] = reactExports.useState("all");
     const [selectedTags, setSelectedTags] = reactExports.useState(/* @__PURE__ */ new Set());
@@ -13399,11 +13443,14 @@ input, select, textarea, button {
     reactExports.useEffect(() => {
       if (!initialized.current) {
         initialized.current = true;
+        loadData().then((loadedData) => {
+          setData(loadedData);
+        });
       }
     }, []);
-    const persist = reactExports.useCallback((nextData) => {
+    const persist = reactExports.useCallback(async (nextData) => {
       setData(nextData);
-      saveData(nextData);
+      await saveData(nextData);
     }, []);
     const addToast = reactExports.useCallback(
       (message, type = "info") => {
@@ -13415,17 +13462,20 @@ input, select, textarea, button {
       },
       []
     );
-    const bookmarks = data.bookmarks;
-    const categories = data.categories;
-    const settings = data.settings;
-    const categoryTree = buildCategoryTree(categories);
+    const bookmarks = (data == null ? void 0 : data.bookmarks) || [];
+    const categories = (data == null ? void 0 : data.categories) || [];
+    const settings = (data == null ? void 0 : data.settings) || {};
+    const categoryTree = reactExports.useMemo(() => {
+      if (categories.length === 0) return [];
+      return buildCategoryTree(categories);
+    }, [categories]);
     const allTags = reactExports.useMemo(() => {
       const tagSet = /* @__PURE__ */ new Set();
       bookmarks.forEach((b) => {
         if (b.tags) b.tags.forEach((t) => tagSet.add(t));
       });
       const all = Array.from(tagSet);
-      const orderMap = new Map(settings.tagOrder.map((t, i) => [t, i]));
+      const orderMap = new Map((settings.tagOrder || []).map((t, i) => [t, i]));
       return all.sort((a, b) => {
         const aIdx = orderMap.get(a);
         const bIdx = orderMap.get(b);
@@ -13435,7 +13485,8 @@ input, select, textarea, button {
         return a.localeCompare(b);
       });
     }, [bookmarks, settings.tagOrder]);
-    const filteredBookmarks = (() => {
+    const filteredBookmarks = reactExports.useMemo(() => {
+      if (!data) return [];
       let result = bookmarks;
       if (selectedCategoryId !== "all") {
         if (selectedCategoryId) {
@@ -13468,52 +13519,56 @@ input, select, textarea, button {
       if (searchQuery.trim()) {
         result = searchBookmarks(result, searchQuery);
       }
-      return sortBookmarks(result, settings.sortBy, settings.sortOrder);
-    })();
+      return sortBookmarks(result, settings.sortBy || "createdAt", settings.sortOrder || "desc");
+    }, [data, bookmarks, categories, selectedCategoryId, selectedTags, searchQuery, settings]);
     const addBookmark$1 = reactExports.useCallback(
-      (bookmarkData) => {
+      async (bookmarkData) => {
+        if (!data) return;
         const bookmark = addBookmark(bookmarkData);
         const nextData = {
           ...data,
           bookmarks: [...data.bookmarks, bookmark]
         };
-        persist(nextData);
+        await persist(nextData);
         addToast("书签添加成功", "success");
         return bookmark;
       },
       [data, persist, addToast]
     );
     const updateBookmark$1 = reactExports.useCallback(
-      (id, changes) => {
+      async (id, changes) => {
+        if (!data) return;
         const nextData = {
           ...data,
           bookmarks: data.bookmarks.map(
             (b) => b.id === id ? updateBookmark(b, changes) : b
           )
         };
-        persist(nextData);
+        await persist(nextData);
         addToast("书签更新成功", "success");
       },
       [data, persist, addToast]
     );
     const deleteBookmark = reactExports.useCallback(
-      (id) => {
+      async (id) => {
+        if (!data) return;
         const nextData = {
           ...data,
           bookmarks: data.bookmarks.filter((b) => b.id !== id)
         };
-        persist(nextData);
+        await persist(nextData);
         addToast("书签已删除", "success");
       },
       [data, persist, addToast]
     );
     const bulkDeleteBookmarks = reactExports.useCallback(
-      (ids) => {
+      async (ids) => {
+        if (!data) return;
         const nextData = {
           ...data,
           bookmarks: data.bookmarks.filter((b) => !ids.includes(b.id))
         };
-        persist(nextData);
+        await persist(nextData);
         setSelectedBookmarks(/* @__PURE__ */ new Set());
         addToast(`已删除 ${ids.length} 个书签`, "success");
       },
@@ -13537,49 +13592,53 @@ input, select, textarea, button {
       setSelectedBookmarks(/* @__PURE__ */ new Set());
     }, []);
     const addCategory$1 = reactExports.useCallback(
-      (name, parentId = null) => {
+      async (name, parentId = null) => {
+        if (!data) return;
         const order = getNextOrder(
-          categories.filter((c) => c.parentId === parentId)
+          data.categories.filter((c) => c.parentId === parentId)
         );
         const category = addCategory(name, parentId, order);
         const nextData = {
           ...data,
           categories: [...data.categories, category]
         };
-        persist(nextData);
+        await persist(nextData);
         addToast("分类添加成功", "success");
         return category;
       },
-      [data, categories, persist, addToast]
+      [data, persist, addToast]
     );
     const updateCategory = reactExports.useCallback(
-      (id, name) => {
+      async (id, name) => {
+        if (!data) return;
         const nextData = {
           ...data,
           categories: data.categories.map(
             (c) => c.id === id ? { ...c, name } : c
           )
         };
-        persist(nextData);
+        await persist(nextData);
         addToast("分类更新成功", "success");
       },
       [data, persist, addToast]
     );
     const updateCategoryColor = reactExports.useCallback(
-      (id, color) => {
+      async (id, color) => {
+        if (!data) return;
         const nextData = {
           ...data,
           categories: data.categories.map(
             (c) => c.id === id ? { ...c, color } : c
           )
         };
-        persist(nextData);
+        await persist(nextData);
         addToast(color ? "已标记颜色" : "已取消标记", "success");
       },
       [data, persist, addToast]
     );
     const deleteCategory = reactExports.useCallback(
-      (id) => {
+      async (id) => {
+        if (!data) return;
         if (categories.filter((c) => c.parentId === id).length > 0) {
           addToast("请先删除子分类", "warning");
           return;
@@ -13593,7 +13652,7 @@ input, select, textarea, button {
           ),
           settings: isDefault ? { ...data.settings, defaultCategory: null } : data.settings
         };
-        persist(nextData);
+        await persist(nextData);
         if (isDefault) {
           setSelectedCategoryId("all");
         }
@@ -13602,7 +13661,8 @@ input, select, textarea, button {
       [data, categories, persist, addToast]
     );
     const reorderCategory = reactExports.useCallback(
-      (draggedId, targetId, position) => {
+      async (draggedId, targetId, position) => {
+        if (!data) return;
         const dragged = categories.find((c) => c.id === draggedId);
         if (!dragged) return;
         const descendants = /* @__PURE__ */ new Set();
@@ -13662,10 +13722,10 @@ input, select, textarea, button {
             (c) => c.id === draggedId ? { ...c, parentId: newParentId, order: newOrder } : c
           )
         };
-        persist(nextData);
+        await persist(nextData);
         addToast("分类已移动", "success");
       },
-      [categories, data, persist, addToast]
+      [data, categories, persist, addToast]
     );
     const toggleTag = reactExports.useCallback((tag) => {
       setSelectedTags((prev) => {
@@ -13682,18 +13742,20 @@ input, select, textarea, button {
       setSelectedTags(/* @__PURE__ */ new Set());
     }, []);
     const updateSettings = reactExports.useCallback(
-      (changes) => {
+      async (changes) => {
+        if (!data) return;
         const nextData = {
           ...data,
           settings: { ...data.settings, ...changes }
         };
-        persist(nextData);
+        await persist(nextData);
       },
       [data, persist]
     );
     const importData = reactExports.useCallback(
-      (content, format, mode = "merge") => {
+      async (content, format, mode = "merge") => {
         var _a;
+        if (!data) return { categories: [], bookmarks: [], conflicts: 0, total: 0 };
         let result;
         switch (format) {
           case "html":
@@ -13729,7 +13791,7 @@ input, select, textarea, button {
               defaultCategory: data.settings.defaultCategory || uncategorizedId
             }
           };
-          persist(nextData);
+          await persist(nextData);
         } else {
           const existingIds = new Set(data.bookmarks.map((b) => b.url));
           const newBookmarks = result.bookmarks.filter(
@@ -13746,7 +13808,7 @@ input, select, textarea, button {
             bookmarks: [...data.bookmarks, ...newBookmarks],
             categories: [...data.categories, ...newCategories]
           };
-          persist(nextData);
+          await persist(nextData);
           result = {
             ...result,
             bookmarks: newBookmarks,
@@ -13759,11 +13821,9 @@ input, select, textarea, button {
       },
       [data, persist, addToast]
     );
-    const resetAllData = reactExports.useCallback(() => {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("toolbox.favorite-plugin.data");
-      }
-      setData(loadData());
+    const resetAllData = reactExports.useCallback(async () => {
+      const newData = await resetData();
+      setData(newData);
       setSearchQuery("");
       setSelectedCategoryId("all");
       setSelectedTags(/* @__PURE__ */ new Set());
@@ -14487,12 +14547,14 @@ input, select, textarea, button {
     return result;
   }
   const PRESET_TAGS = [
+    "搜索",
     "工作",
     "学习",
     "工具",
     "设计",
     "前端",
     "后端",
+    "AI",
     "阅读",
     "参考",
     "收藏",
@@ -14501,7 +14563,8 @@ input, select, textarea, button {
     "资源",
     "教程",
     "文档",
-    "开源"
+    "开源",
+    "VPN"
   ];
   const BookmarkForm = ({
     bookmark,

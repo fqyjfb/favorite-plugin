@@ -1,7 +1,8 @@
 import type { PluginData, Bookmark, Category, PluginSettings } from '../types';
 import { generateBookmarkId, generateCategoryId } from '../utils/id';
 
-const STORAGE_KEY = 'toolbox.favorite-plugin.data';
+const STORAGE_KEY = 'plugin-favorite';
+const DATA_KEY = 'data';
 const DATA_VERSION = '1.0.0';
 
 const DEFAULT_SETTINGS: PluginSettings = {
@@ -14,6 +15,14 @@ const DEFAULT_SETTINGS: PluginSettings = {
   tagOrder: [],
   hiddenTags: []
 };
+
+function getPluginContext() {
+  const pluginData = (window as any).__PLUGIN_DATA__;
+  const pluginId = pluginData?.pluginId || STORAGE_KEY;
+  const userId = pluginData?.userId || 'default';
+  const isElectron = !!(window as any).electron?.plugin?.storage;
+  return { pluginId, userId, isElectron };
+}
 
 function createDefaultData(): PluginData {
   const now = new Date().toISOString();
@@ -34,44 +43,81 @@ function createDefaultData(): PluginData {
   };
 }
 
-export function loadData(): PluginData {
+async function loadFromLocalStorage(): Promise<PluginData | null> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      const data = createDefaultData();
-      saveData(data);
-      return data;
-    }
+    const raw = localStorage.getItem('toolbox.favorite-plugin.data');
+    if (!raw) return null;
     const parsed = JSON.parse(raw) as PluginData;
-    if (!parsed.version) {
-      return createDefaultData();
-    }
-    if (!parsed.settings) {
-      parsed.settings = { ...DEFAULT_SETTINGS };
-    } else {
-      if (parsed.settings.tagDisplayLimit === undefined) parsed.settings.tagDisplayLimit = 5;
-      if (!parsed.settings.tagOrder) parsed.settings.tagOrder = [];
-      if (!parsed.settings.hiddenTags) parsed.settings.hiddenTags = [];
-    }
-    if (!parsed.bookmarks) parsed.bookmarks = [];
-    if (!parsed.categories) parsed.categories = [];
-    return parsed;
+    if (!parsed.version) return null;
+    return migrateData(parsed);
   } catch {
-    return createDefaultData();
+    return null;
   }
 }
 
-export function saveData(data: PluginData): void {
+async function loadFromSQLite(): Promise<PluginData | null> {
+  const { pluginId, userId, isElectron } = getPluginContext();
+  if (!isElectron) return null;
+
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const result = await (window as any).electron.plugin.storage.get(pluginId, userId, DATA_KEY);
+    if (result) {
+      const parsed = (typeof result === 'string' ? JSON.parse(result) : result) as PluginData;
+      return migrateData(parsed);
+    }
+    return null;
   } catch {
-    console.error('Failed to save data to localStorage');
+    return null;
   }
 }
 
-export function resetData(): PluginData {
+function migrateData(data: PluginData): PluginData {
+  if (!data.settings) {
+    data.settings = { ...DEFAULT_SETTINGS };
+  } else {
+    if (data.settings.tagDisplayLimit === undefined) data.settings.tagDisplayLimit = 5;
+    if (!data.settings.tagOrder) data.settings.tagOrder = [];
+    if (!data.settings.hiddenTags) data.settings.hiddenTags = [];
+  }
+  if (!data.bookmarks) data.bookmarks = [];
+  if (!data.categories) data.categories = [];
+  if (data.version !== DATA_VERSION) {
+    data.version = DATA_VERSION;
+  }
+  return data;
+}
+
+export async function loadData(): Promise<PluginData> {
+  const sqliteData = await loadFromSQLite();
+  if (sqliteData) {
+    return sqliteData;
+  }
+
+  const localData = await loadFromLocalStorage();
+  if (localData) {
+    await saveData(localData);
+    return localData;
+  }
+
+  return createDefaultData();
+}
+
+export async function saveData(data: PluginData): Promise<void> {
+  const { pluginId, userId, isElectron } = getPluginContext();
+
+  try {
+    if (isElectron) {
+      await (window as any).electron.plugin.storage.set(pluginId, userId, DATA_KEY, data);
+    }
+    localStorage.setItem('toolbox.favorite-plugin.data', JSON.stringify(data));
+  } catch (error) {
+    console.error('Failed to save data:', error);
+  }
+}
+
+export async function resetData(): Promise<PluginData> {
   const data = createDefaultData();
-  saveData(data);
+  await saveData(data);
   return data;
 }
 
