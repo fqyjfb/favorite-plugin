@@ -1,7 +1,11 @@
 :root {
+  /* 原生控件（复选框 / 下拉 / 数字输入框 / 滚动条）按当前明暗渲染 */
+  color-scheme: light;
   --color-primary: #2563eb;
   --color-primary-dark: #1d4ed8;
   --color-primary-light: #3b82f6;
+  /* 主色作为文字色使用时的取值，保证在页面底色上可读 */
+  --color-primary-text: #1d4ed8;
   --color-neutral-50: #f9fafb;
   --color-neutral-100: #f3f4f6;
   --color-neutral-200: #e5e7eb;
@@ -15,6 +19,8 @@
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
+  /* 危险项的浅色底：浅色模式用极浅红，深色模式用低透明度红（见 .dark） */
+  --color-error-soft: #fef2f2;
   --color-bg: #f8f9fa;
   --color-bg-card: #ffffff;
   --color-text: #111827;
@@ -34,14 +40,24 @@
   --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
 }
 
+/* 深色模式（含以深色为基色的自定义主题）：主程序会在 <html> / <body> 上挂 dark class */
 .dark {
+  color-scheme: dark;
+  --color-primary-text: #93c5fd;
+  --color-error-soft: rgba(239, 68, 68, 0.18);
   --color-bg: #111827;
   --color-bg-card: #1f2937;
-  --color-neutral-100: #1f2937;
-  --color-neutral-200: #374151;
-  --color-neutral-300: #4b5563;
-  --color-neutral-400: #6b7280;
-  --color-neutral-500: #9ca3af;
+  /* 中性色整体反转：数值越大越亮，--color-neutral-50 是最深的内嵌块底色 */
+  --color-neutral-50: #111827;
+  --color-neutral-100: #374151;
+  --color-neutral-200: #4b5563;
+  --color-neutral-300: #6b7280;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #d1d5db;
+  --color-neutral-600: #d1d5db;
+  --color-neutral-700: #e5e7eb;
+  --color-neutral-800: #f3f4f6;
+  --color-neutral-900: #f9fafb;
   --color-text: #f3f4f6;
   --color-text-secondary: #d1d5db;
   --color-text-tertiary: #9ca3af;
@@ -62,6 +78,18 @@ body, html, #root {
 input, select, textarea, button {
   font-family: inherit;
   font-size: inherit;
+}
+
+/* 原生复选框 / 单选框跟随品牌色，避免深色模式下出现浅色方块 */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-primary);
+}
+
+/* 输入框占位符在深浅两种底色上都要可辨 */
+::placeholder {
+  color: var(--color-text-tertiary);
+  opacity: 1;
 }
 
 .fp-btn-primary {
@@ -175,7 +203,7 @@ input, select, textarea, button {
   color: var(--color-error);
 }
 .fp-context-menu-item.danger:hover {
-  background-color: #fef2f2;
+  background-color: var(--color-error-soft);
 }
 .fp-context-menu-separator {
   height: 1px;

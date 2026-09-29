@@ -131,7 +131,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           backgroundColor: isDropTarget && dropPosition === 'child'
             ? 'var(--color-primary)' + '33'
             : (isSelected ? 'var(--color-primary)' + '1a' : 'transparent'),
-          color: isSelected ? 'var(--color-primary)' : 'var(--color-text)',
+          color: isSelected ? 'var(--color-primary-text)' : 'var(--color-text)',
           opacity: isDragging ? 0.5 : 1,
           borderTop: isDropTarget && dropPosition === 'before' ? '2px solid var(--color-primary)' : undefined,
           borderBottom: isDropTarget && dropPosition === 'after' ? '2px solid var(--color-primary)' : undefined,
@@ -559,7 +559,7 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
           cursor: 'pointer',
           transition: 'background-color 0.15s',
           backgroundColor: selectedCategoryId === 'all' ? 'var(--color-primary)' + '1a' : 'transparent',
-          color: selectedCategoryId === 'all' ? 'var(--color-primary)' : 'var(--color-text)'
+          color: selectedCategoryId === 'all' ? 'var(--color-primary-text)' : 'var(--color-text)'
         }}
         onMouseEnter={(e) => { if (selectedCategoryId !== 'all') e.currentTarget.style.backgroundColor = 'var(--color-neutral-100)'; }}
         onMouseLeave={(e) => { if (selectedCategoryId !== 'all') e.currentTarget.style.backgroundColor = 'transparent'; }}
@@ -583,7 +583,7 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
           cursor: 'pointer',
           transition: 'background-color 0.15s',
           backgroundColor: selectedCategoryId === null ? 'var(--color-primary)' + '1a' : 'transparent',
-          color: selectedCategoryId === null ? 'var(--color-primary)' : 'var(--color-text)'
+          color: selectedCategoryId === null ? 'var(--color-primary-text)' : 'var(--color-text)'
         }}
         onMouseEnter={(e) => { if (selectedCategoryId !== null) e.currentTarget.style.backgroundColor = 'var(--color-neutral-100)'; }}
         onMouseLeave={(e) => { if (selectedCategoryId !== null) e.currentTarget.style.backgroundColor = 'transparent'; }}

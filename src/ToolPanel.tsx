@@ -609,7 +609,7 @@ const ToolPanel: React.FC = () => {
         <span>
           共 {bookmarks.length} 个书签 · {categories.length} 个分类
           {selectedBookmarks.size > 0 && (
-            <span style={{ marginLeft: 12, color: 'var(--color-primary)', fontWeight: 500 }}>
+            <span style={{ marginLeft: 12, color: 'var(--color-primary-text)', fontWeight: 500 }}>
               已选 {selectedBookmarks.size} 个
             </span>
           )}
@@ -900,12 +900,12 @@ const ToolPanel: React.FC = () => {
                             style={{
                               display: 'flex', alignItems: 'center', gap: '8px',
                               padding: '6px 8px', borderRadius: '4px',
-                              background: 'var(--color-neutral-50)',
+                              background: 'var(--color-neutral-100)',
                               cursor: 'grab',
                               transition: 'background-color 0.15s'
                             }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-neutral-100)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-neutral-50)'; }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-neutral-200)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-neutral-100)'; }}
                           >
                             <input
                               type="checkbox"
@@ -916,9 +916,9 @@ const ToolPanel: React.FC = () => {
                                   : [...settings.hiddenTags, tag];
                                 updateSettings({ hiddenTags: newHidden });
                               }}
-                              style={{ margin: 0 }}
+                              style={{ margin: 0, cursor: 'pointer', accentColor: 'var(--color-primary)' }}
                             />
-                            <span style={{ flex: 1, fontSize: '13px', color: hidden ? 'var(--color-text-tertiary)' : 'var(--color-text)', textDecoration: hidden ? 'line-through' : 'none' }}>
+                            <span style={{ flex: 1, fontSize: '13px', color: hidden ? 'var(--color-text-secondary)' : 'var(--color-text)', textDecoration: hidden ? 'line-through' : 'none' }}>
                               {tag}
                             </span>
                             <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>⋮⋮</span>

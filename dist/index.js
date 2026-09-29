@@ -2,9 +2,13 @@
   "use strict";
   var __vite_style__ = document.createElement("style");
   __vite_style__.textContent = `:root {
+  /* 原生控件（复选框 / 下拉 / 数字输入框 / 滚动条）按当前明暗渲染 */
+  color-scheme: light;
   --color-primary: #2563eb;
   --color-primary-dark: #1d4ed8;
   --color-primary-light: #3b82f6;
+  /* 主色作为文字色使用时的取值，保证在页面底色上可读 */
+  --color-primary-text: #1d4ed8;
   --color-neutral-50: #f9fafb;
   --color-neutral-100: #f3f4f6;
   --color-neutral-200: #e5e7eb;
@@ -18,6 +22,8 @@
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
+  /* 危险项的浅色底：浅色模式用极浅红，深色模式用低透明度红（见 .dark） */
+  --color-error-soft: #fef2f2;
   --color-bg: #f8f9fa;
   --color-bg-card: #ffffff;
   --color-text: #111827;
@@ -37,14 +43,24 @@
   --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
 }
 
+/* 深色模式（含以深色为基色的自定义主题）：主程序会在 <html> / <body> 上挂 dark class */
 .dark {
+  color-scheme: dark;
+  --color-primary-text: #93c5fd;
+  --color-error-soft: rgba(239, 68, 68, 0.18);
   --color-bg: #111827;
   --color-bg-card: #1f2937;
-  --color-neutral-100: #1f2937;
-  --color-neutral-200: #374151;
-  --color-neutral-300: #4b5563;
-  --color-neutral-400: #6b7280;
-  --color-neutral-500: #9ca3af;
+  /* 中性色整体反转：数值越大越亮，--color-neutral-50 是最深的内嵌块底色 */
+  --color-neutral-50: #111827;
+  --color-neutral-100: #374151;
+  --color-neutral-200: #4b5563;
+  --color-neutral-300: #6b7280;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #d1d5db;
+  --color-neutral-600: #d1d5db;
+  --color-neutral-700: #e5e7eb;
+  --color-neutral-800: #f3f4f6;
+  --color-neutral-900: #f9fafb;
   --color-text: #f3f4f6;
   --color-text-secondary: #d1d5db;
   --color-text-tertiary: #9ca3af;
@@ -65,6 +81,18 @@ body, html, #root {
 input, select, textarea, button {
   font-family: inherit;
   font-size: inherit;
+}
+
+/* 原生复选框 / 单选框跟随品牌色，避免深色模式下出现浅色方块 */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-primary);
+}
+
+/* 输入框占位符在深浅两种底色上都要可辨 */
+::placeholder {
+  color: var(--color-text-tertiary);
+  opacity: 1;
 }
 
 .fp-btn-primary {
@@ -178,7 +206,7 @@ input, select, textarea, button {
   color: var(--color-error);
 }
 .fp-context-menu-item.danger:hover {
-  background-color: #fef2f2;
+  background-color: var(--color-error-soft);
 }
 .fp-context-menu-separator {
   height: 1px;
@@ -658,7 +686,7 @@ input, select, textarea, button {
   react_production.useTransition = function() {
     return ReactSharedInternals$2.H.useTransition();
   };
-  react_production.version = "19.2.7";
+  react_production.version = "19.2.8";
   {
     react.exports = react_production;
   }
@@ -1081,7 +1109,7 @@ input, select, textarea, button {
   reactDom_production.useFormStatus = function() {
     return ReactSharedInternals$1.H.useHostTransitionStatus();
   };
-  reactDom_production.version = "19.2.7";
+  reactDom_production.version = "19.2.8";
   function checkDCE$1() {
     if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === "undefined" || typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE !== "function") {
       return;
@@ -12523,12 +12551,12 @@ input, select, textarea, button {
     }
   };
   var isomorphicReactPackageVersion$jscomp$inline_1840 = React.version;
-  if ("19.2.7" !== isomorphicReactPackageVersion$jscomp$inline_1840)
+  if ("19.2.8" !== isomorphicReactPackageVersion$jscomp$inline_1840)
     throw Error(
       formatProdErrorMessage(
         527,
         isomorphicReactPackageVersion$jscomp$inline_1840,
-        "19.2.7"
+        "19.2.8"
       )
     );
   ReactDOMSharedInternals.findDOMNode = function(componentOrElement) {
@@ -12546,10 +12574,10 @@ input, select, textarea, button {
   };
   var internals$jscomp$inline_2347 = {
     bundleType: 0,
-    version: "19.2.7",
+    version: "19.2.8",
     rendererPackageName: "react-dom",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.2.7"
+    reconcilerVersion: "19.2.8"
   };
   if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
     var hook$jscomp$inline_2348 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -12616,7 +12644,7 @@ input, select, textarea, button {
     listenToAllSupportedEvents(container);
     return new ReactDOMHydrationRoot(initialChildren);
   };
-  reactDomClient_production.version = "19.2.7";
+  reactDomClient_production.version = "19.2.8";
   function checkDCE() {
     if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === "undefined" || typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE !== "function") {
       return;
@@ -13942,7 +13970,7 @@ input, select, textarea, button {
             cursor: isEditing ? "text" : "pointer",
             transition: "background-color 0.15s",
             backgroundColor: isDropTarget && dropPosition === "child" ? "var(--color-primary)33" : isSelected ? "var(--color-primary)1a" : "transparent",
-            color: isSelected ? "var(--color-primary)" : "var(--color-text)",
+            color: isSelected ? "var(--color-primary-text)" : "var(--color-text)",
             opacity: isDragging ? 0.5 : 1,
             borderTop: isDropTarget && dropPosition === "before" ? "2px solid var(--color-primary)" : void 0,
             borderBottom: isDropTarget && dropPosition === "after" ? "2px solid var(--color-primary)" : void 0,
@@ -14356,7 +14384,7 @@ input, select, textarea, button {
           cursor: "pointer",
           transition: "background-color 0.15s",
           backgroundColor: selectedCategoryId === "all" ? "var(--color-primary)1a" : "transparent",
-          color: selectedCategoryId === "all" ? "var(--color-primary)" : "var(--color-text)"
+          color: selectedCategoryId === "all" ? "var(--color-primary-text)" : "var(--color-text)"
         },
         onMouseEnter: (e) => {
           if (selectedCategoryId !== "all") e.currentTarget.style.backgroundColor = "var(--color-neutral-100)";
@@ -14382,7 +14410,7 @@ input, select, textarea, button {
           cursor: "pointer",
           transition: "background-color 0.15s",
           backgroundColor: selectedCategoryId === null ? "var(--color-primary)1a" : "transparent",
-          color: selectedCategoryId === null ? "var(--color-primary)" : "var(--color-text)"
+          color: selectedCategoryId === null ? "var(--color-primary-text)" : "var(--color-text)"
         },
         onMouseEnter: (e) => {
           if (selectedCategoryId !== null) e.currentTarget.style.backgroundColor = "var(--color-neutral-100)";
@@ -15147,7 +15175,7 @@ input, select, textarea, button {
           onContextMenu(e);
         },
         onMouseEnter: (e) => {
-          if (!isSelected) e.currentTarget.style.background = "var(--color-neutral-50)";
+          if (!isSelected) e.currentTarget.style.background = "var(--color-neutral-100)";
         },
         onMouseLeave: (e) => {
           if (!isSelected) e.currentTarget.style.background = "transparent";
@@ -15226,7 +15254,7 @@ input, select, textarea, button {
           },
           onMouseEnter: (e) => {
             e.currentTarget.style.background = "var(--color-neutral-100)";
-            e.currentTarget.style.color = "var(--color-primary)";
+            e.currentTarget.style.color = "var(--color-primary-text)";
           },
           onMouseLeave: (e) => {
             e.currentTarget.style.background = "transparent";
@@ -15464,7 +15492,7 @@ input, select, textarea, button {
       gap: "8px",
       padding: "12px 16px",
       borderTop: "1px solid var(--color-neutral-200)",
-      background: "var(--color-neutral-50)"
+      background: "var(--color-neutral-100)"
     };
     const contentStyle = {
       padding: "16px",
@@ -15605,7 +15633,7 @@ input, select, textarea, button {
       "解析内容"
     )), previewData && /* @__PURE__ */ React$2.createElement("div", { style: {
       padding: "12px",
-      background: "var(--color-neutral-50)",
+      background: "var(--color-neutral-100)",
       borderRadius: "6px"
     } }, /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" } }, /* @__PURE__ */ React$2.createElement(Check, { size: 16, style: { color: "var(--color-success)" } }), /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "13px", fontWeight: 500, color: "var(--color-text)" } }, "解析成功")), /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "12px", color: "var(--color-text-secondary)", margin: 0 } }, "将导入 ", /* @__PURE__ */ React$2.createElement("span", { style: { fontWeight: 500, color: "var(--color-text)" } }, previewData.bookmarks.length), " 个书签", previewData.categories.length > 0 && /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, "，", /* @__PURE__ */ React$2.createElement("span", { style: { fontWeight: 500, color: "var(--color-text)" } }, previewData.categories.length), " 个分类")), previewData.conflicts > 0 && /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "12px", color: "var(--color-warning)", margin: "4px 0 0", display: "flex", alignItems: "center", gap: "4px" } }, /* @__PURE__ */ React$2.createElement(TriangleAlert, { size: 12 }), "检测到 ", previewData.conflicts, " 个重复项")), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px", fontSize: "12px" } }, /* @__PURE__ */ React$2.createElement("span", { style: { color: "var(--color-text-secondary)" } }, "导入方式："), /* @__PURE__ */ React$2.createElement("label", { style: { display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" } }, /* @__PURE__ */ React$2.createElement(
       "input",
@@ -15638,7 +15666,7 @@ input, select, textarea, button {
       format.toUpperCase()
     ))), /* @__PURE__ */ React$2.createElement("div", { style: {
       padding: "12px",
-      background: "var(--color-neutral-50)",
+      background: "var(--color-neutral-100)",
       borderRadius: "6px"
     } }, /* @__PURE__ */ React$2.createElement("p", { style: { fontSize: "13px", color: "var(--color-text)", margin: 0 } }, "将导出 ", /* @__PURE__ */ React$2.createElement("span", { style: { fontWeight: 500 } }, bookmarks.length), " 个书签", data.categories.length > 0 && /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, "，", /* @__PURE__ */ React$2.createElement("span", { style: { fontWeight: 500 } }, data.categories.length), " 个分类"))), /* @__PURE__ */ React$2.createElement("div", { style: { fontSize: "12px", color: "var(--color-text-secondary)", display: "flex", flexDirection: "column", gap: "4px" } }, /* @__PURE__ */ React$2.createElement("p", { style: { margin: 0 } }, "• HTML 格式：可导入浏览器（Chrome/Edge/Firefox）书签"), /* @__PURE__ */ React$2.createElement("p", { style: { margin: 0 } }, "• JSON 格式：完整备份，包含分类结构"), /* @__PURE__ */ React$2.createElement("p", { style: { margin: 0 } }, "• TXT 格式：纯 URL 列表，无分类信息")))), /* @__PURE__ */ React$2.createElement("div", { style: footerStyle }, /* @__PURE__ */ React$2.createElement(
       "button",
@@ -16322,7 +16350,7 @@ input, select, textarea, button {
       background: selectedBookmarks.size > 0 ? "var(--color-primary)0d" : "var(--color-bg-card)",
       fontSize: "12px",
       color: "var(--color-text-tertiary)"
-    } }, /* @__PURE__ */ React$2.createElement("span", null, "共 ", bookmarks.length, " 个书签 · ", categories.length, " 个分类", selectedBookmarks.size > 0 && /* @__PURE__ */ React$2.createElement("span", { style: { marginLeft: 12, color: "var(--color-primary)", fontWeight: 500 } }, "已选 ", selectedBookmarks.size, " 个")), /* @__PURE__ */ React$2.createElement("span", null, settings.viewMode === "card" ? "卡片视图" : "列表视图")), isFormOpen && /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal-overlay" }, /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal" }, /* @__PURE__ */ React$2.createElement("div", { style: {
+    } }, /* @__PURE__ */ React$2.createElement("span", null, "共 ", bookmarks.length, " 个书签 · ", categories.length, " 个分类", selectedBookmarks.size > 0 && /* @__PURE__ */ React$2.createElement("span", { style: { marginLeft: 12, color: "var(--color-primary-text)", fontWeight: 500 } }, "已选 ", selectedBookmarks.size, " 个")), /* @__PURE__ */ React$2.createElement("span", null, settings.viewMode === "card" ? "卡片视图" : "列表视图")), isFormOpen && /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal-overlay" }, /* @__PURE__ */ React$2.createElement("div", { className: "fp-modal" }, /* @__PURE__ */ React$2.createElement("div", { style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -16592,15 +16620,15 @@ input, select, textarea, button {
             gap: "8px",
             padding: "6px 8px",
             borderRadius: "4px",
-            background: "var(--color-neutral-50)",
+            background: "var(--color-neutral-100)",
             cursor: "grab",
             transition: "background-color 0.15s"
           },
           onMouseEnter: (e) => {
-            e.currentTarget.style.background = "var(--color-neutral-100)";
+            e.currentTarget.style.background = "var(--color-neutral-200)";
           },
           onMouseLeave: (e) => {
-            e.currentTarget.style.background = "var(--color-neutral-50)";
+            e.currentTarget.style.background = "var(--color-neutral-100)";
           }
         },
         /* @__PURE__ */ React$2.createElement(
@@ -16612,10 +16640,10 @@ input, select, textarea, button {
               const newHidden = hidden ? settings.hiddenTags.filter((t) => t !== tag) : [...settings.hiddenTags, tag];
               updateSettings({ hiddenTags: newHidden });
             },
-            style: { margin: 0 }
+            style: { margin: 0, cursor: "pointer", accentColor: "var(--color-primary)" }
           }
         ),
-        /* @__PURE__ */ React$2.createElement("span", { style: { flex: 1, fontSize: "13px", color: hidden ? "var(--color-text-tertiary)" : "var(--color-text)", textDecoration: hidden ? "line-through" : "none" } }, tag),
+        /* @__PURE__ */ React$2.createElement("span", { style: { flex: 1, fontSize: "13px", color: hidden ? "var(--color-text-secondary)" : "var(--color-text)", textDecoration: hidden ? "line-through" : "none" } }, tag),
         /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-tertiary)" } }, "⋮⋮")
       );
     })))), /* @__PURE__ */ React$2.createElement("div", { style: { paddingTop: "8px", borderTop: "1px solid var(--color-neutral-200)" } }, /* @__PURE__ */ React$2.createElement(

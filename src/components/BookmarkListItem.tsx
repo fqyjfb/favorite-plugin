@@ -71,7 +71,7 @@ const BookmarkListItem: React.FC<BookmarkListItemProps> = ({
       onClick={onOpen}
       onContextMenu={(e) => { e.stopPropagation(); onContextMenu(e); }}
       onMouseEnter={(e) => {
-        if (!isSelected) e.currentTarget.style.background = 'var(--color-neutral-50)';
+        if (!isSelected) e.currentTarget.style.background = 'var(--color-neutral-100)';
       }}
       onMouseLeave={(e) => {
         if (!isSelected) e.currentTarget.style.background = 'transparent';
@@ -141,7 +141,7 @@ const BookmarkListItem: React.FC<BookmarkListItemProps> = ({
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'var(--color-neutral-100)';
-            e.currentTarget.style.color = 'var(--color-primary)';
+            e.currentTarget.style.color = 'var(--color-primary-text)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent';

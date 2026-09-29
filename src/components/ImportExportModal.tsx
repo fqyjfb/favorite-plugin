@@ -178,8 +178,8 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
     gap: '8px',
     padding: '12px 16px',
     borderTop: '1px solid var(--color-neutral-200)',
-    background: 'var(--color-neutral-50)'
-  };
+    background: 'var(--color-neutral-100)'
+    };
 
   const contentStyle: React.CSSProperties = {
     padding: '16px',
@@ -327,7 +327,7 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
               {previewData && (
                 <div style={{
                   padding: '12px',
-                  background: 'var(--color-neutral-50)',
+                  background: 'var(--color-neutral-100)',
                   borderRadius: '6px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
@@ -394,7 +394,7 @@ const ImportExportModal: React.FC<ImportExportModalProps> = ({
 
               <div style={{
                 padding: '12px',
-                background: 'var(--color-neutral-50)',
+                background: 'var(--color-neutral-100)',
                 borderRadius: '6px'
               }}>
                 <p style={{ fontSize: '13px', color: 'var(--color-text)', margin: 0 }}>
