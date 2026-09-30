@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ExternalLink, Globe, Tag } from 'lucide-react';
+import { ExternalLink, Globe, Tag, Star } from 'lucide-react';
 import type { Bookmark, Category } from '../types';
-import { getFaviconUrl, truncateText, formatDate } from '../utils/validator';
+import { getFaviconUrl, truncateText } from '../utils/validator';
 import '../styles.css';
 
 interface BookmarkCardProps {
@@ -20,12 +20,12 @@ const FaviconFallback: React.FC<{ url: string }> = ({ url }) => {
   if (!url || error) {
     return (
       <div style={{
-        width: '32px', height: '32px', borderRadius: '4px',
+        width: '24px', height: '24px', borderRadius: '4px',
         background: 'var(--color-neutral-100)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0
       }}>
-        <Globe size={16} style={{ color: 'var(--color-neutral-400)' }} />
+        <Globe size={14} style={{ color: 'var(--color-neutral-400)' }} />
       </div>
     );
   }
@@ -35,7 +35,7 @@ const FaviconFallback: React.FC<{ url: string }> = ({ url }) => {
       src={url}
       alt="favicon"
       style={{
-        width: '32px', height: '32px', borderRadius: '4px',
+        width: '24px', height: '24px', borderRadius: '4px',
         objectFit: 'contain', flexShrink: 0
       }}
       onError={() => setError(true)}
@@ -53,12 +53,14 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
   showFavicon
 }) => {
   const faviconUrl = bookmark.favicon || getFaviconUrl(bookmark.url);
+  // 未显示 favicon 时，为左上角悬浮复选框预留空间
+  const textOffset = showFavicon ? 0 : '20px';
 
   const cardStyle: React.CSSProperties = {
     position: 'relative',
     background: isSelected ? 'var(--color-primary)' + '0d' : 'var(--color-bg-card)',
     borderRadius: '8px',
-    padding: '12px',
+    padding: '8px 10px',
     cursor: 'pointer',
     transition: 'box-shadow 0.15s, transform 0.15s',
     boxShadow: isSelected ? '0 0 0 2px var(--color-primary)' : 'none'
@@ -66,9 +68,21 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
 
   const checkboxWrapStyle: React.CSSProperties = {
     position: 'absolute',
-    top: '8px',
-    left: '8px',
+    top: '6px',
+    left: '6px',
     opacity: isSelected ? 1 : undefined
+  };
+
+  const badgeStyle: React.CSSProperties = {
+    padding: '1px 5px', fontSize: '11px', borderRadius: '4px',
+    whiteSpace: 'nowrap', flexShrink: 0
+  };
+
+  const openButtonStyle: React.CSSProperties = {
+    padding: '3px', borderRadius: '4px', background: 'none', border: 'none',
+    cursor: 'pointer', color: 'var(--color-text-tertiary)',
+    display: 'flex', alignItems: 'center', flexShrink: 0,
+    transition: 'background-color 0.15s, color 0.15s'
   };
 
   return (
@@ -100,96 +114,39 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
           }}
           onClick={(e) => e.stopPropagation()}
           style={{
-            width: '16px', height: '16px', borderRadius: '4px',
+            width: '14px', height: '14px', borderRadius: '4px',
             borderColor: 'var(--color-neutral-300)', cursor: 'pointer'
           }}
         />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '6px',
+        paddingLeft: textOffset
+      }}>
         {showFavicon && <FaviconFallback url={faviconUrl} />}
-        <div style={{ flex: 1, minWidth: 0, paddingLeft: showFavicon ? 0 : '24px' }}>
-          <h3 style={{
-            fontSize: '14px', fontWeight: 500,
-            color: 'var(--color-text)',
-            margin: 0, overflow: 'hidden',
-            textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-          }}>
-            {bookmark.title}
-          </h3>
-          <p style={{
-            fontSize: '12px', color: 'var(--color-text-tertiary)',
-            margin: '2px 0 0', overflow: 'hidden',
-            textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-          }}>
-            {bookmark.url.replace(/^https?:\/\//, '')}
-          </p>
-        </div>
-      </div>
-
-      {bookmark.description && (
-        <p style={{
-          fontSize: '12px', color: 'var(--color-text-secondary)',
-          margin: '8px 0 0',
-          display: '-webkit-box', WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical', overflow: 'hidden'
-        }}>
-          {truncateText(bookmark.description, 100)}
-        </p>
-      )}
-
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: '8px',
-        marginTop: '8px', flexWrap: 'wrap'
-      }}>
-        {category && (
-          <span style={{
-            padding: '2px 6px', fontSize: '12px',
-            background: 'var(--color-neutral-100)',
-            color: 'var(--color-text-secondary)',
-            borderRadius: '4px'
-          }}>
-            {category.name}
-          </span>
+        <h3 style={{
+          flex: 1, minWidth: 0, fontSize: '13px', fontWeight: 500,
+          color: 'var(--color-text)', margin: 0,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+        }} title={bookmark.title}>
+          {bookmark.title}
+        </h3>
+        {bookmark.isFavorite && (
+          <Star
+            size={12}
+            fill="#f59e0b"
+            aria-label="已收藏"
+            style={{ color: '#f59e0b', flexShrink: 0 }}
+          />
         )}
-        {bookmark.tags.slice(0, 2).map((tag) => (
-          <span
-            key={tag}
-            style={{
-              padding: '2px 6px', fontSize: '12px',
-              background: 'var(--color-primary)' + '1a',
-              color: 'var(--color-primary)',
-              borderRadius: '4px',
-              display: 'inline-flex', alignItems: 'center', gap: '2px'
-            }}
-          >
-            <Tag size={10} />
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      <div style={{
-        display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: '8px', paddingTop: '8px'
-      }}>
-        <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
-          {formatDate(bookmark.updatedAt)}
-        </span>
         <button
           onClick={(e) => {
             e.stopPropagation();
             onOpen();
           }}
           title="打开"
-          style={{
-            padding: '4px', borderRadius: '4px', background: 'none',
-            border: 'none', cursor: 'pointer',
-            color: 'var(--color-text-tertiary)',
-            display: 'flex', alignItems: 'center',
-            transition: 'background-color 0.15s'
-          }}
+          style={openButtonStyle}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'var(--color-neutral-100)';
             e.currentTarget.style.color = 'var(--color-primary)';
@@ -199,9 +156,51 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({
             e.currentTarget.style.color = 'var(--color-text-tertiary)';
           }}
         >
-          <ExternalLink size={14} />
+          <ExternalLink size={12} />
         </button>
       </div>
+
+      {bookmark.description && (
+        <p style={{
+          fontSize: '11px', color: 'var(--color-text-secondary)',
+          margin: '4px 0 0', paddingLeft: textOffset,
+          display: '-webkit-box', WebkitLineClamp: 1,
+          WebkitBoxOrient: 'vertical', overflow: 'hidden'
+        }}>
+          {truncateText(bookmark.description, 60)}
+        </p>
+      )}
+
+      {(category || bookmark.tags.length > 0) && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '4px',
+          marginTop: '6px', paddingLeft: textOffset, overflow: 'hidden'
+        }}>
+          {category && (
+            <span style={{
+              ...badgeStyle,
+              background: 'var(--color-neutral-100)',
+              color: 'var(--color-text-secondary)'
+            }}>
+              {category.name}
+            </span>
+          )}
+          {bookmark.tags.slice(0, 1).map((tag) => (
+            <span
+              key={tag}
+              style={{
+                ...badgeStyle,
+                background: 'var(--color-primary)' + '1a',
+                color: 'var(--color-primary)',
+                display: 'inline-flex', alignItems: 'center', gap: '2px'
+              }}
+            >
+              <Tag size={9} />
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

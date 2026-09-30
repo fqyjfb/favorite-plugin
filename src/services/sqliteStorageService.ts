@@ -13,7 +13,8 @@ const DEFAULT_SETTINGS: PluginSettings = {
   defaultCategory: null,
   tagDisplayLimit: 5,
   tagOrder: [],
-  hiddenTags: []
+  hiddenTags: [],
+  showCategoryPanel: false
 };
 
 function getPluginContext() {
@@ -78,6 +79,7 @@ function migrateData(data: PluginData): PluginData {
     if (data.settings.tagDisplayLimit === undefined) data.settings.tagDisplayLimit = 5;
     if (!data.settings.tagOrder) data.settings.tagOrder = [];
     if (!data.settings.hiddenTags) data.settings.hiddenTags = [];
+    if (data.settings.showCategoryPanel === undefined) data.settings.showCategoryPanel = false;
   }
   if (!data.bookmarks) data.bookmarks = [];
   if (!data.categories) data.categories = [];

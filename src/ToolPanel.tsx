@@ -14,7 +14,11 @@ import {
   Settings,
   Pencil,
   FolderOpen,
-  ChevronDown
+  ChevronDown,
+  PanelLeftOpen,
+  PanelLeftClose,
+  Star,
+  Home
 } from 'lucide-react';
 import { useBookmarkStore } from './store/useBookmarkStore';
 import CategoryTree from './components/CategoryTree';
@@ -26,7 +30,7 @@ import ImportExportModal from './components/ImportExportModal';
 import EmptyState from './components/EmptyState';
 import ToastContainer from './components/ToastContainer';
 import type { Bookmark as BookmarkType } from './types';
-import { normalizeUrl } from './utils/validator';
+import { normalizeUrl, isDuplicateBookmark } from './utils/validator';
 import './styles.css';
 
 const ToolPanel: React.FC = () => {
@@ -50,6 +54,8 @@ const ToolPanel: React.FC = () => {
     addBookmark,
     updateBookmark,
     deleteBookmark,
+    setFavorite,
+    setHomeVisible,
     bulkDeleteBookmarks,
     toggleBookmarkSelect,
     selectAllBookmarks,
@@ -61,7 +67,8 @@ const ToolPanel: React.FC = () => {
     reorderCategory,
     updateSettings,
     importData,
-    resetAllData
+    resetAllData,
+    addToast
   } = store;
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -86,6 +93,22 @@ const ToolPanel: React.FC = () => {
   const tagDropdownRef = useRef<HTMLDivElement>(null);
   const moreBtnRef = useRef<HTMLButtonElement>(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+  const [viewFilter, setViewFilter] = useState<'all' | 'favorite'>('favorite');
+
+  const iconButtonStyle: React.CSSProperties = {
+    padding: '6px', borderRadius: '6px', background: 'none', border: 'none',
+    cursor: 'pointer', color: 'var(--color-text-secondary)',
+    display: 'flex', alignItems: 'center', transition: 'background-color 0.15s'
+  };
+
+  const filterButtonStyle = (active: boolean): React.CSSProperties => ({
+    padding: '4px 10px', fontSize: '12px', border: 'none', borderRadius: '4px',
+    cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background-color 0.15s, color 0.15s',
+    background: active ? 'var(--color-bg-card)' : 'transparent',
+    color: active ? 'var(--color-primary-text)' : 'var(--color-text-tertiary)',
+    fontWeight: active ? 500 : 400,
+    boxShadow: active ? 'var(--shadow-sm)' : 'none'
+  });
 
   const closeContentMenu = useCallback(() => {
     setContentMenu((prev) => ({ ...prev, visible: false }));
@@ -204,6 +227,11 @@ const ToolPanel: React.FC = () => {
 
   const handleFormSubmit = useCallback(
     (data: Omit<BookmarkType, 'id' | 'createdAt' | 'updatedAt'>) => {
+      if (isDuplicateBookmark(bookmarks, data.title, data.url, editingBookmark?.id)) {
+        // 提示走 toast，表单保持打开以便继续修改
+        addToast('已存在相同标题和网址的书签', 'warning');
+        return;
+      }
       if (editingBookmark) {
         updateBookmark(editingBookmark.id, data);
       } else {
@@ -212,7 +240,7 @@ const ToolPanel: React.FC = () => {
       setIsFormOpen(false);
       setEditingBookmark(null);
     },
-    [editingBookmark, addBookmark, updateBookmark]
+    [editingBookmark, bookmarks, addBookmark, updateBookmark, addToast]
   );
 
   const toggleSort = useCallback(() => {
@@ -221,13 +249,18 @@ const ToolPanel: React.FC = () => {
     });
   }, [settings.sortOrder, updateSettings]);
 
+  const visibleBookmarks = useMemo(() => {
+    if (viewFilter !== 'favorite') return filteredBookmarks;
+    return filteredBookmarks.filter((b) => b.isFavorite);
+  }, [filteredBookmarks, viewFilter]);
+
   const handleSelectAll = useCallback(() => {
-    if (selectedBookmarks.size === filteredBookmarks.length) {
+    if (selectedBookmarks.size === visibleBookmarks.length) {
       clearSelection();
     } else {
-      selectAllBookmarks();
+      selectAllBookmarks(visibleBookmarks.map((b) => b.id));
     }
-  }, [selectedBookmarks, filteredBookmarks, selectAllBookmarks, clearSelection]);
+  }, [selectedBookmarks, visibleBookmarks, selectAllBookmarks, clearSelection]);
 
   const handleContentContextMenu = useCallback((e: React.MouseEvent, bookmarkId: string | null) => {
     e.preventDefault();
@@ -235,8 +268,8 @@ const ToolPanel: React.FC = () => {
   }, []);
 
   const allSelected =
-    filteredBookmarks.length > 0 &&
-    selectedBookmarks.size === filteredBookmarks.length;
+    visibleBookmarks.length > 0 &&
+    selectedBookmarks.size === visibleBookmarks.length;
 
   const labelBase: React.CSSProperties = {
     fontSize: '13px',
@@ -251,6 +284,42 @@ const ToolPanel: React.FC = () => {
     }
     return null;
   }, [selectedBookmarks, bookmarks]);
+
+  // 右键菜单作用对象：多选时作用于全部选中项，否则作用于右键项
+  const contextTargetIds = useMemo(() => {
+    const id = contentMenu.bookmarkId;
+    if (!id) return [];
+    if (selectedBookmarks.size > 1 && selectedBookmarks.has(id)) {
+      return Array.from(selectedBookmarks);
+    }
+    return [id];
+  }, [contentMenu.bookmarkId, selectedBookmarks]);
+
+  const contextAllFavorite = useMemo(
+    () =>
+      contextTargetIds.length > 0 &&
+      contextTargetIds.every((id) => bookmarks.find((b) => b.id === id)?.isFavorite),
+    [contextTargetIds, bookmarks]
+  );
+
+  const contextAllOnHome = useMemo(
+    () =>
+      contextTargetIds.length > 0 &&
+      contextTargetIds.every((id) => bookmarks.find((b) => b.id === id)?.showOnHome),
+    [contextTargetIds, bookmarks]
+  );
+
+  const handleToggleFavorite = useCallback(() => {
+    if (contextTargetIds.length === 0) return;
+    setFavorite(contextTargetIds, !contextAllFavorite);
+    closeContentMenu();
+  }, [contextTargetIds, contextAllFavorite, setFavorite, closeContentMenu]);
+
+  const handleToggleHomeVisible = useCallback(() => {
+    if (contextTargetIds.length === 0) return;
+    setHomeVisible(contextTargetIds, !contextAllOnHome);
+    closeContentMenu();
+  }, [contextTargetIds, contextAllOnHome, setHomeVisible, closeContentMenu]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-bg)' }}>
@@ -271,11 +340,7 @@ const ToolPanel: React.FC = () => {
           <button
             onClick={() => setIsExportOpen(true)}
             title="导出"
-            style={{
-              padding: '6px', borderRadius: '6px', background: 'none', border: 'none',
-              cursor: 'pointer', color: 'var(--color-text-secondary)',
-              display: 'flex', alignItems: 'center', transition: 'background-color 0.15s'
-            }}
+            style={iconButtonStyle}
             onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-neutral-100)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
@@ -284,11 +349,7 @@ const ToolPanel: React.FC = () => {
           <button
             onClick={() => setIsImportOpen(true)}
             title="导入"
-            style={{
-              padding: '6px', borderRadius: '6px', background: 'none', border: 'none',
-              cursor: 'pointer', color: 'var(--color-text-secondary)',
-              display: 'flex', alignItems: 'center', transition: 'background-color 0.15s'
-            }}
+            style={iconButtonStyle}
             onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-neutral-100)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
@@ -297,16 +358,31 @@ const ToolPanel: React.FC = () => {
           <button
             onClick={() => setIsSettingsOpen(true)}
             title="设置"
-            style={{
-              padding: '6px', borderRadius: '6px', background: 'none', border: 'none',
-              cursor: 'pointer', color: 'var(--color-text-secondary)',
-              display: 'flex', alignItems: 'center', transition: 'background-color 0.15s'
-            }}
+            style={iconButtonStyle}
             onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-neutral-100)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
             <Settings size={16} />
           </button>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '4px',
+            padding: '2px', borderRadius: '6px', background: 'var(--color-neutral-100)'
+          }}>
+            <button
+              onClick={() => setViewFilter('all')}
+              title="显示全部书签"
+              style={filterButtonStyle(viewFilter === 'all')}
+            >
+              全部
+            </button>
+            <button
+              onClick={() => setViewFilter('favorite')}
+              title="只显示收藏的书签"
+              style={filterButtonStyle(viewFilter === 'favorite')}
+            >
+              收藏
+            </button>
+          </div>
         </div>
       </header>
 
@@ -315,6 +391,16 @@ const ToolPanel: React.FC = () => {
         padding: '8px 16px', background: 'var(--color-bg-card)',
         position: 'relative', zIndex: 10
       }}>
+        <button
+          onClick={() => updateSettings({ showCategoryPanel: !settings.showCategoryPanel })}
+          title={settings.showCategoryPanel ? '隐藏分类' : '显示分类'}
+          style={iconButtonStyle}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-neutral-100)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+        >
+          {settings.showCategoryPanel ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+        </button>
+
         <div style={{ flex: '0 1 200px', minWidth: '160px' }}>
           <SearchBar value={searchQuery} onChange={setSearchQuery} inputRef={searchInputRef} />
         </div>
@@ -460,11 +546,7 @@ const ToolPanel: React.FC = () => {
           <button
             onClick={toggleSort}
             title={`排序: ${settings.sortBy}`}
-            style={{
-              padding: '6px', borderRadius: '6px', background: 'none', border: 'none',
-              cursor: 'pointer', color: 'var(--color-text-secondary)',
-              display: 'flex', alignItems: 'center', transition: 'background-color 0.15s'
-            }}
+            style={iconButtonStyle}
             onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-neutral-100)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
@@ -474,11 +556,7 @@ const ToolPanel: React.FC = () => {
           <button
             onClick={() => updateSettings({ viewMode: settings.viewMode === 'card' ? 'list' : 'card' })}
             title={settings.viewMode === 'card' ? '列表视图' : '卡片视图'}
-            style={{
-              padding: '6px', borderRadius: '6px', background: 'none', border: 'none',
-              cursor: 'pointer', color: 'var(--color-text-secondary)',
-              display: 'flex', alignItems: 'center', transition: 'background-color 0.15s'
-            }}
+            style={iconButtonStyle}
             onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-neutral-100)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
           >
@@ -488,25 +566,27 @@ const ToolPanel: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <aside style={{
-          width: '224px', flexShrink: 0,
-          background: 'var(--color-bg-card)', padding: '8px', overflow: 'auto'
-        }} className="fp-scrollbar">
-          <CategoryTree
-            categories={categoryTree}
-            selectedCategoryId={selectedCategoryId}
-            onSelectCategory={setSelectedCategoryId}
-            onAddCategory={(name, parentId) => addCategory(name, parentId)}
-            onUpdateCategory={(id, name) => updateCategory(id, name)}
-            onDeleteCategory={(id) => deleteCategory(id)}
-            onReorderCategory={reorderCategory}
-            onUpdateCategoryColor={updateCategoryColor}
-            bookmarkCounts={bookmarkCounts}
-            renamingCategoryId={renamingCategoryId}
-            onStartRename={(id) => setRenamingCategoryId(id)}
-            onFinishRename={() => setRenamingCategoryId(null)}
-          />
-        </aside>
+        {settings.showCategoryPanel && (
+          <aside style={{
+            width: '224px', flexShrink: 0,
+            background: 'var(--color-bg-card)', padding: '8px', overflow: 'auto'
+          }} className="fp-scrollbar">
+            <CategoryTree
+              categories={categoryTree}
+              selectedCategoryId={selectedCategoryId}
+              onSelectCategory={setSelectedCategoryId}
+              onAddCategory={(name, parentId) => addCategory(name, parentId)}
+              onUpdateCategory={(id, name) => updateCategory(id, name)}
+              onDeleteCategory={(id) => deleteCategory(id)}
+              onReorderCategory={reorderCategory}
+              onUpdateCategoryColor={updateCategoryColor}
+              bookmarkCounts={bookmarkCounts}
+              renamingCategoryId={renamingCategoryId}
+              onStartRename={(id) => setRenamingCategoryId(id)}
+              onFinishRename={() => setRenamingCategoryId(null)}
+            />
+          </aside>
+        )}
 
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{
@@ -559,16 +639,18 @@ const ToolPanel: React.FC = () => {
             }
           }}
           >
-            {filteredBookmarks.length === 0 ? (
+            {visibleBookmarks.length === 0 ? (
               <EmptyState
                 hasBookmarks={bookmarks.length > 0}
                 onAddBookmark={handleAddClick}
                 onImport={() => setIsImportOpen(true)}
                 hasCategories={categories.length > 0}
+                title={viewFilter === 'favorite' ? '还没有收藏的书签' : undefined}
+                description={viewFilter === 'favorite' ? '右键卡片选择「收藏」，即可显示在这里' : undefined}
               />
             ) : settings.viewMode === 'card' ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px', paddingTop: '4px' }}>
-                {filteredBookmarks.map((bookmark) => (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(156px, 1fr))', gap: '8px', paddingTop: '4px' }}>
+                {visibleBookmarks.map((bookmark) => (
                   <BookmarkCard
                     key={bookmark.id}
                     bookmark={bookmark}
@@ -583,7 +665,7 @@ const ToolPanel: React.FC = () => {
               </div>
             ) : (
               <div style={{ paddingTop: '4px' }}>
-                {filteredBookmarks.map((bookmark) => (
+                {visibleBookmarks.map((bookmark) => (
                   <BookmarkListItem
                     key={bookmark.id}
                     bookmark={bookmark}
@@ -669,6 +751,18 @@ const ToolPanel: React.FC = () => {
                 <FolderOpen size={14} /> 打开
               </div>
               <div className="fp-context-menu-separator" />
+              <div
+                className="fp-context-menu-item"
+                onClick={handleToggleFavorite}
+              >
+                <Star size={14} /> {contextAllFavorite ? '取消收藏' : '收藏'}
+              </div>
+              <div
+                className="fp-context-menu-item"
+                onClick={handleToggleHomeVisible}
+              >
+                <Home size={14} /> {contextAllOnHome ? '取消首页显示' : '首页显示'}
+              </div>
               <div
                 className="fp-context-menu-item"
                 onClick={() => {

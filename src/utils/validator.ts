@@ -1,3 +1,5 @@
+import type { Bookmark } from '../types';
+
 export function isValidUrl(url: string): boolean {
   try {
     new URL(url.startsWith('http') ? url : `https://${url}`);
@@ -30,24 +32,31 @@ export function getFaviconUrl(url: string): string {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
 }
 
-export function formatDate(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch {
-    return iso;
-  }
-}
-
 export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '...';
+}
+
+// 比对用：统一协议并去掉结尾斜杠，避免 example.com 与 example.com/ 判定为不同网址
+export function normalizeUrlForCompare(url: string): string {
+  return normalizeUrl(url).replace(/\/+$/, '');
+}
+
+// 标题与 URL 同时相同才视为重复；excludeId 用于编辑时排除自身
+export function isDuplicateBookmark(
+  bookmarks: Bookmark[],
+  title: string,
+  url: string,
+  excludeId?: string
+): boolean {
+  const targetTitle = title.trim();
+  const targetUrl = normalizeUrlForCompare(url);
+  return bookmarks.some(
+    (b) =>
+      b.id !== excludeId &&
+      b.title.trim() === targetTitle &&
+      normalizeUrlForCompare(b.url) === targetUrl
+  );
 }
 
 export async function fetchFaviconAsBase64(url: string): Promise<string> {

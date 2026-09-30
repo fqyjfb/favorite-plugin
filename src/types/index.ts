@@ -9,6 +9,11 @@ export interface Bookmark {
   order: number;
   createdAt: string;
   updatedAt: string;
+  isFavorite?: boolean;
+  // 是否在 ToolBox 首页显示（首页区域与插件共用同一份数据）
+  showOnHome?: boolean;
+  // 首页区域内的展示顺序
+  homeOrder?: number;
 }
 
 export type CategoryColor = 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple' | 'pink' | null;
@@ -35,6 +40,7 @@ export interface PluginSettings {
   tagDisplayLimit: number;
   tagOrder: string[];
   hiddenTags: string[];
+  showCategoryPanel: boolean;
 }
 
 export interface PluginData {

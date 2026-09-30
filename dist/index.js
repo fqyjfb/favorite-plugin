@@ -12913,6 +12913,22 @@ input[type="radio"] {
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
    */
+  const House = createLucideIcon("House", [
+    ["path", { d: "M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8", key: "5wwlr5" }],
+    [
+      "path",
+      {
+        d: "M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+        key: "1d0kgt"
+      }
+    ]
+  ]);
+  /**
+   * @license lucide-react v0.454.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   */
   const Image = createLucideIcon("Image", [
     ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }],
     ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }],
@@ -12943,6 +12959,28 @@ input[type="radio"] {
     ["path", { d: "M8 12h13", key: "1za7za" }],
     ["path", { d: "M8 18h13", key: "1lx6n3" }],
     ["path", { d: "M8 6h13", key: "ik3vkj" }]
+  ]);
+  /**
+   * @license lucide-react v0.454.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   */
+  const PanelLeftClose = createLucideIcon("PanelLeftClose", [
+    ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", key: "afitv7" }],
+    ["path", { d: "M9 3v18", key: "fh3hqa" }],
+    ["path", { d: "m16 15-3-3 3-3", key: "14y99z" }]
+  ]);
+  /**
+   * @license lucide-react v0.454.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   */
+  const PanelLeftOpen = createLucideIcon("PanelLeftOpen", [
+    ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", key: "afitv7" }],
+    ["path", { d: "M9 3v18", key: "fh3hqa" }],
+    ["path", { d: "m14 9 3 3-3 3", key: "8010ee" }]
   ]);
   /**
    * @license lucide-react v0.454.0 - ISC
@@ -13005,6 +13043,21 @@ input[type="radio"] {
   const SquareCheckBig = createLucideIcon("SquareCheckBig", [
     ["path", { d: "M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.5", key: "1uzm8b" }],
     ["path", { d: "m9 11 3 3L22 4", key: "1pflzl" }]
+  ]);
+  /**
+   * @license lucide-react v0.454.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   */
+  const Star = createLucideIcon("Star", [
+    [
+      "path",
+      {
+        d: "M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z",
+        key: "r04s7s"
+      }
+    ]
   ]);
   /**
    * @license lucide-react v0.454.0 - ISC
@@ -13095,7 +13148,8 @@ input[type="radio"] {
     defaultCategory: null,
     tagDisplayLimit: 5,
     tagOrder: [],
-    hiddenTags: []
+    hiddenTags: [],
+    showCategoryPanel: false
   };
   function getPluginContext() {
     var _a, _b;
@@ -13155,6 +13209,7 @@ input[type="radio"] {
       if (data.settings.tagDisplayLimit === void 0) data.settings.tagDisplayLimit = 5;
       if (!data.settings.tagOrder) data.settings.tagOrder = [];
       if (!data.settings.hiddenTags) data.settings.hiddenTags = [];
+      if (data.settings.showCategoryPanel === void 0) data.settings.showCategoryPanel = false;
     }
     if (!data.bookmarks) data.bookmarks = [];
     if (!data.categories) data.categories = [];
@@ -13297,23 +13352,19 @@ input[type="radio"] {
     if (!domain) return "";
     return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
   }
-  function formatDate(iso) {
-    try {
-      const d = new Date(iso);
-      return d.toLocaleDateString("zh-CN", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    } catch {
-      return iso;
-    }
-  }
   function truncateText(text, maxLength) {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + "...";
+  }
+  function normalizeUrlForCompare(url) {
+    return normalizeUrl(url).replace(/\/+$/, "");
+  }
+  function isDuplicateBookmark(bookmarks, title, url, excludeId) {
+    const targetTitle = title.trim();
+    const targetUrl = normalizeUrlForCompare(url);
+    return bookmarks.some(
+      (b) => b.id !== excludeId && b.title.trim() === targetTitle && normalizeUrlForCompare(b.url) === targetUrl
+    );
   }
   async function fetchFaviconAsBase64(url) {
     if (!url) return "";
@@ -13589,6 +13640,40 @@ input[type="radio"] {
       },
       [data, persist, addToast]
     );
+    const setFavorite = reactExports.useCallback(
+      async (ids, value) => {
+        if (!data || ids.length === 0) return;
+        const idSet = new Set(ids);
+        const nextData = {
+          ...data,
+          bookmarks: data.bookmarks.map(
+            (b) => idSet.has(b.id) ? updateBookmark(b, { isFavorite: value }) : b
+          )
+        };
+        await persist(nextData);
+        addToast(value ? "已加入收藏" : "已取消收藏", "success");
+      },
+      [data, persist, addToast]
+    );
+    const setHomeVisible = reactExports.useCallback(
+      async (ids, value) => {
+        if (!data || ids.length === 0) return;
+        const idSet = new Set(ids);
+        let nextOrder = data.bookmarks.reduce((max, b) => Math.max(max, b.homeOrder ?? 0), 0) + 1;
+        const nextData = {
+          ...data,
+          bookmarks: data.bookmarks.map(
+            (b) => idSet.has(b.id) ? updateBookmark(b, {
+              showOnHome: value,
+              homeOrder: b.homeOrder ?? nextOrder++
+            }) : b
+          )
+        };
+        await persist(nextData);
+        addToast(value ? "已添加到首页" : "已从首页移除", "success");
+      },
+      [data, persist, addToast]
+    );
     const bulkDeleteBookmarks = reactExports.useCallback(
       async (ids) => {
         if (!data) return;
@@ -13613,8 +13698,8 @@ input[type="radio"] {
         return next;
       });
     }, []);
-    const selectAllBookmarks = reactExports.useCallback(() => {
-      setSelectedBookmarks(new Set(filteredBookmarks.map((b) => b.id)));
+    const selectAllBookmarks = reactExports.useCallback((ids) => {
+      setSelectedBookmarks(new Set(ids ?? filteredBookmarks.map((b) => b.id)));
     }, [filteredBookmarks]);
     const clearSelection = reactExports.useCallback(() => {
       setSelectedBookmarks(/* @__PURE__ */ new Set());
@@ -13821,9 +13906,11 @@ input[type="radio"] {
           };
           await persist(nextData);
         } else {
-          const existingIds = new Set(data.bookmarks.map((b) => b.url));
+          const existingUrls = new Set(
+            data.bookmarks.map((b) => normalizeUrlForCompare(b.url))
+          );
           const newBookmarks = result.bookmarks.filter(
-            (b) => !existingIds.has(b.url)
+            (b) => !existingUrls.has(normalizeUrlForCompare(b.url))
           );
           const existingCategoryNames = new Set(
             data.categories.map((c) => c.name)
@@ -13841,7 +13928,7 @@ input[type="radio"] {
             ...result,
             bookmarks: newBookmarks,
             categories: newCategories,
-            conflicts: result.bookmarks.length - newBookmarks
+            conflicts: result.bookmarks.length - newBookmarks.length
           };
         }
         addToast(`导入完成：${result.total} 个书签`, "success");
@@ -13878,6 +13965,8 @@ input[type="radio"] {
       addBookmark: addBookmark$1,
       updateBookmark: updateBookmark$1,
       deleteBookmark,
+      setFavorite,
+      setHomeVisible,
       bulkDeleteBookmarks,
       toggleBookmarkSelect,
       selectAllBookmarks,
@@ -14929,15 +15018,15 @@ input[type="radio"] {
     const [error, setError] = reactExports.useState(false);
     if (!url || error) {
       return /* @__PURE__ */ React$2.createElement("div", { style: {
-        width: "32px",
-        height: "32px",
+        width: "24px",
+        height: "24px",
         borderRadius: "4px",
         background: "var(--color-neutral-100)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0
-      } }, /* @__PURE__ */ React$2.createElement(Globe, { size: 16, style: { color: "var(--color-neutral-400)" } }));
+      } }, /* @__PURE__ */ React$2.createElement(Globe, { size: 14, style: { color: "var(--color-neutral-400)" } }));
     }
     return /* @__PURE__ */ React$2.createElement(
       "img",
@@ -14945,8 +15034,8 @@ input[type="radio"] {
         src: url,
         alt: "favicon",
         style: {
-          width: "32px",
-          height: "32px",
+          width: "24px",
+          height: "24px",
           borderRadius: "4px",
           objectFit: "contain",
           flexShrink: 0
@@ -14965,20 +15054,40 @@ input[type="radio"] {
     showFavicon
   }) => {
     const faviconUrl = bookmark.favicon || getFaviconUrl(bookmark.url);
+    const textOffset = showFavicon ? 0 : "20px";
     const cardStyle = {
       position: "relative",
       background: isSelected ? "var(--color-primary)0d" : "var(--color-bg-card)",
       borderRadius: "8px",
-      padding: "12px",
+      padding: "8px 10px",
       cursor: "pointer",
       transition: "box-shadow 0.15s, transform 0.15s",
       boxShadow: isSelected ? "0 0 0 2px var(--color-primary)" : "none"
     };
     const checkboxWrapStyle = {
       position: "absolute",
-      top: "8px",
-      left: "8px",
+      top: "6px",
+      left: "6px",
       opacity: isSelected ? 1 : void 0
+    };
+    const badgeStyle = {
+      padding: "1px 5px",
+      fontSize: "11px",
+      borderRadius: "4px",
+      whiteSpace: "nowrap",
+      flexShrink: 0
+    };
+    const openButtonStyle = {
+      padding: "3px",
+      borderRadius: "4px",
+      background: "none",
+      border: "none",
+      cursor: "pointer",
+      color: "var(--color-text-tertiary)",
+      display: "flex",
+      alignItems: "center",
+      flexShrink: 0,
+      transition: "background-color 0.15s, color 0.15s"
     };
     return /* @__PURE__ */ React$2.createElement(
       "div",
@@ -15014,76 +15123,38 @@ input[type="radio"] {
           },
           onClick: (e) => e.stopPropagation(),
           style: {
-            width: "16px",
-            height: "16px",
+            width: "14px",
+            height: "14px",
             borderRadius: "4px",
             borderColor: "var(--color-neutral-300)",
             cursor: "pointer"
           }
         }
       )),
-      /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "flex-start", gap: "8px" } }, showFavicon && /* @__PURE__ */ React$2.createElement(FaviconFallback$1, { url: faviconUrl }), /* @__PURE__ */ React$2.createElement("div", { style: { flex: 1, minWidth: 0, paddingLeft: showFavicon ? 0 : "24px" } }, /* @__PURE__ */ React$2.createElement("h3", { style: {
-        fontSize: "14px",
+      /* @__PURE__ */ React$2.createElement("div", { style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        paddingLeft: textOffset
+      } }, showFavicon && /* @__PURE__ */ React$2.createElement(FaviconFallback$1, { url: faviconUrl }), /* @__PURE__ */ React$2.createElement("h3", { style: {
+        flex: 1,
+        minWidth: 0,
+        fontSize: "13px",
         fontWeight: 500,
         color: "var(--color-text)",
         margin: 0,
         overflow: "hidden",
         textOverflow: "ellipsis",
         whiteSpace: "nowrap"
-      } }, bookmark.title), /* @__PURE__ */ React$2.createElement("p", { style: {
-        fontSize: "12px",
-        color: "var(--color-text-tertiary)",
-        margin: "2px 0 0",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap"
-      } }, bookmark.url.replace(/^https?:\/\//, "")))),
-      bookmark.description && /* @__PURE__ */ React$2.createElement("p", { style: {
-        fontSize: "12px",
-        color: "var(--color-text-secondary)",
-        margin: "8px 0 0",
-        display: "-webkit-box",
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: "vertical",
-        overflow: "hidden"
-      } }, truncateText(bookmark.description, 100)),
-      /* @__PURE__ */ React$2.createElement("div", { style: {
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        marginTop: "8px",
-        flexWrap: "wrap"
-      } }, category && /* @__PURE__ */ React$2.createElement("span", { style: {
-        padding: "2px 6px",
-        fontSize: "12px",
-        background: "var(--color-neutral-100)",
-        color: "var(--color-text-secondary)",
-        borderRadius: "4px"
-      } }, category.name), bookmark.tags.slice(0, 2).map((tag) => /* @__PURE__ */ React$2.createElement(
-        "span",
+      }, title: bookmark.title }, bookmark.title), bookmark.isFavorite && /* @__PURE__ */ React$2.createElement(
+        Star,
         {
-          key: tag,
-          style: {
-            padding: "2px 6px",
-            fontSize: "12px",
-            background: "var(--color-primary)1a",
-            color: "var(--color-primary)",
-            borderRadius: "4px",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "2px"
-          }
-        },
-        /* @__PURE__ */ React$2.createElement(Tag, { size: 10 }),
-        tag
-      ))),
-      /* @__PURE__ */ React$2.createElement("div", { style: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginTop: "8px",
-        paddingTop: "8px"
-      } }, /* @__PURE__ */ React$2.createElement("span", { style: { fontSize: "12px", color: "var(--color-text-tertiary)" } }, formatDate(bookmark.updatedAt)), /* @__PURE__ */ React$2.createElement(
+          size: 12,
+          fill: "#f59e0b",
+          "aria-label": "已收藏",
+          style: { color: "#f59e0b", flexShrink: 0 }
+        }
+      ), /* @__PURE__ */ React$2.createElement(
         "button",
         {
           onClick: (e) => {
@@ -15091,17 +15162,7 @@ input[type="radio"] {
             onOpen();
           },
           title: "打开",
-          style: {
-            padding: "4px",
-            borderRadius: "4px",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "var(--color-text-tertiary)",
-            display: "flex",
-            alignItems: "center",
-            transition: "background-color 0.15s"
-          },
+          style: openButtonStyle,
           onMouseEnter: (e) => {
             e.currentTarget.style.background = "var(--color-neutral-100)";
             e.currentTarget.style.color = "var(--color-primary)";
@@ -15111,8 +15172,45 @@ input[type="radio"] {
             e.currentTarget.style.color = "var(--color-text-tertiary)";
           }
         },
-        /* @__PURE__ */ React$2.createElement(ExternalLink, { size: 14 })
-      ))
+        /* @__PURE__ */ React$2.createElement(ExternalLink, { size: 12 })
+      )),
+      bookmark.description && /* @__PURE__ */ React$2.createElement("p", { style: {
+        fontSize: "11px",
+        color: "var(--color-text-secondary)",
+        margin: "4px 0 0",
+        paddingLeft: textOffset,
+        display: "-webkit-box",
+        WebkitLineClamp: 1,
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden"
+      } }, truncateText(bookmark.description, 60)),
+      (category || bookmark.tags.length > 0) && /* @__PURE__ */ React$2.createElement("div", { style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+        marginTop: "6px",
+        paddingLeft: textOffset,
+        overflow: "hidden"
+      } }, category && /* @__PURE__ */ React$2.createElement("span", { style: {
+        ...badgeStyle,
+        background: "var(--color-neutral-100)",
+        color: "var(--color-text-secondary)"
+      } }, category.name), bookmark.tags.slice(0, 1).map((tag) => /* @__PURE__ */ React$2.createElement(
+        "span",
+        {
+          key: tag,
+          style: {
+            ...badgeStyle,
+            background: "var(--color-primary)1a",
+            color: "var(--color-primary)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "2px"
+          }
+        },
+        /* @__PURE__ */ React$2.createElement(Tag, { size: 9 }),
+        tag
+      )))
     );
   };
   const FaviconFallback = ({ url }) => {
@@ -15205,7 +15303,7 @@ input[type="radio"] {
         display: "flex",
         alignItems: "center",
         gap: "12px"
-      } }, /* @__PURE__ */ React$2.createElement("span", { style: {
+      } }, bookmark.isFavorite && /* @__PURE__ */ React$2.createElement(Star, { size: 12, fill: "#f59e0b", "aria-label": "已收藏", style: { color: "#f59e0b", flexShrink: 0 } }), /* @__PURE__ */ React$2.createElement("span", { style: {
         fontSize: "14px",
         fontWeight: 500,
         color: "var(--color-text)",
@@ -15700,7 +15798,9 @@ input[type="radio"] {
     hasBookmarks,
     onAddBookmark,
     onImport,
-    hasCategories
+    hasCategories,
+    title,
+    description
   }) => {
     const containerStyle = {
       display: "flex",
@@ -15736,7 +15836,7 @@ input[type="radio"] {
       alignItems: "center",
       gap: "8px"
     };
-    return /* @__PURE__ */ React$2.createElement("div", { style: containerStyle }, hasBookmarks ? /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { style: iconCircleStyle }, /* @__PURE__ */ React$2.createElement(FolderOpen, { size: 32, style: { color: "var(--color-neutral-400)" } })), /* @__PURE__ */ React$2.createElement("h3", { style: titleStyle }, "没有找到匹配的书签"), /* @__PURE__ */ React$2.createElement("p", { style: descStyle }, "尝试调整搜索条件或切换分类")) : /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { style: iconCircleStyle }, /* @__PURE__ */ React$2.createElement(BookmarkPlus, { size: 32, style: { color: "var(--color-neutral-400)" } })), /* @__PURE__ */ React$2.createElement("h3", { style: titleStyle }, hasCategories ? "还没有书签" : "开始使用前，先创建一些分类"), /* @__PURE__ */ React$2.createElement("p", { style: { ...descStyle, marginBottom: "24px" } }, hasCategories ? "点击下方按钮添加第一个书签" : "分类可以帮助你更好地组织书签"), /* @__PURE__ */ React$2.createElement("div", { style: btnGroupStyle }, /* @__PURE__ */ React$2.createElement(
+    return /* @__PURE__ */ React$2.createElement("div", { style: containerStyle }, hasBookmarks ? /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { style: iconCircleStyle }, /* @__PURE__ */ React$2.createElement(FolderOpen, { size: 32, style: { color: "var(--color-neutral-400)" } })), /* @__PURE__ */ React$2.createElement("h3", { style: titleStyle }, title || "没有找到匹配的书签"), /* @__PURE__ */ React$2.createElement("p", { style: descStyle }, description || "尝试调整搜索条件或切换分类")) : /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement("div", { style: iconCircleStyle }, /* @__PURE__ */ React$2.createElement(BookmarkPlus, { size: 32, style: { color: "var(--color-neutral-400)" } })), /* @__PURE__ */ React$2.createElement("h3", { style: titleStyle }, hasCategories ? "还没有书签" : "开始使用前，先创建一些分类"), /* @__PURE__ */ React$2.createElement("p", { style: { ...descStyle, marginBottom: "24px" } }, hasCategories ? "点击下方按钮添加第一个书签" : "分类可以帮助你更好地组织书签"), /* @__PURE__ */ React$2.createElement("div", { style: btnGroupStyle }, /* @__PURE__ */ React$2.createElement(
       "button",
       {
         onClick: onAddBookmark,
@@ -15800,6 +15900,8 @@ input[type="radio"] {
       addBookmark: addBookmark2,
       updateBookmark: updateBookmark2,
       deleteBookmark,
+      setFavorite,
+      setHomeVisible,
       bulkDeleteBookmarks,
       toggleBookmarkSelect,
       selectAllBookmarks,
@@ -15811,7 +15913,8 @@ input[type="radio"] {
       reorderCategory,
       updateSettings,
       importData,
-      resetAllData
+      resetAllData,
+      addToast
     } = store;
     const [isFormOpen, setIsFormOpen] = reactExports.useState(false);
     const [editingBookmark, setEditingBookmark] = reactExports.useState(null);
@@ -15830,6 +15933,31 @@ input[type="radio"] {
     const tagDropdownRef = reactExports.useRef(null);
     const moreBtnRef = reactExports.useRef(null);
     const [dropdownPos, setDropdownPos] = reactExports.useState({ top: 0, left: 0 });
+    const [viewFilter, setViewFilter] = reactExports.useState("favorite");
+    const iconButtonStyle = {
+      padding: "6px",
+      borderRadius: "6px",
+      background: "none",
+      border: "none",
+      cursor: "pointer",
+      color: "var(--color-text-secondary)",
+      display: "flex",
+      alignItems: "center",
+      transition: "background-color 0.15s"
+    };
+    const filterButtonStyle = (active) => ({
+      padding: "4px 10px",
+      fontSize: "12px",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      whiteSpace: "nowrap",
+      transition: "background-color 0.15s, color 0.15s",
+      background: active ? "var(--color-bg-card)" : "transparent",
+      color: active ? "var(--color-primary-text)" : "var(--color-text-tertiary)",
+      fontWeight: active ? 500 : 400,
+      boxShadow: active ? "var(--shadow-sm)" : "none"
+    });
     const closeContentMenu = reactExports.useCallback(() => {
       setContentMenu((prev) => ({ ...prev, visible: false }));
     }, []);
@@ -15934,6 +16062,10 @@ input[type="radio"] {
     }, [pendingDeleteId, pendingBulkDelete, deleteBookmark, bulkDeleteBookmarks]);
     const handleFormSubmit = reactExports.useCallback(
       (data) => {
+        if (isDuplicateBookmark(bookmarks, data.title, data.url, editingBookmark == null ? void 0 : editingBookmark.id)) {
+          addToast("已存在相同标题和网址的书签", "warning");
+          return;
+        }
         if (editingBookmark) {
           updateBookmark2(editingBookmark.id, data);
         } else {
@@ -15942,25 +16074,29 @@ input[type="radio"] {
         setIsFormOpen(false);
         setEditingBookmark(null);
       },
-      [editingBookmark, addBookmark2, updateBookmark2]
+      [editingBookmark, bookmarks, addBookmark2, updateBookmark2, addToast]
     );
     const toggleSort = reactExports.useCallback(() => {
       updateSettings({
         sortOrder: settings.sortOrder === "asc" ? "desc" : "asc"
       });
     }, [settings.sortOrder, updateSettings]);
+    const visibleBookmarks = reactExports.useMemo(() => {
+      if (viewFilter !== "favorite") return filteredBookmarks;
+      return filteredBookmarks.filter((b) => b.isFavorite);
+    }, [filteredBookmarks, viewFilter]);
     const handleSelectAll = reactExports.useCallback(() => {
-      if (selectedBookmarks.size === filteredBookmarks.length) {
+      if (selectedBookmarks.size === visibleBookmarks.length) {
         clearSelection();
       } else {
-        selectAllBookmarks();
+        selectAllBookmarks(visibleBookmarks.map((b) => b.id));
       }
-    }, [selectedBookmarks, filteredBookmarks, selectAllBookmarks, clearSelection]);
+    }, [selectedBookmarks, visibleBookmarks, selectAllBookmarks, clearSelection]);
     const handleContentContextMenu = reactExports.useCallback((e, bookmarkId) => {
       e.preventDefault();
       setContentMenu({ visible: true, x: e.clientX, y: e.clientY, bookmarkId });
     }, []);
-    const allSelected = filteredBookmarks.length > 0 && selectedBookmarks.size === filteredBookmarks.length;
+    const allSelected = visibleBookmarks.length > 0 && selectedBookmarks.size === visibleBookmarks.length;
     const labelBase = {
       fontSize: "13px",
       fontWeight: 500,
@@ -15973,6 +16109,38 @@ input[type="radio"] {
       }
       return null;
     }, [selectedBookmarks, bookmarks]);
+    const contextTargetIds = reactExports.useMemo(() => {
+      const id = contentMenu.bookmarkId;
+      if (!id) return [];
+      if (selectedBookmarks.size > 1 && selectedBookmarks.has(id)) {
+        return Array.from(selectedBookmarks);
+      }
+      return [id];
+    }, [contentMenu.bookmarkId, selectedBookmarks]);
+    const contextAllFavorite = reactExports.useMemo(
+      () => contextTargetIds.length > 0 && contextTargetIds.every((id) => {
+        var _a;
+        return (_a = bookmarks.find((b) => b.id === id)) == null ? void 0 : _a.isFavorite;
+      }),
+      [contextTargetIds, bookmarks]
+    );
+    const contextAllOnHome = reactExports.useMemo(
+      () => contextTargetIds.length > 0 && contextTargetIds.every((id) => {
+        var _a;
+        return (_a = bookmarks.find((b) => b.id === id)) == null ? void 0 : _a.showOnHome;
+      }),
+      [contextTargetIds, bookmarks]
+    );
+    const handleToggleFavorite = reactExports.useCallback(() => {
+      if (contextTargetIds.length === 0) return;
+      setFavorite(contextTargetIds, !contextAllFavorite);
+      closeContentMenu();
+    }, [contextTargetIds, contextAllFavorite, setFavorite, closeContentMenu]);
+    const handleToggleHomeVisible = reactExports.useCallback(() => {
+      if (contextTargetIds.length === 0) return;
+      setHomeVisible(contextTargetIds, !contextAllOnHome);
+      closeContentMenu();
+    }, [contextTargetIds, contextAllOnHome, setHomeVisible, closeContentMenu]);
     return /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", flexDirection: "column", height: "100%", background: "var(--color-bg)" } }, /* @__PURE__ */ React$2.createElement(ToastContainer, { toasts }), /* @__PURE__ */ React$2.createElement("header", { style: {
       display: "flex",
       alignItems: "center",
@@ -15984,17 +16152,7 @@ input[type="radio"] {
       {
         onClick: () => setIsExportOpen(true),
         title: "导出",
-        style: {
-          padding: "6px",
-          borderRadius: "6px",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          color: "var(--color-text-secondary)",
-          display: "flex",
-          alignItems: "center",
-          transition: "background-color 0.15s"
-        },
+        style: iconButtonStyle,
         onMouseEnter: (e) => e.currentTarget.style.background = "var(--color-neutral-100)",
         onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
@@ -16004,17 +16162,7 @@ input[type="radio"] {
       {
         onClick: () => setIsImportOpen(true),
         title: "导入",
-        style: {
-          padding: "6px",
-          borderRadius: "6px",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          color: "var(--color-text-secondary)",
-          display: "flex",
-          alignItems: "center",
-          transition: "background-color 0.15s"
-        },
+        style: iconButtonStyle,
         onMouseEnter: (e) => e.currentTarget.style.background = "var(--color-neutral-100)",
         onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
@@ -16024,22 +16172,36 @@ input[type="radio"] {
       {
         onClick: () => setIsSettingsOpen(true),
         title: "设置",
-        style: {
-          padding: "6px",
-          borderRadius: "6px",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          color: "var(--color-text-secondary)",
-          display: "flex",
-          alignItems: "center",
-          transition: "background-color 0.15s"
-        },
+        style: iconButtonStyle,
         onMouseEnter: (e) => e.currentTarget.style.background = "var(--color-neutral-100)",
         onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
       /* @__PURE__ */ React$2.createElement(Settings, { size: 16 })
-    ))), /* @__PURE__ */ React$2.createElement("div", { style: {
+    ), /* @__PURE__ */ React$2.createElement("div", { style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "2px",
+      marginLeft: "4px",
+      padding: "2px",
+      borderRadius: "6px",
+      background: "var(--color-neutral-100)"
+    } }, /* @__PURE__ */ React$2.createElement(
+      "button",
+      {
+        onClick: () => setViewFilter("all"),
+        title: "显示全部书签",
+        style: filterButtonStyle(viewFilter === "all")
+      },
+      "全部"
+    ), /* @__PURE__ */ React$2.createElement(
+      "button",
+      {
+        onClick: () => setViewFilter("favorite"),
+        title: "只显示收藏的书签",
+        style: filterButtonStyle(viewFilter === "favorite")
+      },
+      "收藏"
+    )))), /* @__PURE__ */ React$2.createElement("div", { style: {
       display: "flex",
       alignItems: "center",
       gap: "8px",
@@ -16047,7 +16209,17 @@ input[type="radio"] {
       background: "var(--color-bg-card)",
       position: "relative",
       zIndex: 10
-    } }, /* @__PURE__ */ React$2.createElement("div", { style: { flex: "0 1 200px", minWidth: "160px" } }, /* @__PURE__ */ React$2.createElement(SearchBar, { value: searchQuery, onChange: setSearchQuery, inputRef: searchInputRef })), allTags.length > 0 && /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "4px", flex: 1, overflow: "hidden" } }, (() => {
+    } }, /* @__PURE__ */ React$2.createElement(
+      "button",
+      {
+        onClick: () => updateSettings({ showCategoryPanel: !settings.showCategoryPanel }),
+        title: settings.showCategoryPanel ? "隐藏分类" : "显示分类",
+        style: iconButtonStyle,
+        onMouseEnter: (e) => e.currentTarget.style.background = "var(--color-neutral-100)",
+        onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
+      },
+      settings.showCategoryPanel ? /* @__PURE__ */ React$2.createElement(PanelLeftClose, { size: 16 }) : /* @__PURE__ */ React$2.createElement(PanelLeftOpen, { size: 16 })
+    ), /* @__PURE__ */ React$2.createElement("div", { style: { flex: "0 1 200px", minWidth: "160px" } }, /* @__PURE__ */ React$2.createElement(SearchBar, { value: searchQuery, onChange: setSearchQuery, inputRef: searchInputRef })), allTags.length > 0 && /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", alignItems: "center", gap: "4px", flex: 1, overflow: "hidden" } }, (() => {
       const visiblePool = allTags.filter((t) => !settings.hiddenTags.includes(t));
       const limit = Math.max(1, settings.tagDisplayLimit || 5);
       const visibleTags = visiblePool.slice(0, limit);
@@ -16205,17 +16377,7 @@ input[type="radio"] {
       {
         onClick: toggleSort,
         title: `排序: ${settings.sortBy}`,
-        style: {
-          padding: "6px",
-          borderRadius: "6px",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          color: "var(--color-text-secondary)",
-          display: "flex",
-          alignItems: "center",
-          transition: "background-color 0.15s"
-        },
+        style: iconButtonStyle,
         onMouseEnter: (e) => e.currentTarget.style.background = "var(--color-neutral-100)",
         onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
@@ -16225,22 +16387,12 @@ input[type="radio"] {
       {
         onClick: () => updateSettings({ viewMode: settings.viewMode === "card" ? "list" : "card" }),
         title: settings.viewMode === "card" ? "列表视图" : "卡片视图",
-        style: {
-          padding: "6px",
-          borderRadius: "6px",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          color: "var(--color-text-secondary)",
-          display: "flex",
-          alignItems: "center",
-          transition: "background-color 0.15s"
-        },
+        style: iconButtonStyle,
         onMouseEnter: (e) => e.currentTarget.style.background = "var(--color-neutral-100)",
         onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
       settings.viewMode === "card" ? /* @__PURE__ */ React$2.createElement(List, { size: 16 }) : /* @__PURE__ */ React$2.createElement(LayoutGrid, { size: 16 })
-    ))), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", flex: 1, overflow: "hidden" } }, /* @__PURE__ */ React$2.createElement("aside", { style: {
+    ))), /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", flex: 1, overflow: "hidden" } }, settings.showCategoryPanel && /* @__PURE__ */ React$2.createElement("aside", { style: {
       width: "224px",
       flexShrink: 0,
       background: "var(--color-bg-card)",
@@ -16309,15 +16461,17 @@ input[type="radio"] {
           }
         }
       },
-      filteredBookmarks.length === 0 ? /* @__PURE__ */ React$2.createElement(
+      visibleBookmarks.length === 0 ? /* @__PURE__ */ React$2.createElement(
         EmptyState,
         {
           hasBookmarks: bookmarks.length > 0,
           onAddBookmark: handleAddClick,
           onImport: () => setIsImportOpen(true),
-          hasCategories: categories.length > 0
+          hasCategories: categories.length > 0,
+          title: viewFilter === "favorite" ? "还没有收藏的书签" : void 0,
+          description: viewFilter === "favorite" ? "右键卡片选择「收藏」，即可显示在这里" : void 0
         }
-      ) : settings.viewMode === "card" ? /* @__PURE__ */ React$2.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "12px", paddingTop: "4px" } }, filteredBookmarks.map((bookmark) => /* @__PURE__ */ React$2.createElement(
+      ) : settings.viewMode === "card" ? /* @__PURE__ */ React$2.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(156px, 1fr))", gap: "8px", paddingTop: "4px" } }, visibleBookmarks.map((bookmark) => /* @__PURE__ */ React$2.createElement(
         BookmarkCard,
         {
           key: bookmark.id,
@@ -16329,7 +16483,7 @@ input[type="radio"] {
           onContextMenu: (e) => handleContentContextMenu(e, bookmark.id),
           showFavicon: settings.showFavicon
         }
-      ))) : /* @__PURE__ */ React$2.createElement("div", { style: { paddingTop: "4px" } }, filteredBookmarks.map((bookmark) => /* @__PURE__ */ React$2.createElement(
+      ))) : /* @__PURE__ */ React$2.createElement("div", { style: { paddingTop: "4px" } }, visibleBookmarks.map((bookmark) => /* @__PURE__ */ React$2.createElement(
         BookmarkListItem,
         {
           key: bookmark.id,
@@ -16405,6 +16559,24 @@ input[type="radio"] {
         /* @__PURE__ */ React$2.createElement(FolderOpen, { size: 14 }),
         " 打开"
       ), /* @__PURE__ */ React$2.createElement("div", { className: "fp-context-menu-separator" }), /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          className: "fp-context-menu-item",
+          onClick: handleToggleFavorite
+        },
+        /* @__PURE__ */ React$2.createElement(Star, { size: 14 }),
+        " ",
+        contextAllFavorite ? "取消收藏" : "收藏"
+      ), /* @__PURE__ */ React$2.createElement(
+        "div",
+        {
+          className: "fp-context-menu-item",
+          onClick: handleToggleHomeVisible
+        },
+        /* @__PURE__ */ React$2.createElement(House, { size: 14 }),
+        " ",
+        contextAllOnHome ? "取消首页显示" : "首页显示"
+      ), /* @__PURE__ */ React$2.createElement(
         "div",
         {
           className: "fp-context-menu-item",

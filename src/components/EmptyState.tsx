@@ -7,13 +7,17 @@ interface EmptyStateProps {
   onAddBookmark: () => void;
   onImport: () => void;
   hasCategories: boolean;
+  title?: string;
+  description?: string;
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({
   hasBookmarks,
   onAddBookmark,
   onImport,
-  hasCategories
+  hasCategories,
+  title,
+  description
 }) => {
   const containerStyle: React.CSSProperties = {
     display: 'flex',
@@ -61,8 +65,8 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           <div style={iconCircleStyle}>
             <FolderOpen size={32} style={{ color: 'var(--color-neutral-400)' }} />
           </div>
-          <h3 style={titleStyle}>没有找到匹配的书签</h3>
-          <p style={descStyle}>尝试调整搜索条件或切换分类</p>
+          <h3 style={titleStyle}>{title || '没有找到匹配的书签'}</h3>
+          <p style={descStyle}>{description || '尝试调整搜索条件或切换分类'}</p>
         </>
       ) : (
         <>

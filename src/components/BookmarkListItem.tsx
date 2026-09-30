@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, Globe } from 'lucide-react';
+import { ExternalLink, Globe, Star } from 'lucide-react';
 import type { Bookmark, Category } from '../types';
 import { getFaviconUrl, truncateText } from '../utils/validator';
 import '../styles.css';
@@ -95,6 +95,9 @@ const BookmarkListItem: React.FC<BookmarkListItemProps> = ({
         flex: 1, minWidth: 0,
         display: 'flex', alignItems: 'center', gap: '12px'
       }}>
+        {bookmark.isFavorite && (
+          <Star size={12} fill="#f59e0b" aria-label="已收藏" style={{ color: '#f59e0b', flexShrink: 0 }} />
+        )}
         <span style={{
           fontSize: '14px', fontWeight: 500,
           color: 'var(--color-text)',

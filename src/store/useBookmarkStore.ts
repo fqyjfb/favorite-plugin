@@ -21,6 +21,7 @@ import {
   resetData as resetStorage
 } from '../services/sqliteStorageService';
 import { parseBrowserBookmarks, parseJsonImport, parseTextImport } from '../services/importService';
+import { normalizeUrlForCompare } from '../utils/validator';
 
 export function useBookmarkStore() {
   const [data, setData] = useState<PluginData | null>(null);
@@ -163,6 +164,46 @@ export function useBookmarkStore() {
     [data, persist, addToast]
   );
 
+  const setFavorite = useCallback(
+    async (ids: string[], value: boolean) => {
+      if (!data || ids.length === 0) return;
+      const idSet = new Set(ids);
+      const nextData = {
+        ...data,
+        bookmarks: data.bookmarks.map((b) =>
+          idSet.has(b.id) ? modifyBookmark(b, { isFavorite: value }) : b
+        )
+      };
+      await persist(nextData);
+      addToast(value ? '已加入收藏' : '已取消收藏', 'success');
+    },
+    [data, persist, addToast]
+  );
+
+  // 首页显示开关：开启时分配首页排序号，关闭时保留原排序号以便再次开启
+  const setHomeVisible = useCallback(
+    async (ids: string[], value: boolean) => {
+      if (!data || ids.length === 0) return;
+      const idSet = new Set(ids);
+      let nextOrder =
+        data.bookmarks.reduce((max, b) => Math.max(max, b.homeOrder ?? 0), 0) + 1;
+      const nextData = {
+        ...data,
+        bookmarks: data.bookmarks.map((b) =>
+          idSet.has(b.id)
+            ? modifyBookmark(b, {
+                showOnHome: value,
+                homeOrder: b.homeOrder ?? nextOrder++
+              })
+            : b
+        )
+      };
+      await persist(nextData);
+      addToast(value ? '已添加到首页' : '已从首页移除', 'success');
+    },
+    [data, persist, addToast]
+  );
+
   const bulkDeleteBookmarks = useCallback(
     async (ids: string[]) => {
       if (!data) return;
@@ -189,8 +230,8 @@ export function useBookmarkStore() {
     });
   }, []);
 
-  const selectAllBookmarks = useCallback(() => {
-    setSelectedBookmarks(new Set(filteredBookmarks.map((b) => b.id)));
+  const selectAllBookmarks = useCallback((ids?: string[]) => {
+    setSelectedBookmarks(new Set(ids ?? filteredBookmarks.map((b) => b.id)));
   }, [filteredBookmarks]);
 
   const clearSelection = useCallback(() => {
@@ -423,9 +464,12 @@ export function useBookmarkStore() {
         };
         await persist(nextData);
       } else {
-        const existingIds = new Set(data.bookmarks.map((b) => b.url));
+        // 导入判重：仅按 URL 判断（忽略协议与结尾斜杠差异）
+        const existingUrls = new Set(
+          data.bookmarks.map((b) => normalizeUrlForCompare(b.url))
+        );
         const newBookmarks = result.bookmarks.filter(
-          (b) => !existingIds.has(b.url)
+          (b) => !existingUrls.has(normalizeUrlForCompare(b.url))
         );
         const existingCategoryNames = new Set(
           data.categories.map((c) => c.name)
@@ -443,7 +487,7 @@ export function useBookmarkStore() {
           ...result,
           bookmarks: newBookmarks,
           categories: newCategories,
-          conflicts: result.bookmarks.length - newBookmarks
+          conflicts: result.bookmarks.length - newBookmarks.length
         };
       }
 
@@ -483,6 +527,8 @@ export function useBookmarkStore() {
     addBookmark,
     updateBookmark,
     deleteBookmark,
+    setFavorite,
+    setHomeVisible,
     bulkDeleteBookmarks,
     toggleBookmarkSelect,
     selectAllBookmarks,
