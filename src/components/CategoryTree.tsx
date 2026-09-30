@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { Plus, Pencil, Trash2, FolderOpen, Folder, ChevronRight, ChevronDown, Tag } from 'lucide-react';
 import type { CategoryNode, CategoryColor } from '../types';
 import '../styles.css';
@@ -17,6 +17,8 @@ const getColorValue = (color?: CategoryColor): string => {
   if (!color) return '#9ca3af';
   return CATEGORY_COLORS.find((c) => c.key === color)?.value || '#9ca3af';
 };
+
+const CONTENT_MENU_GAP = 4; // 距容器边距
 
 interface CategoryTreeProps {
   categories: CategoryNode[];
@@ -294,17 +296,73 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
   });
 
   const contextMenuRef = useRef<HTMLDivElement>(null);
+  const rootContextMenuRef = useRef<HTMLDivElement>(null);
+  // 节点菜单应用 clamp 后的实际渲染位置（视口坐标）
+  const [menuRenderPos, setMenuRenderPos] = useState<{ left: number; top: number } | null>(null);
+  // 根菜单应用 clamp 后的实际渲染位置（视口坐标）
+  const [rootMenuRenderPos, setRootMenuRenderPos] = useState<{ left: number; top: number } | null>(null);
 
   const closeAllMenus = useCallback(() => {
     setContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
     setRootContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
+    setMenuRenderPos(null);
+    setRootMenuRenderPos(null);
   }, []);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent, categoryId: string) => {
+    e.preventDefault();
+    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId, isRoot: false, showColorMenu: false });
+    setRootContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
+  }, []);
+
+  const handleRootContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setRootContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId: null, isRoot: true, showColorMenu: false });
+    setContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
+  }, []);
+
+  // 节点菜单基于视口边界 clamp，让二级子菜单能展开到侧边栏外
+  useLayoutEffect(() => {
+    if (!contextMenu.visible) return;
+    const el = contextMenuRef.current;
+    if (!el) return;
+    const menuW = el.offsetWidth;
+    const menuH = el.offsetHeight;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    let left = contextMenu.x;
+    let top = contextMenu.y;
+    if (left + menuW + CONTENT_MENU_GAP > vw) left = Math.max(CONTENT_MENU_GAP, contextMenu.x - menuW);
+    if (top + menuH + CONTENT_MENU_GAP > vh) top = Math.max(CONTENT_MENU_GAP, contextMenu.y - menuH);
+
+    setMenuRenderPos({ left, top });
+  }, [contextMenu]);
+
+  // 根菜单基于视口边界 clamp（仅一项，与节点菜单逻辑统一）
+  useLayoutEffect(() => {
+    if (!rootContextMenu.visible) return;
+    const el = rootContextMenuRef.current;
+    if (!el) return;
+    const menuW = el.offsetWidth;
+    const menuH = el.offsetHeight;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    let left = rootContextMenu.x;
+    let top = rootContextMenu.y;
+    if (left + menuW + CONTENT_MENU_GAP > vw) left = Math.max(CONTENT_MENU_GAP, rootContextMenu.x - menuW);
+    if (top + menuH + CONTENT_MENU_GAP > vh) top = Math.max(CONTENT_MENU_GAP, rootContextMenu.y - menuH);
+
+    setRootMenuRenderPos({ left, top });
+  }, [rootContextMenu]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
-        closeAllMenus();
-      }
+      const target = e.target as Node;
+      const inNodeMenu = contextMenuRef.current?.contains(target);
+      const inRootMenu = rootContextMenuRef.current?.contains(target);
+      if (!inNodeMenu && !inRootMenu) closeAllMenus();
     };
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeAllMenus();
@@ -349,17 +407,6 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
     onReorderCategory(draggingId, targetId, dropPosition as 'before' | 'after' | 'child');
     handleDragEnd();
   }, [draggingId, dropPosition, onReorderCategory, handleDragEnd]);
-
-  const handleContextMenu = useCallback((e: React.MouseEvent, categoryId: string) => {
-    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId, isRoot: false, showColorMenu: false });
-    setRootContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
-  }, []);
-
-  const handleRootContextMenu = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setRootContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId: null, isRoot: true, showColorMenu: false });
-    setContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
-  }, []);
 
   const uncategorizedCount = bookmarkCounts.get(null) || 0;
 
@@ -452,9 +499,10 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
         ref={contextMenuRef}
         style={{
           position: 'fixed',
-          left: contextMenu.x,
-          top: contextMenu.y,
-          zIndex: 9999
+          left: menuRenderPos ? menuRenderPos.left : contextMenu.x,
+          top: menuRenderPos ? menuRenderPos.top : contextMenu.y,
+          zIndex: 9999,
+          visibility: menuRenderPos ? 'visible' : 'hidden'
         }}
       >
         <div
@@ -524,13 +572,14 @@ const CategoryTree: React.FC<CategoryTreeProps> = ({
     if (!rootContextMenu.visible) return null;
     return (
       <div
-        ref={contextMenuRef}
+        ref={rootContextMenuRef}
         className="fp-context-menu"
         style={{
           position: 'fixed',
-          left: rootContextMenu.x,
-          top: rootContextMenu.y,
-          zIndex: 9999
+          left: rootMenuRenderPos ? rootMenuRenderPos.left : rootContextMenu.x,
+          top: rootMenuRenderPos ? rootMenuRenderPos.top : rootContextMenu.y,
+          zIndex: 9999,
+          visibility: rootMenuRenderPos ? 'visible' : 'hidden'
         }}
       >
         <div

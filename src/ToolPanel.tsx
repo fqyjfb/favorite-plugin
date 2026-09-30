@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Bookmark,
@@ -32,6 +32,9 @@ import ToastContainer from './components/ToastContainer';
 import type { Bookmark as BookmarkType } from './types';
 import { normalizeUrl, isDuplicateBookmark } from './utils/validator';
 import './styles.css';
+
+const CONTENT_MENU_MIN_WIDTH = 160;
+const CONTENT_MENU_GAP = 4; // 距容器边距
 
 const ToolPanel: React.FC = () => {
   const store = useBookmarkStore();
@@ -88,6 +91,10 @@ const ToolPanel: React.FC = () => {
     bookmarkId: string | null;
   }>({ visible: false, x: 0, y: 0, bookmarkId: null });
 
+  // 应用 clamp 后的实际渲染位置（首次渲染后根据测量尺寸修正）
+  const [menuRenderPos, setMenuRenderPos] = useState<{ left: number; top: number } | null>(null);
+
+  const panelRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const contentMenuRef = useRef<HTMLDivElement>(null);
   const tagDropdownRef = useRef<HTMLDivElement>(null);
@@ -112,7 +119,50 @@ const ToolPanel: React.FC = () => {
 
   const closeContentMenu = useCallback(() => {
     setContentMenu((prev) => ({ ...prev, visible: false }));
+    setMenuRenderPos(null);
   }, []);
+
+  // 右键打开菜单（坐标统一换算为面板内相对坐标）
+  const handleContentContextMenu = useCallback((e: React.MouseEvent, bookmarkId: string | null) => {
+    e.preventDefault();
+    const host = panelRef.current;
+    if (!host) return;
+    const hostRect = host.getBoundingClientRect();
+    setMenuRenderPos(null);
+    setContentMenu({
+      visible: true,
+      x: e.clientX - hostRect.left,
+      y: e.clientY - hostRect.top,
+      bookmarkId
+    });
+  }, []);
+
+  // 首次渲染菜单后，根据真实测量尺寸 + 容器边界 clamp，避免溢出被裁剪
+  useLayoutEffect(() => {
+    if (!contentMenu.visible) return;
+    const host = panelRef.current;
+    const el = contentMenuRef.current;
+    if (!host || !el) return;
+
+    const hostW = host.clientWidth;
+    const hostH = host.clientHeight;
+    const menuW = Math.max(el.offsetWidth, CONTENT_MENU_MIN_WIDTH);
+    const menuH = el.offsetHeight;
+
+    let left = contentMenu.x;
+    let top = contentMenu.y;
+
+    if (left + menuW + CONTENT_MENU_GAP > hostW) {
+      left = contentMenu.x - menuW;
+      if (left < CONTENT_MENU_GAP) left = CONTENT_MENU_GAP;
+    }
+    if (top + menuH + CONTENT_MENU_GAP > hostH) {
+      top = contentMenu.y - menuH;
+      if (top < CONTENT_MENU_GAP) top = CONTENT_MENU_GAP;
+    }
+
+    setMenuRenderPos({ left, top });
+  }, [contentMenu]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -262,11 +312,6 @@ const ToolPanel: React.FC = () => {
     }
   }, [selectedBookmarks, visibleBookmarks, selectAllBookmarks, clearSelection]);
 
-  const handleContentContextMenu = useCallback((e: React.MouseEvent, bookmarkId: string | null) => {
-    e.preventDefault();
-    setContentMenu({ visible: true, x: e.clientX, y: e.clientY, bookmarkId });
-  }, []);
-
   const allSelected =
     visibleBookmarks.length > 0 &&
     selectedBookmarks.size === visibleBookmarks.length;
@@ -322,7 +367,7 @@ const ToolPanel: React.FC = () => {
   }, [contextTargetIds, contextAllOnHome, setHomeVisible, closeContentMenu]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-bg)' }}>
+    <div ref={panelRef} style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-bg)', position: 'relative' }}>
       <ToastContainer toasts={toasts} />
 
       <header style={{
@@ -736,7 +781,12 @@ const ToolPanel: React.FC = () => {
         <div
           ref={contentMenuRef}
           className="fp-context-menu"
-          style={{ left: contentMenu.x, top: contentMenu.y }}
+          style={{
+            left: menuRenderPos ? menuRenderPos.left : contentMenu.x,
+            top: menuRenderPos ? menuRenderPos.top : contentMenu.y,
+            minWidth: CONTENT_MENU_MIN_WIDTH,
+            visibility: menuRenderPos ? 'visible' : 'hidden'
+          }}
         >
           {contentMenu.bookmarkId ? (
             <>

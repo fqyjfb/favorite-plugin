@@ -13996,6 +13996,7 @@ input[type="radio"] {
     if (!color) return "#9ca3af";
     return ((_a = CATEGORY_COLORS.find((c) => c.key === color)) == null ? void 0 : _a.value) || "#9ca3af";
   };
+  const CONTENT_MENU_GAP$1 = 4;
   const TreeNode = ({
     category,
     level,
@@ -14210,15 +14211,60 @@ input[type="radio"] {
       showColorMenu: false
     });
     const contextMenuRef = reactExports.useRef(null);
+    const rootContextMenuRef = reactExports.useRef(null);
+    const [menuRenderPos, setMenuRenderPos] = reactExports.useState(null);
+    const [rootMenuRenderPos, setRootMenuRenderPos] = reactExports.useState(null);
     const closeAllMenus = reactExports.useCallback(() => {
       setContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
       setRootContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
+      setMenuRenderPos(null);
+      setRootMenuRenderPos(null);
     }, []);
+    const handleContextMenu = reactExports.useCallback((e, categoryId) => {
+      e.preventDefault();
+      setContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId, isRoot: false, showColorMenu: false });
+      setRootContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
+    }, []);
+    const handleRootContextMenu = reactExports.useCallback((e) => {
+      e.preventDefault();
+      setRootContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId: null, isRoot: true, showColorMenu: false });
+      setContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
+    }, []);
+    reactExports.useLayoutEffect(() => {
+      if (!contextMenu.visible) return;
+      const el = contextMenuRef.current;
+      if (!el) return;
+      const menuW = el.offsetWidth;
+      const menuH = el.offsetHeight;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let left = contextMenu.x;
+      let top = contextMenu.y;
+      if (left + menuW + CONTENT_MENU_GAP$1 > vw) left = Math.max(CONTENT_MENU_GAP$1, contextMenu.x - menuW);
+      if (top + menuH + CONTENT_MENU_GAP$1 > vh) top = Math.max(CONTENT_MENU_GAP$1, contextMenu.y - menuH);
+      setMenuRenderPos({ left, top });
+    }, [contextMenu]);
+    reactExports.useLayoutEffect(() => {
+      if (!rootContextMenu.visible) return;
+      const el = rootContextMenuRef.current;
+      if (!el) return;
+      const menuW = el.offsetWidth;
+      const menuH = el.offsetHeight;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let left = rootContextMenu.x;
+      let top = rootContextMenu.y;
+      if (left + menuW + CONTENT_MENU_GAP$1 > vw) left = Math.max(CONTENT_MENU_GAP$1, rootContextMenu.x - menuW);
+      if (top + menuH + CONTENT_MENU_GAP$1 > vh) top = Math.max(CONTENT_MENU_GAP$1, rootContextMenu.y - menuH);
+      setRootMenuRenderPos({ left, top });
+    }, [rootContextMenu]);
     reactExports.useEffect(() => {
       const handleClick = (e) => {
-        if (contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
-          closeAllMenus();
-        }
+        var _a, _b;
+        const target = e.target;
+        const inNodeMenu = (_a = contextMenuRef.current) == null ? void 0 : _a.contains(target);
+        const inRootMenu = (_b = rootContextMenuRef.current) == null ? void 0 : _b.contains(target);
+        if (!inNodeMenu && !inRootMenu) closeAllMenus();
       };
       const handleEsc = (e) => {
         if (e.key === "Escape") closeAllMenus();
@@ -14260,15 +14306,6 @@ input[type="radio"] {
       onReorderCategory(draggingId, targetId, dropPosition);
       handleDragEnd();
     }, [draggingId, dropPosition, onReorderCategory, handleDragEnd]);
-    const handleContextMenu = reactExports.useCallback((e, categoryId) => {
-      setContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId, isRoot: false, showColorMenu: false });
-      setRootContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
-    }, []);
-    const handleRootContextMenu = reactExports.useCallback((e) => {
-      e.preventDefault();
-      setRootContextMenu({ visible: true, x: e.clientX, y: e.clientY, categoryId: null, isRoot: true, showColorMenu: false });
-      setContextMenu((prev) => ({ ...prev, visible: false, showColorMenu: false }));
-    }, []);
     const uncategorizedCount = bookmarkCounts.get(null) || 0;
     const findCategoryById = reactExports.useCallback((id) => {
       const find = (nodes) => {
@@ -14357,9 +14394,10 @@ input[type="radio"] {
           ref: contextMenuRef,
           style: {
             position: "fixed",
-            left: contextMenu.x,
-            top: contextMenu.y,
-            zIndex: 9999
+            left: menuRenderPos ? menuRenderPos.left : contextMenu.x,
+            top: menuRenderPos ? menuRenderPos.top : contextMenu.y,
+            zIndex: 9999,
+            visibility: menuRenderPos ? "visible" : "hidden"
           }
         },
         /* @__PURE__ */ React$2.createElement(
@@ -14437,13 +14475,14 @@ input[type="radio"] {
       return /* @__PURE__ */ React$2.createElement(
         "div",
         {
-          ref: contextMenuRef,
+          ref: rootContextMenuRef,
           className: "fp-context-menu",
           style: {
             position: "fixed",
-            left: rootContextMenu.x,
-            top: rootContextMenu.y,
-            zIndex: 9999
+            left: rootMenuRenderPos ? rootMenuRenderPos.left : rootContextMenu.x,
+            top: rootMenuRenderPos ? rootMenuRenderPos.top : rootContextMenu.y,
+            zIndex: 9999,
+            visibility: rootMenuRenderPos ? "visible" : "hidden"
           }
         },
         /* @__PURE__ */ React$2.createElement(
@@ -15879,6 +15918,8 @@ input[type="radio"] {
     });
     return /* @__PURE__ */ React$2.createElement("div", { style: containerStyle }, toasts.map((toast) => /* @__PURE__ */ React$2.createElement("div", { key: toast.id, style: toastItemStyle(toast.type) }, toast.message)));
   };
+  const CONTENT_MENU_MIN_WIDTH = 160;
+  const CONTENT_MENU_GAP = 4;
   const ToolPanel = () => {
     const store = useBookmarkStore();
     const {
@@ -15928,6 +15969,8 @@ input[type="radio"] {
     const [tagDropdownOpen, setTagDropdownOpen] = reactExports.useState(false);
     const [isResetConfirmOpen, setIsResetConfirmOpen] = reactExports.useState(false);
     const [contentMenu, setContentMenu] = reactExports.useState({ visible: false, x: 0, y: 0, bookmarkId: null });
+    const [menuRenderPos, setMenuRenderPos] = reactExports.useState(null);
+    const panelRef = reactExports.useRef(null);
     const searchInputRef = reactExports.useRef(null);
     const contentMenuRef = reactExports.useRef(null);
     const tagDropdownRef = reactExports.useRef(null);
@@ -15960,7 +16003,42 @@ input[type="radio"] {
     });
     const closeContentMenu = reactExports.useCallback(() => {
       setContentMenu((prev) => ({ ...prev, visible: false }));
+      setMenuRenderPos(null);
     }, []);
+    const handleContentContextMenu = reactExports.useCallback((e, bookmarkId) => {
+      e.preventDefault();
+      const host = panelRef.current;
+      if (!host) return;
+      const hostRect = host.getBoundingClientRect();
+      setMenuRenderPos(null);
+      setContentMenu({
+        visible: true,
+        x: e.clientX - hostRect.left,
+        y: e.clientY - hostRect.top,
+        bookmarkId
+      });
+    }, []);
+    reactExports.useLayoutEffect(() => {
+      if (!contentMenu.visible) return;
+      const host = panelRef.current;
+      const el = contentMenuRef.current;
+      if (!host || !el) return;
+      const hostW = host.clientWidth;
+      const hostH = host.clientHeight;
+      const menuW = Math.max(el.offsetWidth, CONTENT_MENU_MIN_WIDTH);
+      const menuH = el.offsetHeight;
+      let left = contentMenu.x;
+      let top = contentMenu.y;
+      if (left + menuW + CONTENT_MENU_GAP > hostW) {
+        left = contentMenu.x - menuW;
+        if (left < CONTENT_MENU_GAP) left = CONTENT_MENU_GAP;
+      }
+      if (top + menuH + CONTENT_MENU_GAP > hostH) {
+        top = contentMenu.y - menuH;
+        if (top < CONTENT_MENU_GAP) top = CONTENT_MENU_GAP;
+      }
+      setMenuRenderPos({ left, top });
+    }, [contentMenu]);
     reactExports.useEffect(() => {
       const handleClick = (e) => {
         if (contentMenuRef.current && !contentMenuRef.current.contains(e.target)) {
@@ -16092,10 +16170,6 @@ input[type="radio"] {
         selectAllBookmarks(visibleBookmarks.map((b) => b.id));
       }
     }, [selectedBookmarks, visibleBookmarks, selectAllBookmarks, clearSelection]);
-    const handleContentContextMenu = reactExports.useCallback((e, bookmarkId) => {
-      e.preventDefault();
-      setContentMenu({ visible: true, x: e.clientX, y: e.clientY, bookmarkId });
-    }, []);
     const allSelected = visibleBookmarks.length > 0 && selectedBookmarks.size === visibleBookmarks.length;
     const labelBase = {
       fontSize: "13px",
@@ -16141,7 +16215,7 @@ input[type="radio"] {
       setHomeVisible(contextTargetIds, !contextAllOnHome);
       closeContentMenu();
     }, [contextTargetIds, contextAllOnHome, setHomeVisible, closeContentMenu]);
-    return /* @__PURE__ */ React$2.createElement("div", { style: { display: "flex", flexDirection: "column", height: "100%", background: "var(--color-bg)" } }, /* @__PURE__ */ React$2.createElement(ToastContainer, { toasts }), /* @__PURE__ */ React$2.createElement("header", { style: {
+    return /* @__PURE__ */ React$2.createElement("div", { ref: panelRef, style: { display: "flex", flexDirection: "column", height: "100%", background: "var(--color-bg)", position: "relative" } }, /* @__PURE__ */ React$2.createElement(ToastContainer, { toasts }), /* @__PURE__ */ React$2.createElement("header", { style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -16544,7 +16618,12 @@ input[type="radio"] {
       {
         ref: contentMenuRef,
         className: "fp-context-menu",
-        style: { left: contentMenu.x, top: contentMenu.y }
+        style: {
+          left: menuRenderPos ? menuRenderPos.left : contentMenu.x,
+          top: menuRenderPos ? menuRenderPos.top : contentMenu.y,
+          minWidth: CONTENT_MENU_MIN_WIDTH,
+          visibility: menuRenderPos ? "visible" : "hidden"
+        }
       },
       contentMenu.bookmarkId ? /* @__PURE__ */ React$2.createElement(React$2.Fragment, null, /* @__PURE__ */ React$2.createElement(
         "div",
